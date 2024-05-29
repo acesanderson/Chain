@@ -1,2 +1,3 @@
-/vectordbs
-/__pycache__
+/vectordbs/
+/__pycache__/
+chains/__pycache__/
