@@ -1,9 +1,9 @@
 repos:
 - repo: local
   hooks:
-  - id: pytest
-    name: Run pytest
-    entry: pytest
+  - id: pytest-commit
+    name: pytest for commit
+    entry: pytest -m run_every_commit
     language: system
     pass_filenames: false
     always_run: true

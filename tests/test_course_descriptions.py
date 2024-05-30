@@ -1,3 +1,8 @@
+"""
+Decorators:
+@pytest.mark.run_every_commit
+@pytest.mark.run_occasionally
+"""
 import pytest
 from Course_Descriptions import query_db
 import random
@@ -25,6 +30,7 @@ queries = [
 def setup():
     pass
 
+@pytest.mark.run_every_commit
 def test_query_db(setup):
     # Test case 1: Query the database and check the returned documents
     query = random.choice(queries)

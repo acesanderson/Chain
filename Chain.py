@@ -509,6 +509,12 @@ class Response():
         attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
         return f"{self.__class__.__name__}({attributes})"
     
+    def __len__(self):
+        """
+        We want to be able to check the length of the content.
+        """
+        return len(self.content)
+    
     def __str__(self):
         """
         We want to pass as string when possible.
