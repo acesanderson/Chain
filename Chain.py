@@ -542,16 +542,36 @@ class Chat():
     def __init__(self, model='mistral'):
         self.model = Model(model)
     
+    def __repr__(self):
+        """
+        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
+        """
+        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
+        return f"{self.__class__.__name__}({attributes})"
+    
     def chat(self):
         """
         Chat with the model.
         """
-        messages = []
+        system_prompt = "You're a helpful assistant."
+        messages = [{'role': 'system', 'content': system_prompt}]
         print("Let's chat! Type 'exit' to leave.")
         while True:
             user_input = input("You: ")
-            if user_input == "exit":
-                break
+            match user_input:
+                case "exit":
+                    break
+                case "/show system":
+                    print('"""\n' +  system_prompt + '\n"""')
+                    continue
+                case "/show model":
+                    print("'" + self.model.model+ "'")
+                    continue
+                case "/help":
+                    print("Type 'exit' to leave the chat. Type '/show system' to see the system prompt. Type '/show model' to see the model.")
+                    continue
+                case _:
+                    pass
             messages.append({"role": "user", "content": user_input})
             response = self.model.query(messages)
             messages.append({"role": "assistant", "content": response})
