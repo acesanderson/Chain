@@ -14,8 +14,23 @@ def setup():
     pass
 
 @pytest.mark.run_occasionally
-def test_default_Chain(setup):
-    c=Chain(model=Model('gpt-3.5-turbo-0125'))
+def test_default_chain(setup):
+    c=Chain()
     r=c.run()
+    assert isinstance(r.content, str)
+    assert len(r) > 0
+
+@pytest.mark.run_occasionally
+def test_Model(setup):
+    m=Model()
+    r=m.query("Name ten mammals.")
     assert isinstance(r, str)
     assert len(r) > 0
+
+@pytest.mark.run_occasionally
+def test_json_parser(setup):
+    p=Parser('json')
+    r=p.parse("{\"content\":\"Hello, world!\", \"status\":\"success\"}")
+    assert isinstance(r, dict)
+    assert len(r.keys()) == 2
+
