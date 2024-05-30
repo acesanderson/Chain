@@ -1,3 +1,4 @@
 /vectordbs/
 /__pycache__/
 chains/__pycache__/
+.env
