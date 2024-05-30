@@ -539,8 +539,8 @@ class Chat():
     """
     My first implementation of a chatbot.
     """
-    def __init__(self, model):
-        self.model = model
+    def __init__(self, model='mistral'):
+        self.model = Model(model)
     
     def chat(self):
         """
