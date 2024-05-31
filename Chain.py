@@ -562,13 +562,25 @@ class Chat():
                 case "exit":
                     break
                 case "/show system":
-                    print('"""\n' +  system_prompt + '\n"""')
+                    print('============================\n' + 
+                        system_prompt +
+                        '\n============================\n')
                     continue
                 case "/show model":
-                    print("'" + self.model.model+ "'")
+                    print(self.model.model)
+                    continue
+                case "/show messages":
+                    print('============================\n' + 
+                        '\n\n'.join([str(m) for m in messages]) +
+                        '\n============================\n')
                     continue
                 case "/help":
-                    print("Type 'exit' to leave the chat. Type '/show system' to see the system prompt. Type '/show model' to see the model.")
+                    print("""
+                        Type 'exit' to leave the chat.
+                        Type '/show system' to see the system prompt.
+                        Type '/show model' to see the model.
+                        Type '/show messages' to see the conversation.
+                        """)
                     continue
                 case _:
                     pass
