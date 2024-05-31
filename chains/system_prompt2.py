@@ -1,6 +1,12 @@
+"""
+The nested while-loops of the first iteration of this script are too confusing and hard to bug.
+I will refactor the script to make it more readable and easier to debug.
+Embracing state-driven programming.
+"""
 from Chain import Model
 from Course_Descriptions import query_db
 import re
+import sys
 
 system_prompt = """  
 You work as the learning and development administrator for a large enterprise company (over 1,000 employees),
@@ -63,41 +69,91 @@ def search(query):
 model = Model('gpt-3.5-turbo-0125')
 # model = Model('gpt')
 messages = [{'role': 'system', 'content': system_prompt}]
-print("Let's chat! Type 'exit' to leave.")
-while True:
-    # 1: User Input
-    user_input = input("You: ")
-    match user_input:
-        case "exit":
-            break
-        case "/show system":
-            print(system_prompt)
-            continue
-        case "/show model":
-            print(model.model)
-            continue
-        case "/help":
-            print("Type 'exit' to leave the chat. Type '/show system' to see the system prompt. Type '/show model' to see the model.")
-            continue
-        case _:
-            pass
-    # 2: Machine evaluates human input
-    messages.append({"role": "user", "content": user_input})
-    while True:
-        response = model.query(messages)
-        print(f"Model: {response}")
-        action, action_input = extract_action_and_input(response)
-        match action:
-            case "Search_Courses":          # 4: Machine queries database.
-                tool = search
-            case _:
-                messages.append({"role": "assistant", "content": action_input})
-                print(f"Response: {action_input}")
-                break
-        observation = tool(action_input)
-        messages.append({"role":"user","content": f"Here are some courses you can recommend to the user:\n{observation}"})
-        response = model.query(messages)
-        print(f"Model: {response}")
-        messages.append({"role": "assistant", "content": response})
-        break
 
+#     while True:
+#         response = model.query(messages)
+#         print(f"Model: {response}")
+#         action, action_input = extract_action_and_input(response)
+#         match action:
+#             case "Search_Courses":          # 4: Machine queries database.
+#                 tool = search
+#             case _:
+#                 messages.append({"role": "assistant", "content": action_input})
+#                 print(f"Response: {action_input}")
+#                 break
+#         observation = tool(action_input)
+#         messages.append({"role":"user","content": f"Here are some courses you can recommend to the user:\n{observation}"})
+#         response = model.query(messages)
+#         print(f"Model: {response}")
+#         messages.append({"role": "assistant", "content": response})
+#         break
+
+def human_input():
+    print("State 1: Human_Input")
+    while True:
+        # 1: User Input
+        user_input = input("You: ")
+        match user_input:
+            case "exit":
+                sys.exit()
+            case "/show system":
+                print(system_prompt)
+                continue
+            case "/show model":
+                print(model.model)
+                continue
+            case "/help":
+                print("Type 'exit' to leave the chat. Type '/show system' to see the system prompt. Type '/show model' to see the model.")
+                continue
+            case _:
+                pass
+    messages.append({"role": "user", "content": user_input})
+    return machine_evaluates_human_input
+
+
+model = Model('gpt-3.5-turbo-0125')
+current_state = human_input  # Start with the initial state
+# while True:
+#     current_state = current_state()  # Execute the current state and transition to the next
+messages = [{'role': 'system', 'content': system_prompt}]
+current_state = current_state()
+print("Let's chat! Type 'exit' to leave.")
+
+
+
+
+def machine_evaluates_human_input():
+    print("State 2: Machine_Evaluates_Human_Input")
+    # Decision point based on some evaluation
+    from random import choice
+    if choice([True, False]):
+        return machine_responds_to_human
+    else:
+        return machine_queries_database
+
+def machine_responds_to_human():
+    print("State 3: Machine_Responds_to_Human")
+    # Simulate machine response
+    return human_input
+
+def machine_queries_database():
+    print("State 4: Machine_Queries_Database")
+    # Simulate database query
+    from random import choicemodel = Model('gpt-3.5-turbo-0125')
+current_state = human_input  # Start with the initial state
+# while True:
+#     current_state = current_state()  # Execute the current state and transition to the next
+messages = [{'role': 'system', 'content': system_prompt}]
+current_state = current_state()
+print("Let's chat! Type 'exit' to leave.")
+
+    if choice([True, False]):
+        return machine_queries_database  # Stay in the same state
+    else:
+        return machine_responds_to_human  # Move to another state
+
+# def main():
+
+# if __name__ == "__main__":
+#     model = Model('gpt-3.5-turbo-0125')
+#     main()
