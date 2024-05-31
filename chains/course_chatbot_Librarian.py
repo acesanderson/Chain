@@ -10,14 +10,9 @@ The abstractions should become more clear to me the more I do this, and I can st
 - suppress system prompts where necessary
 - etc.
 
-Issues I'm having:
-- LLM is not strictly adhering to system prompt, and it breaks.
-- LLM is given a natural language response, when I need the response to be highly structured.
-- This breaks the `machine_evaluates_human_input():` function, which is expecting a structured response.
-
-Possible solutions:
-- Find a better prompt format for these kinds of agents.
-- Leverage my json parser to extract the structured response from the LLM output. (this is likely more promising)
+I was unable to get the LLM to consistently respond with a clear tool identified, so I wussed out and 
+let it respond with a "No_Action" response. This is a good example of where I could have a better
+understanding of prompt engineering for agents.
 """
 from Chain import Model
 from Course_Descriptions import query_db
