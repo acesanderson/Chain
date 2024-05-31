@@ -1,7 +1,23 @@
 """
-The nested while-loops of the first iteration of this script are too confusing and hard to bug.
-I will refactor the script to make it more readable and easier to debug.
-Embracing state-driven programming.
+This is a Chain of Responsibility pattern for a chatbot that helps users find courses in a database.
+Ideally I can use this design pattern with increasingly complex chatbot flows.
+One way of mapping this out:
+- use mermaid to map out Finite State Machines
+- have GPT produce the empty python definitions
+
+The abstractions should become more clear to me the more I do this, and I can start to see easy ways to
+- define prompts within the functions
+- suppress system prompts where necessary
+- etc.
+
+Issues I'm having:
+- LLM is not strictly adhering to system prompt, and it breaks.
+- LLM is given a natural language response, when I need the response to be highly structured.
+- This breaks the `machine_evaluates_human_input():` function, which is expecting a structured response.
+
+Possible solutions:
+- Find a better prompt format for these kinds of agents.
+- Leverage my json parser to extract the structured response from the LLM output. (this is likely more promising)
 """
 from Chain import Model
 from Course_Descriptions import query_db
@@ -41,7 +57,8 @@ Begin!
 example_chat = [{'role': 'system', 'content': '  \nYou work as the learning and development administrator for a large enterprise company (over 1,000 employees),\nand you have been asked by leadership to help people develop learning path of video courses that will address\nthe most important skills for your company.\n\nAnswer the following questions and obey the following commands as best you can.  \n\nYou have access to the following tool:  \n\nSearch_Courses: you can use this tool to search for courses in the database. Use natural language, and aim for rich description\n(e.g. "machine learning for a business audience who doesn\'t know how to code"). Your query should be more nuanced than "machine learning courses";\nbe sure to ask the human about ideal audience, prerequisites, and other relevant details that will help with your query. The response to your query\nwill be a list of course titles + their descriptions.\n\nYou will receive a message from the human, then you should start a loop and do one of two things:\n \nOption 1: You use a tool to answer the question.  \nFor this, you should use the following format:  \nThought: you should always think about what to do  \nAction: the action to take, should be one of [Search_Courses]\nAction Input: "the input to the action, to be sent to the tool"  \n \nAfter this, the human will respond with an observation, and you will continue.  \n \nOption 2: You respond to the human.  \nFor this, you should use the following format:  \nAction: Response To Human  \nAction Input: "your response to the human, summarizing what you did and what you learned"  \n\nBegin!\n'}, {'role': 'user', 'content': 'I want to learn to be a python developer'}, {'role': 'assistant', 'content': ' Thought: The human has asked me to help them learn Python development. I will use the Search_Courses tool to find courses that fit their request.\n\nAction: Search_Courses\nAction Input: "Python development for beginners"'}]
 messages = []
 # model = Model('gpt-3.5-turbo-0125')
-model = Model('gpt-4o')
+# model = Model('gpt-4o')
+model = Model('gpt')
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -74,11 +91,11 @@ def human_input():
                 continue
             case "/help":
                 print("""
-    Type 'exit' to leave the chat.
-    Type '/show system' to see the system prompt.
-    Type '/show model' to see the model.
-    Type '/show messages' to see the conversation.
-    """)
+                Type 'exit' to leave the chat.
+                Type '/show system' to see the system prompt.
+                Type '/show model' to see the model.
+                Type '/show messages' to see the conversation.
+                """)
                 continue
             case _:
                 break
