@@ -123,10 +123,7 @@ def machine_evaluates_human_input():
             action_input = re.findall(input_pattern, text)[0].strip()
             return action, action_input
         except:
-            # throw an error here
-            error = "Error: Could not extract action and input from text."
-            logging.debug(text)
-            return error
+            return text
     
     # Machine evaluates human input
     response = model.query(messages)
@@ -135,9 +132,8 @@ def machine_evaluates_human_input():
     try:
         action, action_input = extract_action_and_input(response)
     except:
-        error = "Error: Could not extract action and input from response."
-        print(response)
-        return(error)
+        logging.debug("Error: Could not extract action and input from response.")
+        action = "No_Action"
     
     match action:
         case "Search_Courses":
@@ -146,6 +142,10 @@ def machine_evaluates_human_input():
         case "Respond_To_Human":
             messages.append({"role": "assistant", "content": action_input})
             logging.debug(f"Response: {action_input}")
+            return human_input
+        case "No_Action":
+            logging.debug("No action found, so just returning response to user.")
+            messages.append({"role": "assistant", "content": response})
             return human_input
         case _:
             error = "Error: Unrecognized action."
