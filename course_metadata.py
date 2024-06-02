@@ -26,8 +26,6 @@ class Course:
     Visible_Video_Count : str
     Contract_Type : str
 
-column_names = Course.__match_args__
-
 # grab all rows from df where Activation_Status is 'Active'
 active_courses = df[df['Activation Status'] == 'ACTIVE']
 # grab all rows from active_courses that have Course_Release_date later than 2018-01-01
@@ -42,11 +40,11 @@ for column in columns:
     variables[column.replace(' ', '_')] = column
 
 # create a list of Course objects
-course_variables = Course.__match_args__
+course_variables = Course.__match_args__        # This is the variables we defined in our dataclass above.
 courses = []
 for row in active_courses.iterrows():
     values = {}
     for var in course_variables:
         values[var] = row[1][variables[var]]
-    courses.append(Course(**values)
+    courses.append(Course(**values))
 
