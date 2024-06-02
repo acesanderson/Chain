@@ -4,7 +4,7 @@ Decorators:
 @pytest.mark.run_occasionally
 """
 import pytest
-from Course_Data import query_short_descriptions, query_transcripts, get_mongodb_client, load_courses
+from Course_Data import query_short_descriptions, query_long_descriptions, query_transcripts, get_mongodb_client, load_courses
 import random
 
 queries = [
@@ -31,11 +31,19 @@ def setup():
     pass
 
 @pytest.mark.run_every_commit
-def test_query_descriptions(setup):
+def test_query_short_descriptions(setup):
     # Test case 1: Query the database and check the returned documents
     query = random.choice(queries)
     n_results = 5
     documents = query_short_descriptions(query, n_results)
+    assert len(documents) == n_results
+
+@pytest.mark.run_every_commit
+def test_query_long_descriptions(setup):
+    # Test case 1: Query the database and check the returned documents
+    query = random.choice(queries)
+    n_results = 5
+    documents = query_long_descriptions(query, n_results)
     assert len(documents) == n_results
 
 @pytest.mark.run_every_commit

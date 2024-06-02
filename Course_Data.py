@@ -5,12 +5,13 @@ So far we have two datasets:
 - Course Transcripts (in a vector database). This is only about half of the transcripts that I was able to download. 300MB+
 - courses_db: a MongoDB database with all of our Course objects.
 
-Notes:
-- Should refactor descriptions so that ids are course titles.
+Next up:
+- create a test runner so I can evaluate the quality of various embedding models.
+- clean up text; my clean function feels like cheating and we stil have html markers in the text for example
 
 Usage:
 
-`from Course_Data import query_descriptions, query_transcripts, get_mongodb_client, load_courses, Course`
+`from Course_Data import query_short_descriptions, query_long_descritpions, query_transcripts, get_mongodb_client, load_courses, Course`
 `courses_db = get_mongodb_client()`
 `courses = load_courses()`
 """
@@ -58,6 +59,27 @@ def query_short_descriptions(query, n_results=10):
     )
     return q['documents'][0]
 
+# Now for the long descriptions.
+# Initialize our vector databases (descriptions and transcripts)
+long_descriptions_collection_name = "Long_Descriptions_5_23_2024"
+long_descriptions_persist_directory = '/home/bianders/Brian_Code/Chain_Framework/data/vectordbs/Library_RAG_Chain'
+long_descriptions_client = chromadb.PersistentClient(path=long_descriptions_persist_directory)
+long_descriptions_collection = long_descriptions_client.get_collection(name=long_descriptions_collection_name)
+
+def query_long_descriptions(query, n_results=10):
+    """
+    This currently returns the first document in the query results.
+    You can imagine some use cases where you want the ids.
+    In future, that can be iomplemented if necessary by changing 'documents' to 'ids' in the return.
+    """
+    q = long_descriptions_collection.query(
+        query_texts=[query],
+        n_results=n_results,
+    )
+    return q['documents'][0]
+
+
+# Now for our transcripts
 transcripts_collection_name = "Half_of_Transcripts_6-1-2024"
 transcripts_persist_directory = '/home/bianders/Brian_Code/Chain_Framework/data/vectordbs/Transcripts'
 transcripts_client = chromadb.PersistentClient(path=transcripts_persist_directory)
