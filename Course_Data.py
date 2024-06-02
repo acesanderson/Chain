@@ -41,13 +41,18 @@ class Course:
     Contract_Type : str
 
 # Initialize our vector databases (descriptions and transcripts)
-descriptions_collection_name = "All_Courses-5-23-2024"
-descriptions_persist_directory = '/home/bianders/Brian_Code/Chain_Framework/data/vectordbs/Library_RAG_Chain'
-descriptions_client = chromadb.PersistentClient(path=descriptions_persist_directory)
-descriptions_collection = descriptions_client.get_collection(name=descriptions_collection_name)
+short_descriptions_collection_name = "Short_Descriptions_5_23_2024"
+short_descriptions_persist_directory = '/home/bianders/Brian_Code/Chain_Framework/data/vectordbs/Library_RAG_Chain'
+short_descriptions_client = chromadb.PersistentClient(path=short_descriptions_persist_directory)
+short_descriptions_collection = short_descriptions_client.get_collection(name=short_descriptions_collection_name)
 
-def query_descriptions(query, n_results=10):
-    q = descriptions_collection.query(
+def query_short_descriptions(query, n_results=10):
+    """
+    This currently returns the first document in the query results.
+    You can imagine some use cases where you want the ids.
+    In future, that can be iomplemented if necessary by changing 'documents' to 'ids' in the return.
+    """
+    q = short_descriptions_collection.query(
         query_texts=[query],
         n_results=n_results,
     )
