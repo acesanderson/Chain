@@ -21,22 +21,24 @@ import ollama
 import chromadb
 import json         # for pretty printing dicts
 import pandas as pd
+from chromadb import Documents, EmbeddingFunction, Embeddings
 
 ## Load short course descriptions into memory
 ## This is from data/short_descriptions_db.py
-excel_file = '../data/exports/courselist_en_US.xlsx'
+excel_file = '/home/bianders/Brian_Code/Chain_Framework/data/exports/courselist_en_US.xlsx'
 df = pd.read_excel(excel_file)
-df = df.astype(str).fillna('')\
+
+df = df.astype(str).fillna('')
 active_courses = df[(df['Activation Status'] == 'ACTIVE') &
                     (df['Course Release Date'] > '2018-01-01') &
                     (df['Locale'] == 'en_US')]
+
 # get only these two columns: "Course Name EN" and "Course Short Description"
 # handle utf encoding
 def clean_text(text):
     replacements = {
         'â€™': "'",
         'â€œ': '"',
-        'â€': '"',
         'â€˜': "'",
         'â€”': '—',  # Em-dash
         'â€“': '–'   # En-dash
@@ -61,31 +63,43 @@ snowflake-arctic-embed
 snowflake-arctic-embed:22m""".split('\n')
 
 # create the database we will be loading our various embeddings into
-embeddings_test_directory = '/home/bianders/Brian_Code/Chain_Framework/data/vectordbs/Embeddings_Test'
+embeddings_test_directory = '/home/bianders/Brian_Code/Chain_Framework/data/vectordbs/Embeddings_Test2'
 embeddings_test_client = chromadb.PersistentClient(path=embeddings_test_directory)
 
 short_descriptions_collection_template = "Short_Descriptions_5_23_2024_"
+# embeddings_test_client.get_collection('Short_Descriptions_5_23_2024_mxbai-embed-large')
 
-###!!!!!!!!!
-### YOU NEED TO CREATE EMBEDDING FUNCTIONS, THIS IS JUST USING CHROMA DEFAULT
-###!!!!!!!!!
+# our functions
+
+def get_embeddings(model, text):
+    """
+    Basic ollama embeddings function.
+    We can specify model.
+    """
+    response = ollama.embeddings(model=model, prompt=text)
+    return response['embedding']
 
 def create_short_descriptions_collection_for_model(short_descriptions, model):
+    """
+    This creates a short descriptions VDB with a given ollama embeddings model.
+    """
     short_descriptions_collection_name = short_descriptions_collection_template + model
     embeddings_test_client.create_collection(name=short_descriptions_collection_name)
     short_descriptions_collection = embeddings_test_client.get_collection(name=short_descriptions_collection_name)
     start = time()
     for index, short_description in enumerate(short_descriptions):
+        document = short_description[0] + "::" + short_description[1]
         short_descriptions_collection.add(
-            documents=[short_description[0] + "::" + short_description[1]],
-            ids=[short_description[0]]
+            documents=[document],
+            ids=[short_description[0]],
+            embeddings = [get_embeddings(model, document)]
         )
         print(f"Added document {index + 1} of {len(short_descriptions)} to the database for model {model}.")
     end = time()
     return short_descriptions_collection_name, end - start
 
 # our function for querying the stuff
-def query_short_descriptions(query, n_results=10, collection = ""):
+def query_short_descriptions(query, n_results=10, collection = "", model = ""):
     """
     This currently returns the first document in the query results.
     You can imagine some use cases where you want the ids.
@@ -93,10 +107,17 @@ def query_short_descriptions(query, n_results=10, collection = ""):
     """
     collection = embeddings_test_client.get_collection(name=collection)
     q = collection.query(
-        query_texts=[query],
+        query_embeddings=[get_embeddings(model,query)],
         n_results=n_results,
     )
     return q['documents'][0]
+
+# don't worry about embedding functions, ollama has better documentation.
+# https://ollama.com/blog/embedding-models
+
+
+# db = embeddings_test_client.get_collection('Short_Descriptions_5_23_2024_mxbai-embed-large')
+# query_short_descriptions('I want to learn python.', n_results=10, collection = db.name, model=model)
 
 if __name__ == "__main__":
     results = {}
@@ -106,43 +127,5 @@ if __name__ == "__main__":
         results[model]['collection'] = collection[0]
         results[model]['duration'] = collection[1]
     
-    print (json.dumps(results, indent=4))
+    print(json.dumps(results, indent=4))
 
-
-# query_short_descriptions('I want to learn python', collection="Short_Descriptions_5_23_2024_mxbai-embed-large")
-
-# our test queries
-
-# from chromadb import Documents, EmbeddingFunction, Embeddings
-# class MyEmbeddingFunction(EmbeddingFunction):
-#     def __call__(self, input: Documents) -> Embeddings:
-#         # embed the documents somehow
-#         return embeddings
-
-
-
-# queries = [
-#     "The Six Morning Habits of High Performers"
-#     "I want to learn The Six Morning Habits of High Performers"
-#     "I want to learn Python programming."
-#     "I want to start a career in Sales."
-#     "I'm creating a startup and need to learn basic digital marketing techniquesl."
-#     "I have been hired to manage a large company's change management initiative.", 
-#     "I am worried about the performance of my SQL database.", 
-#     "I am a Java developer who wants to pivot to Python development.", 
-#     "How do I manage a team of salespeople?", 
-#     "I need to be a better negotiator with strategic partnerships", 
-#     "How do I market my products on Facebook and Instagram?", 
-#     "I have been tasked with overseeing the implementation of a new ERP system for a multinational corporation.", 
-#     "What are the best practices for leading a remote team of customer service representatives?", 
-#     "I am responsible for facilitating the digital transformation initiative at a mid-sized enterprise.", 
-#     "How can I improve the performance and management of my marketing team?"
-#     "Help me get started with infrastructure automation."
-# ]
-
-
-# @pytest.fixture
-# def setup():
-#     pass
-
-# @pytest.mark.run_every_commit
