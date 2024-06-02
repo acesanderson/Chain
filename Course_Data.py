@@ -3,14 +3,16 @@ This is a wrapper for the various data sources I want to leverage as part of my 
 So far we have two datasets:
 - Course Descriptions (in a vector database). This has arbitrary IDs and the embeddings are course titles with descriptions.
 - Course Transcripts (in a vector database). This is only about half of the transcripts that I was able to download. 300MB+
+- courses_db: a MongoDB database with all of our Course objects.
 
 Notes:
 - Should refactor descriptions so that ids are course titles.
-- Should add a metadata database so that we can get richer results. (mongodb)
 
 Usage:
 
-`from Course_Data import query_descriptions, query_transcripts, get_mongodb_client, load_courses`
+`from Course_Data import query_descriptions, query_transcripts, get_mongodb_client, load_courses, Course`
+`courses_db = get_mongodb_client()`
+`courses = load_courses()`
 """
 import chromadb
 from dataclasses import dataclass
