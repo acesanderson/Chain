@@ -1,0 +1,2184 @@
+
+"I want to learn Python programming."
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Python for Non-Programmers
+		Python Quick Start
+		Python for Students
+		Hands-On Introduction: Python
+		Python for Students (2019)
+		Programming Concepts for Python
+		8 Things You Must Know in Python
+		Intermediate Python for Non-Programmers
+		Level Up: Advanced Python
+		Transition from Java to Python
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Learning Python
+		Transition from Java to Python
+		Python for Health Sciences and Healthcare
+		Python for Non-Programmers
+		NAMER28 - Hands-On Advanced Python [Coderpad]
+		Intermediate Python for Non-Programmers
+		Python Essential Training
+		Hands-On Advanced Python: Data Exploration and Manipulation
+		Programming Foundations: Fundamentals
+		Getting Started with Python for Finance
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Learning Python
+		Python for Students (2019)
+		Python Quick Start
+		Python: Recursion
+		Programming Concepts for Python
+		Using Python for Automation
+		Learning Java 11
+		Hands-On Introduction: Python
+		Learning Java 17
+		Learning Julia
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Go for PHP Developers
+		Python Essential Libraries
+		Learning JAX
+		Advanced Python
+		Programming with Go Modules
+		Django: Forms
+		Coding Exercises: pandas
+		Python: Advanced Design Patterns
+		Nano Tips to Jump Start Your Coding in Python with Ronnie Sheer
+		NAMER28 - Hands-On Advanced Python [Coderpad]
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Programming Foundations: Data Structures
+		Level Up: C
+		Learning Java 17
+		Level Up: Python Data Acquisitions, Prep, and EDA
+		Learning Java 11
+		Practice It: Java
+		Unreal: Blueprint
+		Hands-On Introduction: Python
+		Learning Gradle
+		Advanced Cypress
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Machine Learning Foundations: Calculus
+		JavaScript: Arrays
+		ML.NET: Getting Started
+		Azure Event Hubs for Developers
+		Learning Bitbucket
+		CircuitPython: Connecting a Robot Cat to the Internet
+		OpenAI API: Vision
+		WordPress: WP-CLI
+		Reinventing You with Debbie Millman
+		Learning Video Production and Editing
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Python for Students (2019)
+		Functional Programming with PHP
+		Nano Tips to Jump Start Your Coding in Python with Ronnie Sheer
+		Advanced Python: Working With Data
+		Transition from Java to Python
+		Build Three Real-World Python Applications
+		8 Things You Must Know in Python
+		Advanced Python: Practical Database Examples
+		Machine Learning with Python: Foundations
+		Unit Testing and Test Driven Development in Python
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Python for Security
+		Advanced Python
+		Functional Programming with Python
+		Python for Students (2019)
+		Secure Coding in Python
+		Python Quick Start
+		Python for Non-Programmers
+		Python for Health Sciences and Healthcare
+		Nano Tips to Jump Start Your Coding in Python with Ronnie Sheer
+		8 Things You Must Know in Python
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Learning Python
+		Python Standard Library Essential Training
+		Python: Working with Files
+		Transition from Java to Python
+		Advanced Python: Object-Oriented Programming
+		Nail Your Python Interview
+		Using Python with Excel
+		Python Essential Training
+		Hands-On Introduction: Python
+		Python Object-Oriented Programming
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Learning Python
+		Intermediate Python for Non-Programmers
+		Python Essential Training
+		Advanced Python
+		Programming Foundations: Beyond the Fundamentals
+		Python for Students (2019)
+		Python Practice: Operations
+		Python Standard Library Essential Training
+		Python for Students
+		Cert Prep: Certified Entry-Level Python Programmer (PCEP-30-02)
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Python Quick Start
+		Python for Security
+		Python for Non-Programmers
+		Python Automation and Testing
+		Programming Concepts for Python
+		Level Up: Python
+		Advanced Python
+		Advanced Python: Working With Data
+		Managing Python Projects
+		Learning PHP
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Learning Python
+		Machine Learning with Python: Foundations
+		Python Practice: Real-World Coding Challenges
+		Hands-On Introduction: Python
+		Advanced Python
+		Python Quick Start
+		Python for Non-Programmers
+		Using Python for Automation
+		Level Up: Python Data Modeling and Model Evaluation Metrics
+		Python for Students (2019)
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Python Quick Start
+		Machine Learning with Python: Foundations
+		Advanced Python: Working With Data
+		Create an Open-Source Project in Python
+		Programming Concepts for Python
+		Go for Python Developers
+		Python for Students (2019)
+		Level Up: Advanced Python
+		Nano Tips to Jump Start Your Coding in Python with Ronnie Sheer
+		8 Things You Must Know in Python
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Python for Non-Programmers
+		Learning Python
+		Advanced Python
+		8 Things You Must Know in Python
+		Python Essential Training
+		Nano Tips to Jump Start Your Coding in Python with Ronnie Sheer
+		Intermediate Python for Non-Programmers
+		Python for Students (2019)
+		Python Practice: Real-World Coding Challenges
+		Python Standard Library Essential Training
+
+"I want to start a career in Sales."
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Prepare Yourself for a Career in Sales
+		B2B Sales Foundations
+		Sales Strategy: Qualifying Opportunities
+		Rocking Your First Retail Sales Job
+		Retail Sales Management
+		Purpose-Driven Sales
+		Selling with Authenticity
+		Sales Skills for Non-Sales Professionals
+		Sales Management Foundations
+		Retail Sales Foundations
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Job Skills: Learning Retail Sales
+		How to Hire Great Salespeople
+		Prepare Yourself for a Career in Sales
+		Creating Your Sales Process
+		Sales Discovery
+		Rocking Your First Retail Sales Job
+		Networking for Sales Professionals
+		Becoming Head of Sales: Developing Your Playbook
+		Consulting Foundations: Building Your Sales System
+		Selling into Industries: Retail and Consumer Products
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Selling with Authenticity
+		Purpose-Driven Sales
+		Prepare Yourself for a Career in Sales
+		Networking for Sales Professionals
+		How to Create a Career You Love
+		Sales Skills for Non-Sales Professionals
+		Increase Visibility to Advance Your Career
+		Activate Connections That Will Transform Your Career
+		Turning Your Communication Talents into a Career
+		Learning LinkedIn for Students
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Sales Fundamentals
+		Managing Your Career as an Introvert
+		DJ Patil: Ask Me Anything
+		Getting into the Mind of the Hiring Manager
+		Job Skills: Learning Retail Sales
+		Selling Into Industries: Government
+		Skilled Trades: Interviews
+		Transformational Leadership
+		Internal Interviewing
+		Advanced Persuasive Selling: Persuading Different Personality Types
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Selling with Authenticity
+		Sales Coaching
+		Sales Operations
+		Controlling the Sale
+		Succeeding in a New Role By Managing Up
+		Taking Charge of Your Career
+		Account Management: Maintaining Relationships
+		Be an Intrapreneur to Take Your Career to the Next Level
+		Start a Side Hustle
+		Better Relationships and More Sales: Using ChatGPT to Sell
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Cross-Selling
+		Sales Discovery
+		Aligning Sales and Marketing
+		Sales: Handling Objections
+		Sales: Selling Financial Products and Services
+		Managing Your Career: Mid-Career
+		Finance Foundations for Solopreneurs
+		Crafting Questions to Make Better Decisions
+		Writing Email
+		Selling Into Industries: Government
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Azure AI Engineering: Fundamentals
+		BIM Manager: Building Envelope Design in Revit
+		Green Building Concepts Foundations
+		Producer October Training Session [Serial]
+		Lean Foundations: 5S
+		Additive Manufacturing for Business
+		DevOps Foundations: Continuous Delivery/Continuous Integration
+		Kickstart Your Construction Project Management Career [Licensed]
+		Humane Productivity: Burnout Proof Your Performance
+		Implementing Lean: A Case Study
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		Future-Proofing Your Career
+		Recession-Proof Career Strategies
+		Making a Career Change
+		How to Launch a Career in Project Management
+		Building a Successful Business Analysis Career
+		Advance Your Cybersecurity Career
+		Inside the Mind of an Aspiring Data Scientist
+		Transitioning to a Career in Sports Analytics
+		Switching Your Career
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Prepare Yourself for a Career in Sales
+		Sales Fundamentals
+		Purpose-Driven Sales
+		Rocking Your First Retail Sales Job
+		Job Skills: Learning Retail Sales
+		Sales Pipeline Management
+		Managing Your Sales Process
+		Get a Job in Marketing
+		Sales Management Foundations
+		How to Sell Anything with Confidence
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Rocking Your First Retail Sales Job
+		Prepare Yourself for a Career in Sales
+		Selling into Industries: Retail and Consumer Products
+		Job Skills: Learning Retail Sales
+		Interview Tips for Sales Professionals
+		Sales Fundamentals
+		B2B Sales Foundations
+		Get a Job in Marketing
+		Sales: Selling Financial Products and Services
+		Sales Management Foundations
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		You Need a Career Development Plan
+		Switching Your Career
+		How to Create a Career You Love
+		Managing Your Career: Early Career
+		Hitting Your Sales Targets
+		Entrepreneurship Foundations
+		Create Your Dream Career: A Transformative Guide for Women
+		Creating Your Sales Process
+		Nine Career Lessons You'll Wish You Learned Sooner
+		Sales Trends
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Sales Trends
+		Azure AI Engineering: Fundamentals
+		Test Course for Dan Anders #2
+		test TL Jan12 24
+		Cosmo Tips Weekly
+		Learning LinkedIn
+		Lessons from Data Scientists
+		Inside the Mind of an Aspiring Data Scientist
+		test for cosmo docs writing
+		Interview Tips for Sales Professionals
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		You Need a Career Development Plan
+		Happiness and Success in Sales
+		Managing Your Sales Process
+		Selling with Authenticity
+		Sales Fundamentals
+		The 52 Best Sales Prospecting Tips
+		Onboarding New Salespeople [Licensed]
+		Women Transforming Tech: Career Insights
+		Creating Your Sales Process
+		Tech Career Skills: Getting Promoted
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Finding a Job in User Experience
+		Nano Tips to Succeed in Sales with Morgan Ingram
+		Nano Tips for Career Growth from Today's Top Business Leaders
+		Career Advice from Some of the Biggest Names in Business
+		B2B Sales Foundations
+		Marketing Tips
+		Become a Marketing Entrepreneur
+		Becoming a Product Tester
+		Consulting Foundations: Building Your Sales System
+		Digital Transformation Tips
+
+"I'm creating a startup and need to learn basic digital marketing techniquesl."
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Digital Marketing Foundations
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		The Ultimate Guide to B2B Digital Marketing
+		A Beginner's Guide to Email Marketing
+		Marketing Automation: How to Build a Successful Campaign
+		Become a Marketing Entrepreneur
+		Product Marketing Foundations
+		Data Driven: Harnessing Data and AI to Reinvent Customer Engagement (getAbstract Summary)
+		Small Business Marketing
+		Facebook Marketing Nano Tips for Beginners with Sam Dey
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Become a Marketing Entrepreneur
+		The Ultimate Guide to B2B Digital Marketing
+		Digital Marketing Foundations
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		Marketing Foundations
+		Marketing Tools: Digital Marketing Tools and Services
+		Nano Tips for Using Digital Marketing to Grow with Ross Simmonds
+		Email and Newsletter Marketing Foundations
+		Social Media Marketing: Strategy and Optimization
+		Social Media Marketing Foundations
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Introduction to Content Marketing
+		Small Business Marketing
+		Marketing on Facebook
+		Become a Marketing Entrepreneur
+		Email and Newsletter Marketing Foundations
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		Digital Marketing Foundations
+		Content Marketing: Newsletters
+		Promoting Your Podcast
+		Launching Your Newsletter on Substack
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		B2B Foundations: Content Marketing
+		The Ultimate Guide to B2B Digital Marketing
+		Ideation for Marketers
+		A Marketer's Guide to Cross-Departmental Collaboration
+		Marketing Tools: Digital Marketing Tools and Services
+		Marketing Your Side Hustle
+		Marketing Tools: Automation
+		Finance Foundations for Solopreneurs
+		Building a Small Business Website with Open Source WordPress
+		Marketing Tools: SEO
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Digital Marketing Foundations
+		Marketing Foundations: Ecommerce
+		Marketing Strategy: SEO Content Writing
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		Content Marketing: Newsletters
+		17 Questions to Help Improve Your Marketing
+		SEO: Videos
+		Startup Stories: Smart SEO Helps Tech Employee Prosper
+		B2B Content Marketing Strategy: SEO Writing
+		Social Media Marketing Foundations
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Web Video for Business: 1 Creating an Online Series
+		Learning Video Production and Editing
+		Marketing Foundations: Analytics
+		Marketing Tools: SEO
+		Email and Newsletter Marketing Foundations
+		The Ultimate Guide to B2B Digital Marketing
+		Advertising on Facebook
+		Marketing on LinkedIn (2021)
+		Advertising on Instagram
+		Email Marketing: Drip Campaigns
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		BIM Manager: Building Envelope Design in Revit
+		A Guide to Setting Boundaries in the Modern Workplace
+		How to Be More Inclusive
+		Personal Finance Nano Tips with Brittney Castro
+		Revit 2019: Interior Design Construction Ready Techniques
+		Difficult Situations: Solutions for Managers
+		Business Analysis for Busy Professionals
+		Embracing Times of Uncertainty
+		Additive Manufacturing for Business
+		Angular: Workflows
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		NAMER28 - Digital Marketing Trends
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		Carlos Alfaro_CosmoOnboarding
+		E2E - 3083712 - Product Marketing Foundations [REVISION 2022]
+		Producer October Training Session [Serial]
+		Azure AI Engineering: Fundamentals
+		sub-project PTOC test
+		TEST_Facelifts
+		Smarter Faster Better (Blinkist Summary)
+		Unlocking Your Potential
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Become a Marketing Entrepreneur
+		Advanced Product Marketing
+		Lead Generation Foundations
+		Introduction to Content Marketing
+		Content Marketing: Producing and Promoting Live Video
+		First Five Things You Have to Do to Start a Business as a Creator
+		Marketing Analytics: Presenting Digital Marketing Data
+		B2B Marketing Foundations: Positioning
+		Marketing Strategy for Designers
+		Marketing Foundations: The Marketing Funnel
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Become a Marketing Entrepreneur
+		Marketing Foundations
+		The Ultimate Guide to B2B Digital Marketing
+		Identifying Your Target Market
+		Monetization Tips for Creators
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		Creating Marketing Objectives
+		How to Write a Marketing Plan
+		Lead Generation Foundations (2019)
+		Become Your Own Boss
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Marketing on YouTube
+		Content Marketing for Social Media
+		Marketing on Twitter
+		Social Media Marketing Tips
+		Introduction to Content Marketing
+		Learning Local SEO
+		Marketing on Instagram
+		Retail Marketing Strategy
+		Strategic Content Marketing: Grow Your Reach on Social Media
+		Ecommerce Fundamentals
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Marketing Tools: Digital Marketing Tools and Services
+		Digital Marketing Foundations
+		Advanced Google Ads
+		Content Marketing Funnel for Creators
+		Learning LinkedIn
+		Digital Marketing Trends
+		Marketing Tools: Automation
+		Social Media Marketing Foundations
+		Learning GitHub Pages
+		Digital Transformation Tips
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Deep Learning: Getting Started
+		Digital Transformation Tips
+		Marketing Tips
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		Python Quick Start
+		Digital Marketing Trends
+		Women Transforming Tech: Building Your Brand
+		Level Up: C
+		Machine Learning with ML.NET
+		ML.NET: Getting Started
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Become a Marketing Entrepreneur
+		NAMER28 - Digital Marketing Trends
+		Azure AI Engineering: Fundamentals
+		Marketing Tips
+		Digital Transformation Tips
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		The Ultimate Guide to B2B Digital Marketing
+		Monetization Tips for Creators
+		Tech Trends
+		Trending Tools
+
+"I have been hired to manage a large company's change management initiative.", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Building Change Capability for Managers
+		Advocating for Change in Your Organization
+		Managing Organizational Change for Managers
+		Leading Change: Essential Skills for Program and Project Sponsors
+		Change Management Foundations
+		Agile Change Management for Manufacturers
+		Change Management: Roadmap to Execution
+		Change Management: Roadmap to Planning
+		Change Management with Limited Resources
+		Improving Technical Project Success with Change Management
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Change Management Foundations
+		Managing Organizational Change for Managers
+		Initiating Change as a Leader
+		Improving Technical Project Success with Change Management
+		Building Change Capability for Managers
+		Change Management: Roadmap to Execution
+		Change Management: Roadmap to Planning
+		IT Service Management Foundations: Change Management
+		Change Management for HR
+		Adapt and Thrive: Change Management Skills Every Project Manager Needs
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Git for Teams
+		Learning Koa
+		Learning Nuxt.js
+		Learning GitHub Actions
+		Learning NgRx
+		Git: Branches, Merges, and Remotes
+		Choose Your Go Framework: Chi Router, FastHTTP, Fiber, Echo, Gin Gonic, Go Kratos
+		JavaScript Build Tools
+		Git Workflows
+		Git from Scratch
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		PTOC sub-project test Sep 18
+		Azure AI Engineering: Fundamentals
+		New MacBook Pro Resolution Test
+		new test project TL Sep 15...
+		E2E - 4407397 - GitHub Codespaces for Students
+		NAMER28 - Digital Marketing Trends
+		Hands-On SAP Business Rule Framework (BRF+)
+		test TL Jan12 24
+		sub-project PTOC test
+		Producer October Training Session [Facelifts]
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Listen to Lead
+		LinkedIn AI Academy AI-100: 1 Demystifying AI
+		What Is Business Analysis?
+		HR Foundations: Core Human Resources
+		Business Analysis for Project Managers
+		Change Management Tips for Individuals
+		Developing Adaptability as a Manager
+		Leading Culture Change in Your Team
+		Strategic Agility (Beta)
+		Navigating Environmental Sustainability: A Guide for Leaders
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Making User Experience Happen as a Team
+		15 Questions to Ask before Hiring a Lawyer
+		Hands-On Introduction: React
+		Business Data: From Requirements to Insights
+		Managing Depression in the Workplace
+		Considering Transferable Skills in Talent Acquisition and Retention
+		Business Analysis for Project Managers
+		Practice It: Go REST API Server
+		Business Analysis Foundations: Planning
+		Level Up: CSS Layout
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		What Is Change Management?
+		Improving Technical Project Success with Change Management
+		Adapt and Thrive: Change Management Skills Every Project Manager Needs
+		Trauma-Informed Change Management
+		IT Service Management Foundations: Change Management
+		Agile Change Management for Manufacturers
+		Overcoming Resistance: A Leadership Change Management Model for DEI
+		Embracing Unexpected Change
+		Embracing Unexpected Change (with Audio Descriptions)
+		Driving Change and Anti-Racism
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		What Is Change Management?
+		Managing Organizational Change for Managers
+		IT Service Management Foundations: Change Management
+		Trauma-Informed Change Management
+		Change Management Tips for Leaders
+		Adapt and Thrive: Change Management Skills Every Project Manager Needs
+		Embracing Unexpected Change
+		Product Management Tips
+		Embracing Unexpected Change (with Audio Descriptions)
+		Change Management: Roadmap to Planning
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Advocating for Change in Your Organization
+		Transition Management for Agile Environments
+		Agile Change Management for Manufacturers
+		IT Service Management Foundations: Change Management
+		Communicating Change in an Enterprise-Wide Transformation
+		Overcoming Resistance: A Leadership Change Management Model for DEI
+		What Not to Do on Change Work
+		Change Management for HR
+		Managing Organizational Change for Managers
+		Change Management: Plan on a Page
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Change Management for HR
+		Managing Organizational Change for Managers
+		Leading Your Team Through Change
+		Improving Technical Project Success with Change Management
+		Adapt and Thrive: Change Management Skills Every Project Manager Needs
+		Initiating Change as a Leader
+		Building Change Capability for Managers
+		Change Management Foundations
+		Change Management Tips for Individuals
+		Change Management for Projects
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Change Leadership
+		Planning for Your Hybrid Organization
+		Fueling Your Company Culture
+		New Manager Foundations
+		Difficult Situations: Solutions for Managers
+		Switching Your Career
+		Coaching New Managers
+		Conscious Leadership
+		Project Management Tips
+		Introduction to Employee Relations
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		AI Trends
+		Digital Transformation Tips
+		What Is Change Management?
+		Azure AI Engineering: Fundamentals
+		Leadership Effectiveness: Moving Beyond Traditional Success Metrics
+		Test Course for Dan Anders #2
+		Agile Software Development: Transforming Your Organization
+		Tech Trends
+		Human Leadership
+		Go Performance Optimization
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		New Manager Foundations
+		Coaching New Managers
+		Making the Move to Middle Management
+		Tech on the Go: Owning Legacy Software
+		Career Advice from Some of the Biggest Names in Business
+		Change Management: Plan on a Page
+		Managing Innovation
+		Initiating Change as a Leader
+		Difficult Situations: Solutions for Managers
+		Avoiding New Manager Mistakes
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Tech Trends
+		Azure AI Engineering: Fundamentals
+		new test project TL Sep 15...
+		Change Management for HR
+		test for cosmo docs writing
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		Trending Tools
+		Career Advice from Some of the Biggest Names in Business
+		Leadership and Teamwork (Beta)
+		What's Next: Reinventing Work in the New Normal
+
+"I am worried about the performance of my SQL database.", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		SQL Server Performance for Developers
+		Advanced SQL for Application Development
+		Access 2021: Tips, Tricks, and Techniques
+		Advanced SQL for Query Tuning and Performance Optimization
+		Intermediate SQL: Data Reporting and Analysis
+		Advanced SQL: Logical Query Processing, Part 1
+		SQL Weekly Tips
+		Advanced SQL for Data Scientists
+		Oracle Database 19c: Basic SQL
+		Data Engineering: dbt for SQL
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		SQL Server Performance for Developers
+		Advanced SQL for Data Scientists
+		Advanced SQL for Query Tuning and Performance Optimization
+		Advanced SQL for Application Development
+		SQL Essential Training
+		Top Five Things to Know in SQL
+		Data Analysis: Investigate with SQL
+		MySQL Advanced Topics (2019)
+		Database Foundations: Database Management
+		Microsoft SQL Server 2019 Essential Training
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Learning Koa
+		Learning Nuxt.js
+		Learning NgRx
+		Choose Your Go Framework: Chi Router, FastHTTP, Fiber, Echo, Gin Gonic, Go Kratos
+		JavaScript: Recursion
+		Learning MongoDB
+		Vue.js: Testing and Debugging
+		Go: Performance Tuning and Benchmarking
+		JavaScript Build Tools
+		JavaScript: Async
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Go Performance Optimization
+		PTOC sub-project test Sep 18
+		PostgreSQL Essential Training
+		Azure AI Engineering: Fundamentals
+		New MacBook Pro Resolution Test
+		new test project TL Sep 15...
+		test TL Jan12 24
+		Hands-On SAP Business Rule Framework (BRF+)
+		sub-project PTOC test
+		DaVinci Resolve: Color Page
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		ESLint: Checking for Syntax and Logic Errors
+		Oracle Database 19c: PL/SQL
+		Getting Started with SQL Server Ledger
+		Practice It: SQL Joins
+		GitHub Copilot First Look
+		SQL Server 2022 Administration
+		Git Essential Training
+		Complete Your First Project in SQL
+		Learning SFTP
+		Top Five Things to Know in SQL
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Machine Learning Foundations: Calculus
+		Generative AI vs. Traditional AI
+		ML.NET: Getting Started
+		SQL Server Machine Learning Services: R
+		Business Data: From Requirements to Insights
+		Azure Event Hubs for Developers
+		Making User Experience Happen as a Team
+		Azure for DevOps: Application Infrastructure
+		Power BI: Working Together with ChatGPT
+		Power BI Weekly
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Using SQL with Python
+		Hands-On Data Science using SQL, Tableau, Python, and Spark
+		Advanced PostgreSQL
+		Nail Your SQL Interview
+		MySQL Installation and Configuration
+		Learning SQL Programming
+		Understand SQL: Explore the Power and Versatility of the SQL Database Language
+		Using SQL with C++
+		Deploy SQL Server on Linux, Containers, and Kubernetes
+		Finding New Career Paths with SQL
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		MySQL Essential Training
+		Introduction to NoSQL
+		Programming Foundations: Databases
+		Microsoft SQL Server 2019 Essential Training
+		Azure Database for MySQL
+		Data Engineering: dbt for SQL
+		Introduction to PostgreSQL
+		Calming Anxiety to Achieve Peak Performance
+		Everybody's Introduction to Snowflake
+		Advanced Redis
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		SQL Server Performance for Developers
+		Advanced SQL for Application Development
+		Data Engineering: dbt for SQL
+		Intermediate SQL: Data Reporting and Analysis
+		Program Databases with Transact-SQL
+		Level Up: MySQL
+		MySQL for Data Analysis
+		AWS Certified Database – Specialty (DBS-C01) Cert Prep: 4 Monitoring and Troubleshooting
+		Solve Real-World Data Problems with SQL
+		Database Foundations: Data Structures
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		SQL Server Performance for Developers
+		Advanced SQL for Application Development
+		Database Foundations: Database Management
+		SQL for Testers
+		Advanced SQL for Query Tuning and Performance Optimization
+		Database Foundations: Administration
+		Designing Highly Scalable and Highly Available SQL Databases
+		Coding Exercises: SQL Data Science
+		Advanced SQL for Data Science: Time Series
+		Advanced SQL for Data Scientists
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Complete Your First Project in SQL
+		SQL Practice: Window Functions
+		SQL Queries Made Easy
+		Automating SQL Server with dbatools
+		Introduction to SQLite
+		Coding Exercises: SQL Data Science
+		Access Quick Tips
+		Finding New Career Paths with SQL
+		Level Up: SQL
+		Amazon Redshift Essentials
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Practice It: PHP with MySQL
+		Querying Microsoft SQL Server 2022
+		test for cosmo docs writing
+		Go Performance Optimization
+		Quick Start Guide to SQL
+		Cosmo Tips Weekly
+		Java Memory Management: Values and References
+		Help Yourself: Tech Tips Weekly
+		Querying Microsoft SQL Server 2019
+		new test project TL Sep 15...
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Level Up: SQL
+		Complete Your First Project in SQL
+		Level Up: MySQL
+		Introduction to SQLite
+		SQL Weekly Tips
+		Advanced SQL for Query Tuning and Performance Optimization
+		Nail Your SQL Interview
+		Complex Project Tips and Tricks
+		Coding Exercises: SQL Data Science
+		Learning MySQL Development
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		new test project TL Sep 15...
+		test for cosmo docs writing
+		Azure AI Engineering: Fundamentals
+		NAMER28 - Digital Marketing Trends
+		Cosmo Tips Weekly
+		Carlos Alfaro_CosmoOnboarding
+		Advanced SQL: Logical Query Processing, Part 1
+		MySQL Advanced Topics
+		Tech Trends
+		Learning Docker Compose
+
+"I am a Java developer who wants to pivot to Python development.", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		From Java to Python OOP: Bridge the Gap for Java Developers
+		Python Projects
+		Python: Programming Efficiently
+		Transition from Java to Python
+		Python for JavaScript Developers
+		Nail Your Python Interview
+		Hands-On Introduction: Python
+		Python for Students
+		Python for Engineers and Scientists
+		Python for Students (2019)
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Transition from Java to Python
+		From Java to Python OOP: Bridge the Gap for Java Developers
+		Python for JavaScript Developers
+		Advanced Python
+		Python for Engineers and Scientists
+		Nano Tips to Jump Start Your Coding in Python with Ronnie Sheer
+		Intermediate Python for Non-Programmers
+		Managing Python Projects
+		Building Tools with Python
+		Python Projects
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Learning Koa
+		Learning Nuxt.js
+		Git for Teams
+		JavaScript: Recursion
+		JavaScript: Async
+		Python: Recursion
+		Git: Branches, Merges, and Remotes
+		Choose Your Go Framework: Chi Router, FastHTTP, Fiber, Echo, Gin Gonic, Go Kratos
+		Learning NgRx
+		Advanced Node.js
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		PTOC sub-project test Sep 18
+		Azure AI Engineering: Fundamentals
+		E2E - 4407397 - GitHub Codespaces for Students
+		Spring: Spring MVC
+		NAMER28 - Digital Marketing Trends
+		Migrating beyond Java 8
+		JavaScript: Service Workers
+		New MacBook Pro Resolution Test
+		sub-project PTOC test
+		new test project TL Sep 15...
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Spring: Spring MVC
+		Learning Vagrant
+		Composable SwiftUI Architecture Using Redux: 2 Building the App
+		Building a GraphQL Project with React.js
+		Learning Java 11
+		Learning Java 17
+		Complete Your First Project in R
+		Learning Gradle
+		Advanced Spring: Spring Boot Actuator
+		Spring Web MVC 6
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Hands-On Introduction: React
+		Machine Learning Foundations: Calculus
+		ML.NET: Getting Started
+		React: Accessibility
+		Power BI: Working Together with ChatGPT
+		Level Up: CSS Layout
+		Practice It: Python Data Structures
+		Generative AI vs. Traditional AI
+		Practice It: Go REST API Server
+		Reinventing You with Debbie Millman
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Learning Python
+		Python for JavaScript Developers
+		Python for Students
+		Advanced Python: Practical Database Examples
+		Using SQL with Python
+		Getting Started with Python for Finance
+		Python Quick Start
+		Transition from Java to Python
+		Go for Python Developers
+		Learning JAX
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Python vs. JavaScript for Development
+		Go for Python Developers
+		Transition from Java to Python
+		Nail Your Java Interview
+		Getting Started with Python for Finance
+		Learning JAX
+		Managing Python Projects
+		Python for JavaScript Developers
+		Python Projects: Create an Interactive Quiz Application
+		From Java to Python OOP: Bridge the Gap for Java Developers
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Nail Your Python Interview
+		From Java to Python OOP: Bridge the Gap for Java Developers
+		Transition from Java to Python
+		Python Projects
+		Go for Python Developers
+		Python for JavaScript Developers
+		Python vs. JavaScript for Development
+		Visual Studio Code for Python Developers
+		OpenAI API for Python Developers
+		Getting Your First Job as a Web Developer
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		From Java to Python OOP: Bridge the Gap for Java Developers
+		Transition from Java to Python
+		Python for JavaScript Developers
+		Intermediate Python for Non-Programmers
+		Learning Python
+		Python vs. JavaScript for Development
+		Practice It: Java
+		Hands-On Introduction: Java
+		A Career in Code: Your Career Path as a Software Developer
+		Introduction to Career Skills in Software Development
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Python for Security
+		Managing Python Projects
+		Python Automation and Testing
+		Go for Python Developers
+		Coding Exercises: pandas
+		Lessons from Data Scientists
+		Creating GitHub Portfolios
+		Level Up: Python Data Modeling and Model Evaluation Metrics
+		Python: Design Patterns
+		You Need a Career Development Plan
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		.NET Development for Beginners
+		Azure AI Engineering: Fundamentals
+		test TL Jan12 24
+		Advanced Python
+		Hands-On Introduction: Python
+		test for cosmo docs writing
+		Python Practice: Real-World Coding Challenges
+		Producer October Training Session [Serial]
+		Complete Guide to Java Design Patterns: Creational, Behavioral, and Structural
+		E2E - 4407397 - GitHub Codespaces for Students
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Go for Python Developers
+		Python for Data Analysis: Solve Real-World Challenges
+		Python Quick Start
+		Build Three Real-World Python Applications
+		Advanced Python: Working With Data
+		Learning Python with PyCharm
+		Python Projects
+		Managing Python Projects
+		Python Practice: Real-World Coding Challenges
+		Nail Your Python Interview
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Advanced Python
+		Apache PySpark by Example
+		Learning Python
+		Python Practice: Real-World Coding Challenges
+		Learning JAX
+		Transition from Java to Python
+		From Java to Python OOP: Bridge the Gap for Java Developers
+		Intermediate Python for Non-Programmers
+		Learning Django
+		Level Up: Advanced Python
+
+"How do I manage a team of salespeople?", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Inside Sales: Managing Sales Rep Personas
+		Onboarding New Salespeople [Licensed]
+		Building and Managing a High-Performing Sales Team
+		A Sales Trainer's Tips for Coaching a Sales Team
+		Building and Coaching a Sales Development Team
+		Retail Sales Management
+		Empathy for Sales Professionals
+		Sales Management Foundations
+		How to Motivate Your Sales Teams
+		A Marketer's Guide to Cross-Departmental Collaboration
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Microsoft Teams for Team Owners
+		Microsoft 365 Teams Administrator Associate Cert Prep (MS-700): Managing Collaboration Tools
+		Configure and Manage Microsoft Teams
+		Essentials of Team Collaboration
+		Leading Teams Working with Data:Â Pitfalls and Best Practices
+		Managing Projects with Microsoft Teams
+		Microsoft Collaboration: SharePoint, Teams, Groups, and Yammer
+		Time Management Tips: Teamwork
+		Microsoft Teams: Successful Meetings, Webinars and Events
+		Using Microsoft Teams and Outlook Together: Maximizing Productivity
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Personal Productivity for Product Managers
+		Product Management Insights
+		Learning LinkedIn Recruiter
+		Leading Global Expansion
+		How to Succeed as a Social Media Manager Nano Tips with Joanna Yung
+		Interviewing for Product Management Jobs
+		Managing Platform Products
+		Ya Xu: How to Turn AI from a Buzz Word to a Business Tool
+		Transitioning to Product Management
+		React: Design Patterns
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Azure AI Engineering: Fundamentals
+		NAMER28 - Digital Marketing Trends
+		Cosmo Tips Weekly
+		PTOC sub-project test Sep 18
+		Go Performance Optimization
+		Nano Tips to Succeed in Sales with Morgan Ingram
+		E2E - 4407397 - GitHub Codespaces for Students
+		Producer October Training Session [Facelifts]
+		Hands-On SAP Business Rule Framework (BRF+)
+		PostgreSQL Essential Training
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Listen to Lead
+		Sales Leadership: Building a Thriving Coaching Culture
+		Busting Myths About Salary Negotiations
+		How to Manage Your Manager
+		How to Be More Strategic in Six Steps
+		How to Work with a Micromanager
+		Succeeding in a New Role By Managing Up
+		How to Manage Feeling Overwhelmed
+		Jeff Weiner on Leading like a CEO
+		Increasing Confidence by Increasing Self-Awareness
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Initiating Change as a Leader
+		15 Questions to Ask before Hiring a Lawyer
+		Serving Clients with Your Design Vision
+		Leading without Formal Authority
+		Communicating about Culturally Sensitive Issues
+		Just Ask: Kwame Christian on Discussing Race
+		Business Analysis for Project Managers
+		Agile for Distributed Teams
+		Managing Someone Older Than You
+		Finance Strategies for Business Leaders
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Top 10 Skills for Robotics Engineers
+		How to Be More Inclusive
+		A Guide to Setting Boundaries in the Modern Workplace
+		Nano Tips For Building a Career in Cybersecurity
+		Enhancing Landscape Photos with Photoshop and Lightroom
+		20 Nano Tips for Maximizing Excel with Mike Tholfsen
+		GitHub Administration Cert Prep: 6 Manage Actions
+		Applied Concurrency in Go
+		Onboarding New Salespeople [Licensed]
+		Business Analysis for Busy Professionals
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		20 Rules for Visual Communication
+		Design Foundations: Prototyping and Manufacturing
+		JavaScript Practice: Object-Oriented Programming
+		Sharepoint Online Essential Training: Beyond the Basics
+		Leading Teams Working with Data:Â Pitfalls and Best Practices
+		Recruiting Foundations: Recruiting for In-House Recruiters
+		AWS for Developers: Amazon Corretto and Java
+		SharePoint Online Essential Training: Beyond the Basics (2021)
+		IT Service Management Foundations: Problem Management
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Salesforce: Sales Automation for Salespeople
+		Becoming Head of Sales: Developing Your Playbook
+		Salesforce Essential Training
+		A Sales Trainer's Tips for Coaching a Sales Team
+		Microsoft Teams for Team Owners
+		The Traits of Successful Salespeople
+		Salesforce for Admins
+		Onboarding New Salespeople [Licensed]
+		How to Hire Great Salespeople
+		Building and Coaching a Sales Development Team
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Salesforce: Sales Automation for Salespeople
+		Building and Managing a High-Performing Sales Team
+		Microsoft Teams for Team Owners
+		Managing and Administering Microsoft Teams by Microsoft Press
+		Microsoft Teams Essential Training
+		Managing Teams
+		Microsoft 365 Teams Administrator Associate Cert Prep (MS-700): Managing Collaboration Tools
+		Microsoft Teams Tips and Tricks
+		Configure and Manage Microsoft Teams
+		Sales Management Foundations
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Managing for Results
+		Sales Management. Simplified. (Blinkist Summary)
+		Strategies for Effective Leadership Teams
+		Leading Remote Projects and Virtual Teams
+		Managing Virtual Teams
+		Building and Managing a High-Performing Sales Team
+		Difficult Situations: Solutions for Managers
+		Selling to the C-Suite
+		Developing Your Team Members
+		Presenting as a Team
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		How to Motivate Your Sales Teams
+		test for cosmo docs writing
+		Managing Teams
+		test TL Jan12 24
+		TEST_Updates
+		Cosmo Tips Weekly
+		Azure AI Engineering: Fundamentals
+		Sales Trends
+		Essentials of Team Collaboration
+		AI Trends
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Onboarding New Salespeople [Licensed]
+		Empathy for Sales Professionals
+		Sales Management. Simplified. (Blinkist Summary)
+		Managing Your Sales Process
+		How to Hire Great Salespeople
+		Inside Sales: Managing Sales Rep Personas
+		Managing for Results
+		Building and Managing a High-Performing Sales Team
+		Retail Sales Management
+		A Sales Trainer's Tips for Coaching a Sales Team
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Inside Sales: Managing Sales Rep Personas
+		Building and Managing a High-Performing Sales Team
+		A Sales Trainer's Tips for Coaching a Sales Team
+		Nano Tips to Succeed in Sales with Morgan Ingram
+		Coaching New Hires
+		How to Motivate Your Sales Teams
+		Essentials of Team Collaboration
+		How to Hire Great Salespeople
+		B2B Sales Foundations
+		Learning HubSpot CRM
+
+"I need to be a better negotiator with strategic partnerships", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Building Skills to Become a Powerhouse Negotiator
+		Strategic Partnerships
+		How to Fearlessly Negotiate to Get More of What You Want
+		Business Development Foundations: Alliances & Partnerships
+		Mindsets and Strategies for Negotiation Success
+		Developing Business Partnerships
+		Negotiating with Agility
+		Strategic Partnerships: Ecosystems and Platforms
+		Consulting Foundations
+		How to Prepare for Your Negotiations
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Negotiating with Agility
+		Strategic Partnerships
+		Pep Talk from a Lawyer Before You Enter a Negotiation
+		Successfully Negotiating When You Have No Alternatives
+		Business Development Foundations: Alliances & Partnerships
+		Negotiating Your Compensation Package
+		Advanced Business Development: Communication and Negotiation
+		Complex Negotiation Tips
+		Negotiate Like a Lawyer
+		Building Skills to Become a Powerhouse Negotiator
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Managing Generation Z
+		The Business Side of Thought Leadership
+		React: Design Patterns
+		Leading with Purpose
+		Finding Your Purpose at Work
+		Delivering Employee Feedback
+		Communicate Your Team's Talent, Impact, and Value as a Leader
+		Asking for Feedback as an Employee
+		Leadership through Feedback
+		Leading with Emotional Intelligence
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Building Connection and Engagement in Virtual Teams
+		Scrum: Advanced
+		Delivering an Authentic Elevator Pitch
+		Developing Your Emotional Intelligence
+		Spring Cloud Load Balancing
+		Essentialism: Improve Your Work by Focusing on the Essentials (Blinkist Summary)
+		Reverse Mentorship Essentials
+		How to Succeed as a Social Media Manager Nano Tips with Joanna Yung
+		Communicating with Charisma
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Increasing Confidence by Increasing Self-Awareness
+		Communicating with Executives
+		Busting Myths About Salary Negotiations
+		How to Be More Strategic in Six Steps
+		Strategic Thinking
+		Negotiating with Agility
+		Leading Culture Change in Your Team
+		Strategic Agility (Beta)
+		Developing Adaptability as a Manager
+		LinkedIn AI Academy AI-100: 1 Demystifying AI
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Making User Experience Happen as a Team
+		Delegating Tasks
+		Managing Introverts
+		Disagreeing with Someone Senior to You
+		Leading with a Heavy Heart
+		Leading with Love
+		Managing Your Career as an Introvert
+		Developing Your Emotional Intelligence
+		Ten Signs You're a High-Potential Employee
+		Accounting for Managers
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Business Analysis for Busy Professionals
+		Happiness and Success in Sales
+		How to Be More Inclusive
+		Boost Your Career with an Experimental Mindset
+		Green Building Concepts Foundations
+		Applied Concurrency in Go
+		A Guide to Setting Boundaries in the Modern Workplace
+		Lean Foundations: 5S
+		Angular: Workflows
+		Making a Difference: How to Advocate for the Change You Want
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		TEST_Facelifts
+		NAMER28 - Digital Marketing Trends
+		Carlos Alfaro_CosmoOnboarding
+		Producer October Training Session [Serial]
+		Azure AI Engineering: Fundamentals
+		New MacBook Pro Resolution Test
+		test for cosmo docs writing
+		TEST_Updates
+		Smarter Faster Better (Blinkist Summary)
+		Test Course for Dan Anders #2
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Active Listening: The Secret to Effective Communication
+		External Communication Skills for Leaders
+		Six Skills to Develop Cultural Agility
+		Building Skills to Become a Powerhouse Negotiator
+		Account Management: Maintaining Relationships
+		We Need to Talk (Blinkist Summary)
+		How to Fearlessly Negotiate to Get More of What You Want
+		Having Difficult Conversations
+		How to Build Rapport Quickly
+		The Three Pillars of Effective Communication
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Communication Skills for Modern Management
+		Strategic Partnerships
+		Critical Thinking for More Effective Communication
+		Communication Foundations (2018)
+		Business Development Foundations: Alliances & Partnerships
+		Critical Thinking for Better Judgment and Decision-Making
+		Facilitating a Collaborative Strategic Planning Session
+		Leading Your Team Through Change
+		Having Powerful, Advanced Conversations
+		Building Business Relationships
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Difficult Situations: Solutions for Managers
+		You Need a Career Development Plan
+		Negotiation Foundations
+		How to Be a Better Boss
+		Creating Success from Failures
+		Become a Better Coach for Your Team
+		Four Time Wasting Habits: How to Quit
+		Communicating with Executives
+		Building Business Relationships
+		Switching Your Career
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Test Course for Dan Anders #2
+		Azure AI Engineering: Fundamentals
+		test for cosmo docs writing
+		Cosmo Tips Weekly
+		test TL Jan12 24
+		AI Trends
+		Producer October Training Session [Serial]
+		Sales Trends
+		Producer October Training Session [Facelifts]
+		Design Tools Weekly
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Complex Negotiation Tips
+		Strategic Partnerships
+		Building Skills to Become a Powerhouse Negotiator
+		Career Advice from Some of the Biggest Names in Business
+		The Top Three Negotiation Myths
+		Negotiation Foundations
+		Developing Business Partnerships
+		Tech Career Skills: Getting Promoted
+		Consulting Professional Weekly Tips
+		Banking Basics: What Every Business Leader Must Know
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Azure AI Engineering: Fundamentals
+		new test project TL Sep 15...
+		Carlos Alfaro_CosmoOnboarding
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		NAMER28 - Digital Marketing Trends
+		Test Course for Dan Anders #2
+		Cosmo Tips Weekly
+		test for cosmo docs writing
+		Basics of Conflict Resolution (Beta)
+		Tech Trends
+
+"How do I market my products on Facebook and Instagram?", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Marketing on Instagram
+		Ecommerce with Facebook and Instagram
+		Marketing on Instagram (2021)
+		Advertising on Facebook
+		Getting Started with Facebook Shop for Creators
+		Social Selling: Reaching Prospects
+		Social Selling Foundations
+		Marketing on YouTube
+		Facebook for Creative Pros
+		Facebook Marketing Nano Tips for Beginners with Sam Dey
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Ecommerce with Facebook and Instagram
+		Getting Started with Facebook Shop for Creators
+		Marketing on Instagram
+		Facebook Marketing Nano Tips for Beginners with Sam Dey
+		Marketing on Facebook
+		Advertising on Instagram
+		Social Media Marketing with Facebook and Twitter
+		Advertising on Instagram (2021)
+		How to Build a Following Online
+		B2B Foundations: Social Media Marketing
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Marketing on Instagram (2021)
+		How to Succeed as a Social Media Manager Nano Tips with Joanna Yung
+		TikTok for Business Creators
+		Marketing to Generation Z
+		Personal Productivity for Product Managers
+		Nano Tips for Video Content Creators with Tejas Hullur
+		Marketing on Twitter
+		Managing Generation Z
+		Marketing on Instagram
+		Getting the Most out of Video on Facebook
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Marketing on Instagram
+		How to Succeed as a Social Media Manager Nano Tips with Joanna Yung
+		Marketing Tools: Growth Marketing
+		Marketing on Instagram (2021)
+		LinkedIn Creator Posting Strategy
+		LinkedIn Creator Mode
+		Advanced Facebook Advertising
+		Sharing Your Expertise Online Nano Tips with Kim Kaupe
+		Ecommerce with Facebook and Instagram
+		Content Marketing: Newsletters
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Marketing on LinkedIn
+		Nano Tips for Using ChatGPT for Marketers with Ross Simmonds
+		First Five Things You Have to Do to Start a Business as a Creator
+		Marketing on Instagram (2021)
+		ChatGPT Prompts for Small Businesses
+		Marketing on Facebook
+		17 Questions to Help Improve Your Marketing
+		Marketing on Instagram
+		Marketing Foundations: The Marketing Funnel
+		Ya Xu: How to Turn AI from a Buzz Word to a Business Tool
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Serving Clients with Your Design Vision
+		15 Questions to Ask before Hiring a Lawyer
+		Making User Experience Happen as a Team
+		Just Ask: Kwame Christian on Discussing Race
+		Making Video 3: Sell Yourself
+		User Experience for Web Design
+		Practical Accessibility for Designers
+		Business Data: From Requirements to Insights
+		Business Analysis for Project Managers
+		Level Up: Go
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Holding Your Team Accountable
+		iOS 16: iPhone and iPad Essential Training
+		What You Need to Know About Crafting a Stand-out Resume
+		Career Path Counselor: Making It in Media and Entertainment
+		Building a Website with Laravel, React.js, and Inertia
+		10 Mistakes Leaders Should Avoid
+		Nano Tips For Building a Career in Cybersecurity
+		SharePoint Framework for Developers: 4 Managing External Libraries
+		Top 10 Skills for Robotics Engineers
+		How to Be More Inclusive
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Azure AI Engineering: Fundamentals
+		TEST_Updates
+		New MacBook Pro Resolution Test
+		NAMER28 - Digital Marketing Trends
+		Carlos Alfaro_CosmoOnboarding
+		sub-project PTOC test
+		Producer October Training Session [Facelifts]
+		Smarter Faster Better (Blinkist Summary)
+		TEST_Facelifts
+		Data Visualization in R with ggplot2
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Marketing on Instagram
+		Ecommerce with Facebook and Instagram
+		Building an Audience on Instagram for Creators
+		Advertising on Instagram (2021)
+		Marketing on Instagram (2021)
+		Advertising on Instagram
+		Advertising on Facebook
+		Learning Instagram
+		Marketing on Facebook
+		Social Media Marketing Strategy: TikTok and Instagram Reels
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Ecommerce with Facebook and Instagram
+		Advertising on Instagram (2021)
+		Marketing on Instagram
+		Marketing on Instagram (2021)
+		Advertising on Instagram
+		Building an Audience on Instagram for Creators
+		A Marketer's Guide to Appealing to Younger Generations
+		Getting Started with Facebook Shop for Creators
+		Releasing and Promoting Your Music
+		Marketing on Facebook
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Marketing on Instagram
+		Marketing on Twitter
+		Marketing on YouTube
+		Marketing on Instagram (2021)
+		Social Media Marketing Tips
+		Marketing on Facebook
+		Content Marketing for Social Media
+		Strategic Content Marketing: Grow Your Reach on Social Media
+		Advertising on Facebook
+		Strategic Social Media: Grow Your Business
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Cosmo Tips Weekly
+		Learning LinkedIn
+		test for cosmo docs writing
+		Azure AI Engineering: Fundamentals
+		TEST_Updates
+		test TL Jan12 24
+		Understanding Intellectual Property
+		Content Marketing Funnel for Creators
+		Producer October Training Session [Serial]
+		Producer October Training Session [Facelifts]
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Marketing on Instagram
+		Marketing on Instagram (2021)
+		Ecommerce with Facebook and Instagram
+		Marketing on Facebook
+		Social Media Marketing with Facebook and Twitter
+		Social Media Marketing Tips
+		Advertising on Facebook
+		Advertising on Instagram (2021)
+		Social Media Marketing Strategy: TikTok and Instagram Reels
+		Social Media Marketing: Strategy and Optimization
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Ecommerce with Facebook and Instagram
+		Building an Audience on Instagram for Creators
+		Marketing on Instagram (2021)
+		Getting the Most out of Video on Facebook
+		Marketing on Instagram
+		Advertising on Instagram (2021)
+		Social Media Marketing Foundations
+		Marketing Tips
+		Facebook Marketing Nano Tips for Beginners with Sam Dey
+		Social Media Marketing with Facebook and Twitter
+
+"I have been tasked with overseeing the implementation of a new ERP system for a multinational corporation.", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		SAP ERP Essential Training
+		A Guide to ERGs (Employee Resource Groups)
+		Change Management: Roadmap to Execution
+		Fix This Next: Make the Vital Change That Will Level Up Your Business
+		Creating Community within Your Employee Resource Group
+		BE 2.0 (Beyond Entrepreneurship 2.0): (Book Bite)
+		Business Development: Strategic Planning (Beta)
+		Microsoft Project Online: Administration
+		Project Management Foundations: Integration
+		Introduction to SuccessFactors Foundation Module
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Business Analysis Foundations: Enterprise
+		Essential Techniques for Enterprise Analysis
+		Integrating Generative AI into Business Strategy
+		Change Management: Roadmap to Execution
+		Power BI Top Skills
+		Acing Your Strategy: A Human Approach to Successful Business Planning
+		Cisco CCNP ENCOR v1.1 (350-401) Cert Prep: 1 Architecture, Virtualization, and Infrastructure
+		International Business Foundations
+		Enterprise Architecture in Practice
+		Business Development: Strategic Planning (Beta)
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Git for Teams
+		Learning Koa
+		Learning Nuxt.js
+		Learning GitHub Actions
+		Learning NgRx
+		Git: Branches, Merges, and Remotes
+		Choose Your Go Framework: Chi Router, FastHTTP, Fiber, Echo, Gin Gonic, Go Kratos
+		GitHub Actions for CI/CD
+		Learning Ansible
+		Advanced Node.js
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		PTOC sub-project test Sep 18
+		Azure AI Engineering: Fundamentals
+		New MacBook Pro Resolution Test
+		new test project TL Sep 15...
+		NAMER28 - Digital Marketing Trends
+		sub-project PTOC test
+		E2E - 4407397 - GitHub Codespaces for Students
+		test TL Jan12 24
+		Hands-On SAP Business Rule Framework (BRF+)
+		DaVinci Resolve: Color Page
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		LinkedIn AI Academy AI-100: 1 Demystifying AI
+		Business Analysis for Project Managers
+		What Is Business Analysis?
+		What Business Leaders Need to Know about Web3 (+ Metaverse)
+		The Future of Work and Cybersecurity on the Metaverse
+		HR Foundations: Core Human Resources
+		AI Ethics: Disability-Centered Frameworks
+		Implementing the Metaverse
+		Gender in Negotiation
+		Introduction to Generative AI with GPT
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Machine Learning Foundations: Calculus
+		Generative AI vs. Traditional AI
+		Making User Experience Happen as a Team
+		15 Questions to Ask before Hiring a Lawyer
+		IT Vendor Management Foundations
+		AI in Video Production and Post
+		Hands-On Introduction: React
+		Business Data: From Requirements to Insights
+		Power BI: Working Together with ChatGPT
+		ML.NET: Getting Started
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Agile Software Development: Transforming Your Organization
+		Troubleshooting IT Remote Administration
+		Navigating Complexity in Your Organization
+		LinkedIn Learning Highlights: Project Management
+		Git for System Administration
+		Mastering Organizational Chaos
+		Coding Exercises: Advanced MongoDB
+		DevOps Foundations: Accelerating Continuous Delivery in the Enterprise
+		Generative AI for Business Analysts
+		Lean Technology Strategy: Running Agile at Scale
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Problem Solving Across An Organization
+		Introduction to Bluebeam Revu 20
+		Complex Project Tips and Tricks
+		Introduction to Alteryx
+		LinkedIn Learning Highlights: Project Management
+		Overcoming Overwhelm
+		Tech on the Go: Avoiding Over-Engineering
+		Windows 11 Quick Tips
+		Microsoft Project Quick Tips
+		Project 2021 and Project Online Desktop Essential Training
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Social Interactions for Multinational Teams
+		Multinational Communication in the Workplace
+		Developing Your Team Members
+		How to Communicate about Difficult Current Events with Your Team
+		Coaching New Hires
+		Rolling Out a Diversity and Inclusion Training Program in Your Company
+		Learning GDPR
+		Agile Development in the New World of Work
+		Creating a Great Place to Work for All
+		Reshuffle: A Special Series on the New World of Work
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Coaching New Hires
+		Reshuffle: A Special Series on the New World of Work
+		Managing OKRs with Microsoft Viva Goals
+		Performance Management: Improving Employee Performance
+		Communicating Change in an Enterprise-Wide Transformation
+		Leading Your Team Through Change
+		Managing Approvals in Microsoft Teams
+		Foundations of Performance Management
+		An HR Professional's Guide to Supporting a Hybrid Workforce
+		Tasks in Microsoft Teams: First Look
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Introducing AI to Your Organization
+		Fueling Your Company Culture
+		Complete Your First Project in SQL
+		Creating Your Sales Process
+		Introduction to Employee Relations
+		Change Leadership
+		Planning for Your Hybrid Organization
+		Components of Effective Learning
+		Picking the Right Metrics
+		Communicating with Executives
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		AI Trends
+		Digital Transformation Tips
+		Test Course for Dan Anders #2
+		Everybody's Introduction to Tableau
+		Azure AI Engineering: Fundamentals
+		Go Performance Optimization
+		Tech Trends
+		Sales Trends
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		Writing Case Studies
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Exploring AIOps
+		Tech on the Go: Owning Legacy Software
+		Complex Project Tips and Tricks
+		Video Post Production Weekly
+		Tech Trends
+		Complete Your First Project in SQL
+		Level Up: SQL
+		Onboarding in the Hybrid/Remote Workplace
+		Data Engineering with dbt
+		Deep Learning: Getting Started
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		new test project TL Sep 15...
+		Azure AI Engineering: Fundamentals
+		Carlos Alfaro_CosmoOnboarding
+		test for cosmo docs writing
+		Leadership and Teamwork (Beta)
+		Tech Trends
+		Learning Docker Compose
+		Test Course for Dan Anders #2
+		NAMER28 - Digital Marketing Trends
+		What's Next: Reinventing Work in the New Normal
+
+"What are the best practices for leading a remote team of customer service representatives?", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Leading at a Distance
+		Managing Skills for Remote Leaders
+		Level Up Your Remote Team Experience
+		How to Stand Out Remotely
+		Leading at a Distance (2019)
+		Communication within Teams
+		Customer Service Leadership
+		How to Be an Effective Remote Manager
+		Building Your Visibility Online as a Remote Leader
+		Agile Software Development: Remote Teams
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Level Up Your Remote Team Experience
+		Agile Software Development: Remote Teams
+		Planning for the Remote-First, Work-from-Anywhere Organization
+		Leading Remote Projects and Virtual Teams
+		Conducting Remote UX Research Interviews
+		Leading at a Distance
+		Building Your Visibility Online as a Remote Leader
+		Remote Brainstorming
+		Rocking Your Job as a Remote Product Manager
+		Motivate Remote Teams
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Managing Generation Z
+		Personal Productivity for Product Managers
+		Leading at a Distance
+		The Long-Distance Leader (getAbstract Summary)
+		Agile Software Development: Remote Teams
+		Leading at a Distance (2019)
+		Building Your Visibility Online as a Remote Leader
+		Finding a Remote Job
+		Leading Global Expansion
+		Delivering Employee Feedback
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Onboarding New Salespeople [Licensed]
+		Customer Service for Any Sector: Tips from a Hospitality Expert
+		Project Management: Energy and Water Projects
+		Cert Prep: Power Automate RPA Developer (PL-500)
+		Agile for Distributed Teams
+		The Manager's Guide to Career Conversations in the Age of AI
+		Managing Careers in the Age of Longevity: The Midlife Rethink
+		Managing and Administering Microsoft Teams by Microsoft Press
+		How to Build Gender Balanced Businesses and Teams
+		Leading and Managing Successful UX Teams
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		What Business Leaders Need to Know about Web3 (+ Metaverse)
+		Finding a Job at Companies That Embrace Diversity and Inclusion
+		The Future of Work and Cybersecurity on the Metaverse
+		HR Foundations: Core Human Resources
+		LinkedIn AI Academy AI-100: 1 Demystifying AI
+		How to Communicate about Difficult Current Events with Your Team
+		How to Be an Effective Remote Manager
+		Leading from Anywhere (Blinkist Summary)
+		AI Ethics: Disability-Centered Frameworks
+		Active Listening for Better Leadership Communication
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Generative AI vs. Traditional AI
+		Machine Learning Foundations: Calculus
+		ML.NET: Getting Started
+		Power BI: Working Together with ChatGPT
+		AI in Video Production and Post
+		Facilitate Employee Skill Development and Career Mobility as a Manager
+		Leadership Principles for Emerging Leaders with Bill George
+		Promoting Internal Mobility as a Manager
+		Power BI Weekly
+		An HR Professional's Guide to Supporting a Hybrid Workforce
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Menopause in the Workplace: A Guide to Supporting Your Colleagues
+		Nano Tips For Building a Career in Cybersecurity
+		Boost Your Career with an Experimental Mindset
+		Lean Foundations: 5S
+		BIM Manager: Building Envelope Design in Revit
+		What You Need to Know About Crafting a Stand-out Resume
+		Career Path Counselor: Making It in Media and Entertainment
+		Revit 2025: Essential Training for Architecture
+		Applied Concurrency in Go
+		Handling Outsourcing Issues
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Azure AI Engineering: Fundamentals
+		TEST_Updates
+		Carlos Alfaro_CosmoOnboarding
+		NAMER28 - Digital Marketing Trends
+		TEST_Facelifts
+		sub-project PTOC test
+		TEST_Serials_Take2
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		Producer October Training Session [Serial]
+		test for cosmo docs writing
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Agile Software Development: Remote Teams
+		Rocking Your Job as a Remote Product Manager
+		Level Up Your Remote Team Experience
+		Managing Skills for Remote Leaders
+		Managing Stress for Positive Change
+		Engagement Preparation Best Practices for Customer Success Management
+		How to Be an Effective Remote Manager
+		Overcome The Productivity Perception Gap as a Manager
+		Leadership and Teamwork (Beta)
+		Coaching New Hires
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Performance Management: Improving Employee Performance
+		Leading from the Middle
+		HR Foundations: Core Human Resources
+		Coaching and Developing Employees
+		Understanding Organizations and the Role of HR
+		Emerging Leader Foundations
+		How Leaders Generate Energy and Cultivate Commitment
+		Leading in Uncertain Times
+		Leadership Foundations
+		Customer Service: Working in a Customer Contact Center
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Leading Remote Projects and Virtual Teams
+		Leading a Customer Service Team
+		Level Up Your Remote Team Experience
+		Motivate Remote Teams
+		Managing Virtual Teams
+		Leading Virtually: Vulnerability and Presence when Working from Home
+		Leading at a Distance
+		How to Stand Out Remotely
+		Customer Service: Motivating Your Team
+		Strategies for Effective Leadership Teams
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Digital Transformation Tips
+		Delivering Bad News to a Customer
+		Contact Center Leadership
+		How to Motivate Your Sales Teams
+		Leading Remote Projects and Virtual Teams
+		Human Leadership
+		AI Trends
+		Planning for the Remote-First, Work-from-Anywhere Organization
+		Leading a Customer Service Team
+		Customer Service: Handling Abusive Customers
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Level Up Your Remote Team Experience
+		Leading Virtually: Vulnerability and Presence when Working from Home
+		Leading a Customer Service Team
+		Managing Skills for Remote Leaders
+		Agile for Distributed Teams
+		Customer Service: Motivating Your Team
+		Making Hybrid Teams Work
+		Onboarding in the Hybrid/Remote Workplace
+		Leading Remote Projects and Virtual Teams
+		Agile Software Development: Remote Teams
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Digital Transformation Tips
+		Planning for the Remote-First, Work-from-Anywhere Organization
+		Agile Software Development: Remote Teams
+		Making Hybrid Teams Work
+		Azure AI Engineering: Fundamentals
+		Troubleshooting Exchange Online
+		Learning Docker Compose
+		Leadership and Teamwork (Beta)
+		Tech Trends
+		Troubleshooting IT Remote Administration
+
+"I am responsible for facilitating the digital transformation initiative at a mid-sized enterprise.", 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Accelerating Digital Transformation as Offices Reopen
+		Digital Transformation
+		Effectively Leading Digital Transformation
+		Digital Transformation: A Toolkit for Non-Programmers
+		Digital Transformation Tips
+		HR and Digital Transformation
+		Communicating Change in an Enterprise-Wide Transformation
+		Fix This Next: Make the Vital Change That Will Level Up Your Business
+		SharePoint and Digital Transformation: Sites for Collaboration and Communication
+		Women Transforming Tech: Getting Strategic with Your Career
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Effectively Leading Digital Transformation
+		Digital Transformation
+		Digital Transformation Tips
+		Accelerating Digital Transformation as Offices Reopen
+		HR and Digital Transformation
+		Digital Transformation: A Toolkit for Non-Programmers
+		Assessing Digital Maturity
+		Digital Transformation Foundations
+		Autonomous Transformation: Create a More Human Future with AI
+		Cloud Computing: Business Requirements and Digital Transformation
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Learning Koa
+		Git for Teams
+		Learning Nuxt.js
+		Learning GitHub Actions
+		Git: Branches, Merges, and Remotes
+		Learning NgRx
+		Choose Your Go Framework: Chi Router, FastHTTP, Fiber, Echo, Gin Gonic, Go Kratos
+		GitHub Actions for CI/CD
+		Learning GitLab
+		Figma: Teams, Stakeholders, and Design Reviews
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		PTOC sub-project test Sep 18
+		Azure AI Engineering: Fundamentals
+		NAMER28 - Digital Marketing Trends
+		E2E - 4407397 - GitHub Codespaces for Students
+		Hands-On SAP Business Rule Framework (BRF+)
+		New MacBook Pro Resolution Test
+		test TL Jan12 24
+		Producer October Training Session [Facelifts]
+		DaVinci Resolve: Color Page
+		new test project TL Sep 15...
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		LinkedIn AI Academy AI-100: 1 Demystifying AI
+		What Business Leaders Need to Know about Web3 (+ Metaverse)
+		AI Ethics: Disability-Centered Frameworks
+		What Is Business Analysis?
+		HR Foundations: Core Human Resources
+		Business Analysis for Project Managers
+		Business Design: Turning Ideas Into Business
+		Consumer Behavior Trends: Meet the Postmodern Consumer
+		Implementing the Metaverse
+		Strategic Agility (Beta)
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Making User Experience Happen as a Team
+		Hands-On Introduction: React
+		Business Data: From Requirements to Insights
+		15 Questions to Ask before Hiring a Lawyer
+		Considering Transferable Skills in Talent Acquisition and Retention
+		Practice It: Go REST API Server
+		Managing Depression in the Workplace
+		Business Analysis for Project Managers
+		Level Up: CSS Layout
+		ChatGPT Tips for the Help Desk
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Agile Software Development: Transforming Your Organization
+		Five Biggest Mistakes of Cybersecurity Programs
+		Lean Technology Strategy: Running Agile at Scale
+		Pivoting Your Career to Project Management
+		Advance Your Cybersecurity Career
+		Mistakes to Avoid When Obtaining Your PMP Certification
+		DevOps Foundations: Accelerating Continuous Delivery in the Enterprise
+		Thriving as a Project Manager in the Age of AI
+		Transition Management for Agile Environments
+		Land Your First Cybersecurity Job
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Transitioning to a Career in Cybersecurity
+		Machine Learning Foundations: Prototyping on the Edge
+		Advance Your Cybersecurity Career
+		Introduction to Bluebeam Revu 20
+		Bluebeam Revu 21 Essential Training
+		Introduction to Alteryx
+		Tech on the Go: Avoiding Over-Engineering
+		Future-Proofing Your Career
+		LinkedIn Profiles for Technical Professionals
+		Introduction to Analytics Engineering
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		HR and Digital Transformation
+		Digital Transformation Tips
+		Effectively Leading Digital Transformation
+		Assessing Digital Maturity
+		Accelerating Digital Transformation as Offices Reopen
+		Digital Transformation
+		Google Cloud Digital Leader Cert Prep: 1 Digital Transformation with Google Cloud
+		Digital Transformation: A Toolkit for Non-Programmers
+		The Digital Transformation of Learning
+		Change Management: Roadmap to Execution
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Digital Transformation Tips
+		Assessing Digital Maturity
+		Effectively Leading Digital Transformation
+		Leading Your Team Through Change
+		HR and Digital Transformation
+		Digital Transformation
+		Accelerating Digital Transformation as Offices Reopen
+		Building Change Capability for Managers
+		Communicating Change in an Enterprise-Wide Transformation
+		Change Management: Roadmap to Execution
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Assessing Digital Maturity
+		Leading from the Middle
+		Digital Transformation
+		Autonomous Transformation: Create a More Human Future with AI
+		Digital Transformation Tips
+		Marketing on LinkedIn
+		Introducing AI to Your Organization
+		Planning for Your Hybrid Organization
+		Responsible AI to the Rescue
+		How to Stand Out Remotely
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Digital Transformation Tips
+		AI Trends
+		test TL Jan12 24
+		Azure AI Engineering: Fundamentals
+		Test Course for Dan Anders #2
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		Digital Transformation
+		Tech Trends
+		TEST_Updates
+		Everybody's Introduction to Tableau
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Effectively Leading Digital Transformation
+		Digital Transformation
+		Digital Transformation Tips
+		Women Transforming Tech: Building Your Brand
+		Skills and Competencies for Leading Today's DEI Workforce
+		Autonomous Transformation: Create a More Human Future with AI
+		Tech Trends
+		HR and Digital Transformation
+		Fix This Next: Make the Vital Change That Will Level Up Your Business
+		Skills That Set Data Scientists Apart
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Digital Transformation Tips
+		Azure AI Engineering: Fundamentals
+		new test project TL Sep 15...
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		The Digital Transformation of Learning
+		Digital Transformation
+		NAMER28 - Digital Marketing Trends
+		Effectively Leading Digital Transformation
+		Accelerating Digital Transformation as Offices Reopen
+		Carlos Alfaro_CosmoOnboarding
+
+"How can I improve the performance and management of my marketing team?"
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		How Managers Drive Extraordinary Team Performance
+		Foundations of Performance Management
+		Aligning Sales and Marketing
+		Building and Managing a High-Performing Sales Team
+		Be a Better Manager by Motivating Your Team
+		Developing Your Team Members
+		How to Motivate Your Sales Teams
+		Management Essentials
+		Becoming a Manager Your Team Loves
+		Leading Strategically
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Building and Managing a High-Performing Sales Team
+		Foundations of Performance Management
+		Account-Based Marketing Foundations
+		Retail Customer Service Management and Coaching
+		Aligning Sales and Marketing
+		Managing Teams
+		Overcome Managerial Bias in Performance Management
+		How to Motivate Your Sales Teams
+		How Managers Drive Extraordinary Team Performance
+		Human Resources: Building a Performance Management System
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Making More Impact as a Middle Manager
+		Redesigning the Manager Role for the Modern Workplace
+		A Strengths-Based Approach to Managing Your Team
+		Aligning Sales and Marketing
+		Communicate Your Team's Talent, Impact, and Value as a Leader
+		Be the Manager Who Fights for Their Team
+		Be a Better Manager by Motivating Your Team
+		Building Your Visibility Online as a Remote Leader
+		Integrating Performance Management into the Hiring Process
+		Communicating with Transparency
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		A Marketer's Guide to Cross-Departmental Collaboration
+		Delegating Tasks
+		Coaching New Hires
+		Ideation for Leaders
+		Overcome The Productivity Perception Gap as a Manager
+		Leading Yourself
+		Asking for Feedback as an Employee
+		Cultivating Mental Agility
+		Applied Curiosity
+		Leading a Customer-Centric Culture
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Managing Teams
+		Promoting Internal Mobility as a Manager
+		Performance Management: Employee Engagement
+		Hiring an Employee for Managers
+		Managing for Results
+		Be a Better Manager by Motivating Your Team
+		Performance Management: Setting Goals and Managing Performance
+		Project Leadership
+		Developing Your Team Members
+		Integrating Performance Management into the Hiring Process
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Developing Your Team Members
+		Delegating Tasks
+		Time Management Tips: Teamwork
+		Management Foundations
+		Overcome The Productivity Perception Gap as a Manager
+		Facilitation Skills for Managers and Leaders
+		Managing Introverts
+		Managing for Results
+		Leading Effectively
+		Improving the Value of Your Time
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Building Modern Projects with React
+		Holding Your Team Accountable
+		Top 10 Skills for NLP Specialists
+		SharePoint Framework for Developers: 4 Managing External Libraries
+		10 Mistakes Leaders Should Avoid
+		Building a Website with Laravel, React.js, and Inertia
+		Agile Software Development: Cloud Architecture
+		Microsoft Teams: Successful Meetings, Webinars and Events
+		Managing Multiple Generations
+		Leading with Emotional Intelligence
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Characteristics of a Great Scrum Master
+		Presenting as a Team
+		Git for Teams
+		Lean Technology Strategy: Building High-Performing Teams
+		Customer Service: Motivating Your Team
+		Hiring and Managing UX Professionals
+		Managing Teams
+		Microsoft Teams Essential Training
+		NAMER28 - 4363253 - Creating Diverse Slates and Retaining Diverse Talent
+		Six Skills to Develop Cultural Agility
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Managing for Results
+		Management Foundations
+		Facilitation Skills for Managers and Leaders
+		17 Questions to Help Improve Your Marketing
+		Becoming the Manager that Your Team Wants
+		B2B Marketing Foundations
+		Foundations of Performance Management
+		Marketing Foundations: The Marketing Funnel
+		Email Marketing: Strategy and Optimization
+		Marketing Strategy for Designers
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Foundations of Performance Management
+		How to Be an Effective Manager to Drive Impact
+		Management Foundations
+		Be a Better Manager by Motivating Your Team
+		Leading Your Team Through Change
+		Performance Management: Improving Employee Performance
+		Managing Employee Performance Problems
+		Human Resources: Building a Performance Management System
+		Building and Managing a High-Performing Sales Team
+		Lean Technology Strategy: Building High-Performing Teams
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Managing for Results
+		Become a Better Coach for Your Team
+		Developing Your Team Members
+		Strategies for Effective Leadership Teams
+		Product Management Tips
+		Presenting as a Team
+		Project Management Tips
+		Managing Your Energy
+		Measuring Business Performance
+		Onboarding New Salespeople [Licensed]
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		Cosmo Tips Weekly
+		test for cosmo docs writing
+		AI Trends
+		Go Performance Optimization
+		test TL Jan12 24
+		Digital Marketing Trends
+		Azure AI Engineering: Fundamentals
+		Marketing Tools: Digital Marketing Tools and Services
+		Marketing Tips
+		Leadership Effectiveness: Moving Beyond Traditional Success Metrics
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Managing for Results
+		17 Questions to Help Improve Your Marketing
+		Product Management Tips
+		Marketing Tips
+		Women Transforming Tech: Building Your Brand
+		Ideation for Marketers
+		Digital Marketing Trends
+		The Top 10 Project Management Mistakes—and How to Avoid Them
+		Complex Project Tips and Tricks
+		Sales Management. Simplified. (Blinkist Summary)
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Marketing Tips
+		NAMER28 - Digital Marketing Trends
+		Become a Marketing Entrepreneur
+		Nano Tips for Using Generative AI Tools for Better Marketing Outcomes with Joanna Yung
+		Digital Marketing Tools: Create a Marketing Campaign from Start to Finish
+		17 Questions to Help Improve Your Marketing
+		Marketing Tools: Automation
+		How to Write a Marketing Plan
+		Email Marketing: Strategy and Optimization
+		Advanced Google Ads
+
+Help me get started with infrastructure automation." 
+	Short_Descriptions_5_23_2024_all-minilm-latest
+		Learning Infrastructure for Developers
+		DevOps Foundations: Infrastructure as Code
+		Learning Puppet
+		AWS Infrastructure as Code for Software Developers
+		Oracle Cloud Infrastructure Operations Professional
+		Building Infrastructure as Code (IaC) with Azure Bicep: Part 1
+		How Infrastructure Works: The Systems Shaping Our World
+		ASP.NET: Working with an AWS S3 Bucket
+		Oracle Cloud Infrastructure Architect Associate
+		Oracle Autonomous Database Administration Workshop
+	Long_Descriptions_5_23_2024_all-minilm-latest
+		Introduction to IT Automation
+		Learning Infrastructure for Developers
+		DevOps Foundations: Infrastructure as Code
+		Azure Infrastructure as Code with GitHub
+		Cisco Certified DevNet Associate DEVASC 1.1 (200-901) Cert Prep
+		Building Infrastructure-as-Code (IaC) with Azure Bicep: Part 2
+		How Infrastructure Works: The Systems Shaping Our World
+		Building Infrastructure as Code (IaC) with Azure Bicep: Part 1
+		Google Cloud Infrastructure and App Modernization
+		Azure for DevOps: Application Infrastructure
+	Short_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Git for Teams
+		Learning GitHub Actions
+		Learning Ansible
+		Learning Vim
+		Git for System Administration
+		Network Automation Quick Start
+		Terraform: Managing Network Infrastructure
+		Learning Kubernetes
+		WordPress: Workflows
+		Kubernetes: Provisioning with Kubeadm
+	Long_Descriptions_5_23_2024_avr-sfr-embedding-mistral
+		Azure for DevOps: Application Infrastructure
+		Ubuntu Linux: Service Configuration
+		Coding Exercises: GitHub
+		Benefits of GitHub Community
+		Kubernetes: Microservices
+		Coding Exercises: Git
+		Spring: Spring Security
+		Learning Puppet
+		Learning Nagios
+		WordPress: Workflows
+	Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Learning Vagrant
+		Learning Puppet
+		Learning GitLab
+		Kubernetes: GitOps with ArgoCD
+		GitOps Foundations
+		Introduction to PostgreSQL
+		GitHub Copilot First Look
+		Git Essential Training
+		Git for Teams
+		Learning VPN
+	Long_Descriptions_5_23_2024_e5-mistral-7bn-instruct
+		Azure for DevOps: Application Infrastructure
+		Machine Learning Foundations: Calculus
+		Azure Event Hubs for Developers
+		RPA: Automation Anywhere
+		DevOps Tips
+		What is Copilot? Get Started with Microsoft's Everyday AI Companion
+		WordPress: WP-CLI
+		Azure Service Bus
+		Power BI: Working Together with ChatGPT
+		Power BI Weekly
+	Short_Descriptions_5_23_2024_mxbai-embed-large
+		Cisco DevNet Associate (200-901) Cert Prep 5: Infrastructure and Automation
+		DevOps Foundations: Infrastructure as Code
+		Kubernetes: Infrastructure as Code with Pulumi
+		Advanced Docker Automation with AWS CDK
+		Azure for DevOps: Application Infrastructure
+		InfraWorks 2020 Essential Training
+		AWS Infrastructure as Code for Software Developers
+		Google Cloud Digital Leader Cert Prep: Infrastructure and Application Modernization with Google Cloud
+		Microsoft Cybersecurity Architect (SC-100) Cert Prep: 3 Design Security for Infrastructure by Microsoft Press
+		Cisco CCNP ENARSI v1.1 (300-410) Cert Prep: 3 Infrastructure Security
+	Long_Descriptions_5_23_2024_mxbai-embed-large
+		Using Python for Automation
+		Introducing Blue Prism
+		UiPath: Robotic Process Automation (RPA)
+		Introduction to Bluebeam Revu 20
+		Managing Jira Projects: 3 Helpful Concepts and Features
+		Introduction to Alteryx
+		RPA: Automation Anywhere
+		Intelligent Automation for Project Managers
+		Introduction to PLC and Industrial Automation
+		RPA: Automation Anywhere IQ Bot
+	Short_Descriptions_5_23_2024_nomic-embed-text
+		Learning Infrastructure for Developers
+		DevOps Foundations: Infrastructure as Code
+		AWS Infrastructure as Code for Software Developers
+		Terraform: Managing Network Infrastructure
+		Kubernetes: Provisioning for Infrastructure as Code
+		InfraWorks 2021: Animating Infrastructure Designs
+		Kubernetes: Infrastructure as Code with Pulumi
+		Learning Terraform
+		AWS CloudFormation for Beginners
+		Ansible Essential Training
+	Long_Descriptions_5_23_2024_nomic-embed-text
+		Learning Infrastructure for Developers
+		DevOps Foundations: Infrastructure as Code
+		Azure Infrastructure as Code with GitHub
+		Learning Terraform
+		Cisco DevNet Associate (200-901) Cert Prep 5: Infrastructure and Automation
+		Azure for DevOps: Application Infrastructure
+		Oracle Cloud Infrastructure Architect Professional
+		AWS Infrastructure as Code for Software Developers
+		Terraform: Managing Network Infrastructure
+		Kubernetes: Infrastructure as Code with Pulumi
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed
+		Kubernetes: Cloud Native Ecosystem
+		Creating Success from Failures
+		Test Course for Dan Anders #2
+		Learning HubSpot
+		OpenAI API: Vision
+		Postman Essential Training
+		Power Automate Quick Tips
+		RPA in Action: Use Cases to Inspire
+		test for cosmo docs writing
+		Access Quick Tips
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed
+		test for cosmo docs writing
+		Producer October Training Session [Serial]
+		Producer October Training Session [Facelifts]
+		Carlos Alfaro_CosmoOnboarding
+		test TL Jan12 24
+		Cosmo Tips Weekly
+		Azure AI Engineering: Fundamentals
+		Help Yourself: Tech Tips Weekly
+		E2E - 4407397 - GitHub Codespaces for Students
+		PTOC sub-project test Sep 18
+	Short_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		DevOps Foundations: Infrastructure as Code
+		Learning Infrastructure for Developers
+		Learning Puppet
+		Configuration Manager: Configure and Maintain a Management Infrastructure
+		AWS Infrastructure as Code for Software Developers
+		Introduction to IT Automation
+		Azure Infrastructure as Code with GitHub
+		Learning Nagios
+		InfraWorks 2020 Essential Training
+		Kubernetes: Provisioning for Infrastructure as Code
+	Long_Descriptions_5_23_2024_snowflake-arctic-embed-22m
+		Azure AI Engineering: Fundamentals
+		new test project TL Sep 15...
+		E2E - 4407397 - GitHub Codespaces for Students
+		test for cosmo docs writing
+		Tech on the Go: REST
+		Tech Trends
+		Blazor: Getting Started
+		Troubleshooting Exchange Online
+		NAMER28 - Java Code Challenges: Collections [Coderpad]
+		Visual Studio Step-by-Step

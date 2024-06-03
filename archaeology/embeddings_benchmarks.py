@@ -18,6 +18,7 @@ How I'll build this:
 
 from time import time
 import ollama
+import re
 import chromadb
 import json         # for pretty printing dicts
 import pandas as pd
@@ -157,33 +158,33 @@ def query_descriptions(query, n_results=10, collection = "", model = ""):
 # r6 = query_descriptions('I want to learn python.', n_results=10, collection = 'Short_Descriptions_5_23_2024_all-minilm-latest', model='all-minilm:latest')
 # r7 = query_descriptions('I want to learn python.', n_results=10, collection = 'Short_Descriptions_5_23_2024_e5-mistral-7bn-instruct', model='hellord/e5-mistral-7b-instruct:Q4_0')
 
-if __name__ == "__main__":
-    results = {}
-    for model in ollama_models:
-        try:
-            collection = create_long_descriptions_collection_for_model(long_descriptions, model)  # It'll throw an error if collection already exists.
-            print(f"Model: {model} took {collection[1]} seconds to load the long descriptions.")
-            model_results = {}
-            model_results['collection'] = collection[0]
-            model_results['duration'] = collection[1]
-            results[model] = model_results
-        except:
-            print(f"Collection already exists for model {model}.")
+# if __name__ == "__main__":
+#     results = {}
+#     for model in ollama_models:
+#         try:
+#             collection = create_long_descriptions_collection_for_model(long_descriptions, model)  # It'll throw an error if collection already exists.
+#             print(f"Model: {model} took {collection[1]} seconds to load the long descriptions.")
+#             model_results = {}
+#             model_results['collection'] = collection[0]
+#             model_results['duration'] = collection[1]
+#             results[model] = model_results
+#         except:
+#             print(f"Collection already exists for model {model}.")
 
-# queries = """"I want to learn Python programming."
-# "I want to start a career in Sales."
-# "I'm creating a startup and need to learn basic digital marketing techniquesl."
-# "I have been hired to manage a large company's change management initiative.", 
-# "I am worried about the performance of my SQL database.", 
-# "I am a Java developer who wants to pivot to Python development.", 
-# "How do I manage a team of salespeople?", 
-# "I need to be a better negotiator with strategic partnerships", 
-# "How do I market my products on Facebook and Instagram?", 
-# "I have been tasked with overseeing the implementation of a new ERP system for a multinational corporation.", 
-# "What are the best practices for leading a remote team of customer service representatives?", 
-# "I am responsible for facilitating the digital transformation initiative at a mid-sized enterprise.", 
-# "How can I improve the performance and management of my marketing team?"
-# Help me get started with infrastructure automation." """.split('\n')
+queries = """"I want to learn Python programming."
+"I want to start a career in Sales."
+"I'm creating a startup and need to learn basic digital marketing techniquesl."
+"I have been hired to manage a large company's change management initiative.", 
+"I am worried about the performance of my SQL database.", 
+"I am a Java developer who wants to pivot to Python development.", 
+"How do I manage a team of salespeople?", 
+"I need to be a better negotiator with strategic partnerships", 
+"How do I market my products on Facebook and Instagram?", 
+"I have been tasked with overseeing the implementation of a new ERP system for a multinational corporation.", 
+"What are the best practices for leading a remote team of customer service representatives?", 
+"I am responsible for facilitating the digital transformation initiative at a mid-sized enterprise.", 
+"How can I improve the performance and management of my marketing team?"
+Help me get started with infrastructure automation." """.split('\n')
 
 #==============================================================================
 """
@@ -192,41 +193,51 @@ We will want the following:
 dict of model and the corresponding collection names (short desc, long desc)
 """
 
-# collection_names = [c.name for c in embeddings_test_client.list_collections()]
-# # alphabetize collection_names
-# collection_names.sort()
-# ollama_models.sort()
-# # zip collection names and ollama models together
-# our_map = list(zip(collection_names, ollama_models))
+collection_names = [c.name for c in embeddings_test_client.list_collections()]
+collection_names.sort()
 
-"""
+# split collection names into two lists, one that starts with Short_Descriptions and one that starts with Long_Descriptions
+short_descriptions_collections = [c for c in collection_names if c.startswith('Short_Descriptions')]
+long_descriptions_collections = [c for c in collection_names if c.startswith('Long_Descriptions')]
+# alphabetize the collections
+short_descriptions_collections.sort()
+long_descriptions_collections.sort()
+collections = list(zip(short_descriptions_collections, long_descriptions_collections))
+ollama_models.sort()
 
-for each query
-    for each collection
-        get the query results
-        store the results in a dict
-
-"""
+models_iterator = list(zip(ollama_models, collections))
 
 # results = {}
-# for query in queries:
-#     for map in our_map:
-#         response = query_descriptions(query, n_results=10, collection=our_map[0], model=our_map[1])
-#         results[query]
+# for i, query in enumerate(queries):
+#     print(f"Running query {i + 1} of {len(queries)}")
+#     query_results = {}
+#     for index, m in enumerate(models_iterator):
+#         print(f"\tRunning model {index + 1} of {len(models_iterator)}: {m[0]}.")
+#         for collection in m[1]:
+#             try:
+#                 result = query_descriptions(query, n_results=10, collection=collection, model=m[0])
+#                 print(f"\t\tModel {m[0]} and collection {collection} returned {result}")
+#                 query_results[collection] = result
+#             except:
+#                 print(f"Error for model {m[0]} and collection {collection}.")
+#     results[query] = query_results
 
+"""
+query
+    model
+        collection
+
+"""
 """
 results schema:
 
 {
 "I want to start a career in Sales." : {
-    "short_descriptions" : {
         "Short_Descriptions_5_23_2024_mxbai-embed-large" : [course1, course2, course3, course4, course5, course6, course7, course8, course9, course10],
         "Short_Descriptions_5_23_2024_nomic-embed-text" : [course1, course2, course3, course4, course5, course6, course7, course8, course9, course10],
-        }.
-    "long_descriptions" : {
         "Long_Descriptions_5_23_2024_mxbai-embed-large" : [course1, course2, course3, course4, course5, course6, course7, course8, course9, course10],
         "Long_Descriptions_5_23_2024_nomic-embed-text" : [course1, course2, course3, course4, course5, course6, course7, course8, course9, course10],
-        }.
+        },
 "I want to learn Python programming." : {
     "short_descriptions" : {
         "Short_Descriptions_5_23_2024_mxbai-embed-large" : [course1, course2, course3, course4, course5, course6, course7, course8, course9, course10],
@@ -240,7 +251,36 @@ results schema:
 
 """
 
+# save results as a json file to root directory
+# with open('results.json', 'w') as f:
+#     json.dump(results, f, indent=4)
 
+# r = list(results.keys())
+# cc = list(results[r[0]].keys())
 
+# big_txt_file = ""
+# for rr in r:
+#     big_txt_file += f"\n{rr}\n"
+#     for c in cc:
+#         big_txt_file += f"\t{c}\n"
+#         for i, course in enumerate(results[rr][c]):
+#             big_txt_file += f"\t\t{re.findall('^(.+)::', course)[0]}\n"
 
+OG_vdb = chromadb.PersistentClient(path='/home/bianders/Brian_Code/Chain_Framework/data/vectordbs/Library_RAG_Chain')
+OG_vdb_collection = 'Short_Descriptions_5_23_2024'
+OG_vdb_collection = OG_vdb.get_collection(name=OG_vdb_collection)
+
+OG_results = {}
+for query in queries:
+    q = OG_vdb_collection.query(
+        query_texts = [query],
+        n_results=10,
+    )
+    OG_results[query] = q['ids']
+
+OG_txt = ""
+for q in queries:
+    OG_txt += f"\n{q}\n"
+    for course in OG_results[q]:
+        OG_txt += f"\t{course}\n"
 
