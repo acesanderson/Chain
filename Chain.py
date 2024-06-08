@@ -61,7 +61,7 @@ class Chain():
     """
     # Canonical source of models; update that if installing more ollama models, or if there are new cloud models (fex. Gemini)
     models = {
-        "ollama": ["llama3","phi3:medium","mixtral","dolphin-mixtral","mixtral:8x22b","all-minilm","nomic-embed-text","mxbai-embed-large","solar","gemma:7b","gemma:2b","llava","llama2-uncensored","codellama","starling-lm","neural-chat","phi","mistral","phi3","llama3:70b","llama3","zephyr"],
+        "ollama": ['qwen:32b', 'qwen:7b', 'zephyr:latest', 'command-r-plus:latest', 'command-r:latest', 'nous-hermes2:latest', 'mixtral:latest', 'llava:latest', 'gemma:7b', 'gemma:2b', 'solar:latest', 'starling-lm:latest', 'neural-chat:latest', 'mistral:latest', 'phi3:latest', 'phi:latest', 'llama3:70b', 'llama3:latest'],
         "openai": ["gpt-4o","gpt-4-turbo","gpt-3.5-turbo-0125"],
         "anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
         "google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro"],
@@ -75,6 +75,13 @@ class Chain():
         'parser_example': lambda x: x,
         'prompt_example': 'sing a song about {{input}}. Keep it under 200 characters.'
     }
+    
+    def update_models():
+        """
+        If you need to update the ollama model list on the fly, use this function.
+        """
+        models = [m['name'] for m in ollama.list()['models']]
+        Chain.models['ollama'] = models
     
     def find_variables(self, template):    
         """
