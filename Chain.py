@@ -61,7 +61,7 @@ class Chain():
     """
     # Canonical source of models; update that if installing more ollama models, or if there are new cloud models (fex. Gemini)
     models = {
-        "ollama": ['qwen:32b', 'qwen:7b', 'zephyr:latest', 'command-r-plus:latest', 'command-r:latest', 'nous-hermes2:latest', 'mixtral:latest', 'llava:latest', 'gemma:7b', 'gemma:2b', 'solar:latest', 'starling-lm:latest', 'neural-chat:latest', 'mistral:latest', 'phi3:latest', 'phi:latest', 'llama3:70b', 'llama3:latest'],
+        "ollama": [m['name'] for m in ollama.list()['models']],
         "openai": ["gpt-4o","gpt-4-turbo","gpt-3.5-turbo-0125"],
         "anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
         "google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro"],
