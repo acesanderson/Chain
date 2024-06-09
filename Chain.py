@@ -42,6 +42,7 @@ import itertools                                        # for flattening list of
 import json                                             # for our jsonparser
 import ast                                              # for our list parser ("eval" is too dangerous)
 import time                                             # for timing our query calls (saved in Response object)
+import textwrap                                         # to allow for indenting of multiline strings for code readability
 # set up our environment
 dotenv.load_dotenv()
 client_openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
@@ -310,7 +311,16 @@ class Model():
         Fake model for testing purposes.
         """
         _ = user_input
-        response = """My liege, and madam, to expostulate / What majesty should be, what duty is, / Why day is day, night night, and time is time, / Were nothing but to waste night, day and time. / Therefore, since brevity is the soul of wit, / And tediousness the limbs and outward flourishes, / I will be brief: your noble son is mad: / Mad call I it; for, to define true madness, / What is't but to be nothing else but mad? / But let that go."""
+        response = textwrap.dedent("""\
+            My liege, and madam, to expostulate /
+            What majesty should be, what duty is, / 
+            Why day is day, night night, and time is time, / 
+            Were nothing but to waste night, day and time. / 
+            herefore, since brevity is the soul of wit, / And tediousness the limbs and outward flourishes, /
+            I will be brief: your noble son is mad: /
+            Mad call I it; for, to define true madness, /
+            What is't but to be nothing else but mad? / But let that go.
+            """).strip()
         return response
     
     def chat(self, messages):
@@ -424,20 +434,20 @@ class Parser():
         },
         "json": {
             "function": json_parser,
-            "format_instructions": """
+            "format_instructions": textwrap.dedent("""
                 Return your answer as a well-formed json object. Only return the json object; nothing else.
                 Do not include any formatting like "```json" or "```" around your answer. I will be parsing this with json.loads().
-                """},
+                """).strip()},
         "list": {
             "function": list_parser,
-            "format_instructions": """
+            "format_instructions": textwrap.dedent("""
                 Return your answer as a sort of Python list, though with a back slash and a double quote (\") around each item,
                 like this: [\"item1\", \"item2\", \"item3\"]. It is important to escape the double quotes so that we can parse it properly.
                 Only return the list; nothing else. I will be using python ast.literal_eval() to parse this.
-                """},
+                """).strip()},
         "curriculum_parser": {
             "function": json_parser,
-            "format_instructions": """
+            "format_instructions": textwrap.dedent("""
                 Return your answer as a json object with this structure (this is just an example):
                 {
                     "topic": "ux design",
@@ -465,7 +475,7 @@ class Parser():
 
                 Return your answer as a well-formed json object. Only return the json object; nothing else.
                 Do not include any formatting like "```json" or "```" around your answer. I will be parsing this with json.loads().
-                """}
+                """).strip()}
         }
     
     def __init__(self, parser = "str", format_instructions = ""):
@@ -566,9 +576,13 @@ class Chat():
         print("Let's chat! Type '/exit' to leave.")
         while True:
             user_input = input("You: ")
-            if user_input[:12] == "/set system ":   # because match/case doesn't do wildcards or regex.
+            new_system_prompt, new_model = "", ""       # reset these each time
+            if user_input[:12] == "/set system ":       # because match/case doesn't do wildcards or regex.
                 new_system_prompt = user_input[12:]
                 user_input = "/set system"
+            if user_input[:11] == "/set model ":        # because match/case doesn't do wildcards or regex.
+                new_model = user_input[11:]
+                user_input = "/set model"
             match user_input:
                 case "/exit":
                     break
@@ -583,6 +597,9 @@ class Chat():
                 case "/show model":
                     print(self.model.model)
                     continue
+                case "/show models":
+                    print(Chain.models)
+                    continue
                 case "/show messages":
                     print('============================\n' + 
                         '\n\n'.join([str(m) for m in messages]) +
@@ -596,20 +613,28 @@ class Chat():
                         messages = [{'role': 'system', 'content': self.system_prompt}]
                     continue
                 case "/set model":
-                    try:
-                        requested_model = Model(user_input[11:])
-                        self.model = requested_model
-                        print("Model set to: " + requested_model.model)
-                    except: 
-                        print("Model not found.")
+                    if not new_model:
+                        print("You need to enter a model.")
+                    elif new_model not in list(itertools.chain.from_iterable(Chain.models.values())):
+                        print(f"Model not found: {new_model}")
+                    else:
+                        self.model = Model(new_model)
+                        print(f"Model set to {new_model}. It may take a while to load after your next message.")
                     continue
                 case "/help":
-                    print("""
-                        Type '/exit' to leave the chat.
-                        Type '/show system' to see the system prompt.
-                        Type '/show model' to see the model.
-                        Type '/show messages' to see the conversation.
-                        """)
+                    print(textwrap.dedent("""\
+                        ============================
+                        Commands:
+                            /exit: leave the chat
+                            /clear: clear the chat history
+                            /show system: show the system prompt
+                            /show model: show the current model
+                            /show models: show all available models
+                            /show messages: show the chat history
+                            /set system: set the system prompt
+                            /set model: set the model
+                        ============================
+                    """).strip())
                     continue
                 case _:
                     pass
