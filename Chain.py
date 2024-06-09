@@ -184,7 +184,7 @@ class Model():
     """
     Our basic model class.
     Instantiate with a model name; you can find full list at Model.models.
-    This routes to either OpenAI or Ollama models, in future will have Claude, Gemini.
+    This routes to either OpenAI, Anthropic, Google, or Ollama models, in future will have groq.
     There's also an async method which we haven't connected yet (see gpt_async below).
     """
     
@@ -364,6 +364,8 @@ class Model():
     def chat_claude(self, messages):
         """
         Queries anthropic models.
+        Claude doesn't accept system messages within a messages object, sadly, so we switch to 'user'.
+        We then add a message where the model ackwnoledges the system prompt.
         """
         response = client_anthropic.messages.create(
             max_tokens=1024,
@@ -575,6 +577,12 @@ class Chat():
         messages = [{'role': 'system', 'content': self.system_prompt}]
         print("Let's chat! Type '/exit' to leave.")
         while True:
+            # handle annoying Claude exception (they don't accept system prompts)
+            if self.model.model in Chain.models['anthropic']:
+                if messages[0]['role'] == 'system':
+                    messages[0]['role'] = 'user'
+                    messages.append({'role': 'assistant', 'content': 'OK, I will follow that as my system message for this conversation.'})
+            # grab user input
             user_input = input("You: ")
             new_system_prompt, new_model = "", ""       # reset these each time
             if user_input[:12] == "/set system ":       # because match/case doesn't do wildcards or regex.
@@ -615,11 +623,12 @@ class Chat():
                 case "/set model":
                     if not new_model:
                         print("You need to enter a model.")
-                    elif new_model not in list(itertools.chain.from_iterable(Chain.models.values())):
-                        print(f"Model not found: {new_model}")
                     else:
-                        self.model = Model(new_model)
-                        print(f"Model set to {new_model}. It may take a while to load after your next message.")
+                        try:
+                            self.model = Model(new_model)
+                            print(f"Model set to {new_model}. It may take a while to load after your next message.")
+                        except ValueError:
+                            print(f"Model not found: {new_model}")
                     continue
                 case "/help":
                     print(textwrap.dedent("""\
