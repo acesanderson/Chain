@@ -18,6 +18,7 @@ x - eidt link.__init__ so that you can just enter a string to initialize as well
     this would enable fast iteration
 x - add default parsers to Parser class
 x - add gemini models
+x - add groq
 x - handle messages
 - add regex parser (takes a pattern)
 - allow temperature setting for Model
@@ -34,6 +35,7 @@ from openai import OpenAI                               # GPT
 import google.generativeai as client_gemini             # Google's models
 from openai import AsyncOpenAI                          # for async; not implemented yet
 from anthropic import Anthropic                         # claude
+from groq import Groq                                   # groq
 import ollama                                           # local llms
 import re                                               # for regex
 import os                                               # for environment variables
@@ -48,6 +50,7 @@ dotenv.load_dotenv()
 client_openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client_anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 client_openai_async = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
 client_gemini.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 env = Environment(undefined=StrictUndefined)            # # set jinja2 to throw errors if a variable is undefined
 
@@ -66,6 +69,7 @@ class Chain():
         "openai": ["gpt-4o","gpt-4-turbo","gpt-3.5-turbo-0125"],
         "anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
         "google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro"],
+        "groq": ["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma-7b-it"],
         "testing": ["polonius"]
     }
     # Silly examples for testing; if you declare a Chain() without inputs, these are the defaults.
@@ -208,6 +212,8 @@ class Model():
             self.model = 'gpt-4o'                                                   # defaulting to the cheap strong model they just announced
         elif model == 'gemini':
             self.model = 'gemini-pro'                                               # defaulting to the pro (1.0 )model
+        elif model == 'groq':
+            self.model = 'mixtral-8x7b-32768'                                       # defaulting to the mixtral model
         elif model in list(itertools.chain.from_iterable(Chain.models.values())):   # any other model we support (flattened the list)
             self.model = model
         else:
@@ -234,6 +240,8 @@ class Model():
             return self.query_ollama(user_input)
         elif self.model in Chain.models['google']:
             return self.query_gemini(user_input)
+        elif self.model in Chain.models['groq']:
+            return self.query_groq(user_input)
         elif self.model == 'polonius':
             return self.query_polonius(user_input)
         else:
@@ -306,6 +314,18 @@ class Model():
         print(f"{self.model}: {self.pretty(user_input)}")
         return response.candidates[0].content.parts[0].text
     
+    def query_groq(self, user_input):
+        chat_completion = client_groq.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": user_input,
+                }
+            ],
+            model = self.model,
+            )
+        return chat_completion.choices[0].message.content
+    
     def query_polonius(self, user_input):
         """
         Fake model for testing purposes.
@@ -336,6 +356,8 @@ class Model():
             return self.chat_ollama(messages)
         elif self.model in Chain.models['google']:
             return self.chat_gemini(messages)
+        elif self.model in Chain.models['groq']:
+            return self.chat_groq(messages)
         elif self.model == 'polonius':
             return self.query_polonius(messages)
         else:
@@ -389,6 +411,13 @@ class Model():
         gemini_model = client_gemini.GenerativeModel(self.model)
         response = gemini_model.generate_content(messages)
         return response.candidates[0].content.parts[0].text
+    
+    def chat_groq(self, messages):
+        chat_completion = client_groq.chat.completions.create(
+            messages=messages,
+            model = self.model,
+            )
+        return chat_completion.choices[0].message.content
 
 class Parser():
     """
