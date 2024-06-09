@@ -71,9 +71,10 @@ class Chain():
     examples = {
         'batch_example': [{'input': 'John Henry'}, {'input': 'Paul Bunyan'}, {'input': 'Babe the Blue Ox'}, {'input': 'Brer Rabbit'}],
         'run_example': {'input': 'John Henry'},
-        'model_example': 'mistral',
+        'model_example': 'mistral:latest',
         'parser_example': lambda x: x,
-        'prompt_example': 'sing a song about {{input}}. Keep it under 200 characters.'
+        'prompt_example': 'sing a song about {{input}}. Keep it under 200 characters.',
+        'system_prompt_example': "You're a helpful assistant.",
     }
     
     def update_models():
@@ -546,8 +547,9 @@ class Chat():
     """
     My first implementation of a chatbot.
     """
-    def __init__(self, model='mistral'):
+    def __init__(self, model=Chain.examples['model_example'], system_prompt=Chain.examples["system_prompt_example"]):
         self.model = Model(model)
+        self.system_prompt = system_prompt
     
     def __repr__(self):
         """
@@ -560,17 +562,22 @@ class Chat():
         """
         Chat with the model.
         """
-        system_prompt = "You're a helpful assistant."
-        messages = [{'role': 'system', 'content': system_prompt}]
-        print("Let's chat! Type 'exit' to leave.")
+        messages = [{'role': 'system', 'content': self.system_prompt}]
+        print("Let's chat! Type '/exit' to leave.")
         while True:
             user_input = input("You: ")
+            if user_input[:12] == "/set system ":   # because match/case doesn't do wildcards or regex.
+                new_system_prompt = user_input[12:]
+                user_input = "/set system"
             match user_input:
-                case "exit":
+                case "/exit":
                     break
+                case "/clear":
+                    messages = [{'role': 'system', 'content': self.system_prompt}]
+                    continue
                 case "/show system":
                     print('============================\n' + 
-                        system_prompt +
+                        self.system_prompt +
                         '\n============================\n')
                     continue
                 case "/show model":
@@ -581,9 +588,24 @@ class Chat():
                         '\n\n'.join([str(m) for m in messages]) +
                         '\n============================\n')
                     continue
+                case "/set system":
+                    if not new_system_prompt:
+                        print("You need to enter a system prompt.")
+                    else:
+                        self.system_prompt = new_system_prompt
+                        messages = [{'role': 'system', 'content': self.system_prompt}]
+                    continue
+                case "/set model":
+                    try:
+                        requested_model = Model(user_input[11:])
+                        self.model = requested_model
+                        print("Model set to: " + requested_model.model)
+                    except: 
+                        print("Model not found.")
+                    continue
                 case "/help":
                     print("""
-                        Type 'exit' to leave the chat.
+                        Type '/exit' to leave the chat.
                         Type '/show system' to see the system prompt.
                         Type '/show model' to see the model.
                         Type '/show messages' to see the conversation.
