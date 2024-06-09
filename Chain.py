@@ -63,7 +63,7 @@ class Chain():
     - a parser (a function that takes a string and returns a string)
     Defaults to mistral for model, and empty parser.
     """
-    # Canonical source of models; update that if installing more ollama models, or if there are new cloud models (fex. Gemini)
+    # Canonical source of models; or if there are new cloud models (fex. Gemini)
     models = {
         "ollama": [m['name'] for m in ollama.list()['models']],
         "openai": ["gpt-4o","gpt-4-turbo","gpt-3.5-turbo-0125"],
