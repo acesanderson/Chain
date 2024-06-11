@@ -46,6 +46,32 @@ Example response
 
 """
 
+headlines = """
+Chatbots aren't becoming sentient
+Mirages: On Anthropomorphism in Dialogue Systems
+Searching for Sentience
+Human Cognitive Biases in Generative AI
+ELIZA Effect
+In Search of Dark Patterns in Chatbots
+Impact of Voice Fidelitry on Decision Making
+Dark Patterns of Cuteness: Popular Learning App Design
+Tesla Faked Self Driving Demo
+Google's best Gemini demo was faked
+Google's AI Search Errors cause a Furor Online
+Amazon Fresh kills "Just Walk Out"
+"AI Washing"
+Rabbit R1 is just an android app
+OpenAI has a toxic culture of lying
+""".strip().split("\n")
+
+d = {}
+for headline in headlines:
+    print("Searching for:", headline)
+    r = Search(headline)
+    link=r[0]['link']
+    d[headline] = link
+
+
 if __name__ == "__main__":
     search_term = "What is the capital of France?"
     if len(sys.argv) > 1:
@@ -53,3 +79,4 @@ if __name__ == "__main__":
     results = Search(search_term)
     print(json.dumps(results, indent=4))
 
+"""

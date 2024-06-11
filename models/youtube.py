@@ -10,10 +10,24 @@ From module creator:
 
 from youtube_transcript_api import YouTubeTranscriptApi
 import sys
+import re
 
 video_id = '5xb6uWLtCsI'
+example = "https://www.youtube.com/watch?v=VctsqOo8wsc&t=628s"
+
+def Validate_Video_ID(input):
+    """
+    Validates that user has entered a valid YouTube Video ID, or a valid YouTube URL.
+    """
+    if re.match(r'^[a-zA-Z0-9_-]{11}$', input):
+        return input
+    elif re.match(r'^https?:\/\/(www\.)?youtube\.com\/.*[?&]v=([a-zA-Z0-9_-]{11})', input):
+        return re.match(r'^https?:\/\/(www\.)?youtube\.com\/.*[?&]v=([a-zA-Z0-9_-]{11})', input).group(2)
+    else:
+        return ValueError("Invalid YouTube URL or Video ID")
 
 def transcript(video_id):
+    video_id = Validate_Video_ID(video_id)
     t = YouTubeTranscriptApi.get_transcript(video_id)
     script = " ".join([line['text'] for line in t])
     return script
