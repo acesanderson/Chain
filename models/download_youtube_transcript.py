@@ -26,7 +26,10 @@ def Validate_Video_ID(input):
     else:
         return ValueError("Invalid YouTube URL or Video ID")
 
-def transcript(video_id):
+def download_transcript(video_id):
+    """
+    Feed this either a youtube link or a youtube video id, and it will return the transcript of the video.
+    """
     video_id = Validate_Video_ID(video_id)
     t = YouTubeTranscriptApi.get_transcript(video_id)
     script = " ".join([line['text'] for line in t])
@@ -36,5 +39,5 @@ if __name__ == "__main__":
     video_id = '5xb6uWLtCsI'
     if len(sys.argv) > 1:
         video_id = sys.argv[1]
-    print(transcript(video_id))
+    print(download_transcript(video_id))
 
