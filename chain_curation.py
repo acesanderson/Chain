@@ -2,6 +2,7 @@
 """
 from Chain import Chain, Model, Parser, Prompt
 import random # to pick a random skill for demonstration purposes
+import sys
 
 topic_prompt = """
     Come up with a 5-10 module curriculum on the topic of {{topic}}.
@@ -101,5 +102,8 @@ if __name__ == '__main__':
         "Environmental Management",
         "Biotechnology"
     ])
+    if len(sys.argv) > 1:
+        topic = sys.argv[1]
     result = chain_curation(topic,critics=2)    # Run the chain; just two critics because this is a demo.
     print(result)
+
