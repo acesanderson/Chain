@@ -46,7 +46,8 @@ import ast                                              # for our list parser ("
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
 # set up our environment
-dotenv.load_dotenv()
+dotenv.load_dotenv(dotenv_path='/Users/bianders/Brian_Code/Chain-Framework/.env')
+# dotenv.load_dotenv()
 client_openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client_anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 client_openai_async = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))

@@ -40,9 +40,9 @@ TRANSCRIPT
 """)
 
 if __name__ == '__main__':
-	topic = "Python for Machine Learning"
+	topic = "Digital Marketing"
 	parser = Parser(parser='curriculum_parser')
-	model = Model('mistral')
+	model = Model('claude')
 	
 	curation_publisher_chain = Chain(curation_prompt_publisher, model, parser)
 	curation_bootcamp_chain = Chain(curation_prompt_bootcamp, model, parser)

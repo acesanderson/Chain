@@ -56,7 +56,7 @@ make_edits_prompt = """
 # model = 'gpt-3.5-turbo-0125'
 # parser = 'curriculum_parser'
 
-def chain_curation(topic, critics = 2, model = 'gpt-3.5-turbo-0125'):
+def chain_curation(topic, critics = 2, model = 'gpt'):
     """
     Takes a topic and returns a curated curriculum.
     Curriculum goes through a chain of critics, then is reconsolidated based on their feedback.
@@ -104,6 +104,6 @@ if __name__ == '__main__':
     ])
     if len(sys.argv) > 1:
         topic = sys.argv[1]
-    result = chain_curation(topic,critics=2)    # Run the chain; just two critics because this is a demo.
+    result = chain_curation(topic,critics=6)    # Run the chain; just two critics because this is a demo.
     print(result)
 
