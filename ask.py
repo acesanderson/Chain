@@ -10,6 +10,9 @@ import subprocess
 import os
 import textwrap
 
+preferred_model = "gpt-3.5-turbo-0125" # cheaper
+# preferred_model = "gpt" # more expensive
+
 system_instructions = """
 You are a helpful IT admin who is patiently trying to assist a new coder.
 They use Python and Linux. They are experienced with Python programming but don't know much about how to do the following:
@@ -91,7 +94,7 @@ def query(prompt, system_info):
     """
     Very simply query function.
     """
-    model = Model('gpt')
+    model = Model(preferred_model)
     full_prompt = f"{system_instructions}\n============================\n{system_info}\n============================\n\nUser Query: {prompt}"
     prompt = Prompt(full_prompt)
     chain = Chain(prompt, model)
