@@ -126,7 +126,7 @@ class Chain():
         return f"{self.__class__.__name__}({attributes})"
         # Example output: Chain(prompt=Prompt(string='tell me about {{topic}}', format_in, model=Model(model='mistral'), parser=Parser(parser=<function Chain.<lambda> at 0x7f7c5a
     
-    def run(self, input=None, parsed = True):
+    def run(self, input=None, parsed=True, verbose=True):
         """
         Input should be a dict with named variables that match the prompt.
         Chains are parsed by default, but you can turn this off if you want to see the raw output for debugging purposes.
@@ -138,7 +138,7 @@ class Chain():
             input = {list(self.input_schema)[0]: input}
         prompt = self.prompt.render(input=input)
         time_start = time.time()
-        result = self.model.query(prompt)
+        result = self.model.query(prompt, verbose=verbose)
         time_end = time.time()
         duration = time_end - time_start
         if parsed:

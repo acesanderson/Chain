@@ -29,6 +29,9 @@ Here are details about the user's hardware, OS, and software:
 """.strip()
 
 def get_system_info():
+    """
+    Programmatically grab system information to inform out IT assistant.
+    """
     # Operating System and Version
     os_info = platform.system() + " " + platform.release()
     # Python Version
@@ -73,6 +76,9 @@ Terminal: {terminal}
 """).strip()
 
 def read_file_content(file_path):
+    """
+    This allows us to grab contents of our config files (.zshrc and .zprofile).
+    """
     try:
         with open(file_path, 'r') as file:
             return file.read()
@@ -82,11 +88,14 @@ def read_file_content(file_path):
         return f"Error reading file: {e}"
 
 def query(prompt, system_info):
+    """
+    Very simply query function.
+    """
     model = Model('gpt')
     full_prompt = f"{system_instructions}\n============================\n{system_info}\n============================\n\nUser Query: {prompt}"
     prompt = Prompt(full_prompt)
     chain = Chain(prompt, model)
-    response = chain.run()
+    response = chain.run(verbose=False)
     return response
 
 if __name__ == '__main__':
@@ -96,23 +105,3 @@ if __name__ == '__main__':
         print(query(input_prompt, system_info))
     else:
         print("Expecting a prompt.")
-
-
-
-# def query(prompt):
-#     """
-    
-#     """
-#     model = Model('gpt')
-#     prompt = Prompt(prompt)
-#     chain = Chain(prompt, model)
-#     response = chain.run()
-#     return response
-
-# if __name__ == '__main__':
-#     if len(sys.argv) > 1:
-#         input = " ".join(sys.argv[1:])
-#         print(query(input))
-#     else:
-#         print("Expecting a prompt.")
-
