@@ -13,18 +13,18 @@ from download_article import download_article
 from download_youtube_transcript import download_transcript
 from Chain import Chain, Model, Prompt
 import sys
+import os
 
-obsidian_path_pc = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles'
-obsidian_path_mac = '/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles'
+# obsidian_path_pc = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles'
+
+# when on mac, put export OBSIDIAN_PATH="/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles" in .zshrc
+# obsidian_path_mac = '/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles'
+
+# get OBSIDIAN_PATH from environment variable
+obsidian_path = os.environ.get('OBSIDIAN_PATH')
 
 # switch this if on different comp
-obsidian_path = obsidian_path_mac
-
-summarized_urls_pc = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles/Summarized_URLs.md'
-summarized_urls_mac = '/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles/Summarized_URLs.md'
-
-# switch this if on different comp
-summarized_urls = summarized_urls_mac
+summarized_urls = obsidian_path + '/Summarized_URLs.md'
 
 prompt_string = """
 Summarize the key points from the following article or youtube transcript. Structure the summary with clear headings and subheadings.
@@ -78,7 +78,7 @@ def summarize_text(text):
     model = Model('gpt')
     prompt = Prompt(prompt_string)
     chain = Chain(model=model, prompt=prompt)
-    summary = chain.run(text)
+    summary = chain.run(text, verbose=False)
     summary = summary.content.strip()
     if '[[' and ']]' not in summary.split('\n')[-1]:
         return ValueError('Model did not generate a title.')
@@ -98,6 +98,9 @@ def save_to_obsidian(title, summary, url):
 
 if __name__ == '__main__':
     url = 'https://www.androidauthority.com/rabbit-r1-is-an-android-app-3438805'
+    if len(sys.argv) == 1:
+        print('No URL provided. Provide a YouTube URL or an article URL.')
+        sys.exit(1)
     if len(sys.argv) > 1:
         url = sys.argv[1]
     try:

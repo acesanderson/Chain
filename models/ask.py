@@ -10,6 +10,9 @@ import subprocess
 import os
 import textwrap
 
+preferred_model = "gpt-3.5-turbo-0125"  # cheaper
+# preferred_model = "gpt" # more expensive
+
 preferred_model = "gpt-3.5-turbo-0125" # cheaper
 # preferred_model = "gpt" # more expensive
 
@@ -32,35 +35,39 @@ Here are details about the user's hardware, OS, and software:
 """.strip()
 
 def get_system_info():
-    """
-    Programmatically grab system information to inform out IT assistant.
-    """
-    # Operating System and Version
     os_info = platform.system() + " " + platform.release()
-    # Python Version
     python_version = platform.python_version()
-    # System Hardware
     cpu_model = platform.processor()
+
+    if platform.system() == "Darwin":
+        memory_cmd = ['sysctl', 'hw.memsize']
+        gpu_cmd = ['system_profiler', 'SPDisplaysDataType']
+        shell_config_files = ['.zshrc', '.zprofile']
+    elif platform.system() == "Linux":
+        memory_cmd = ['grep', 'MemTotal', '/proc/meminfo']
+        gpu_cmd = ['lshw', '-C', 'display']
+        shell_config_files = ['.bashrc', '.bash_profile']
+
     try:
-        memory_size = subprocess.run(['sysctl', 'hw.memsize'], capture_output=True, text=True).stdout.strip().split(': ')[1]
+        memory_size = subprocess.run(memory_cmd, capture_output=True, text=True).stdout.strip()
     except:
         memory_size = 'Unknown'
-    # GPU Information
+
     try:
-        gpu_info = subprocess.run(['system_profiler', 'SPDisplaysDataType'], capture_output=True, text=True).stdout.strip()
+        gpu_info = subprocess.run(gpu_cmd, capture_output=True, text=True).stdout.strip()
     except:
         gpu_info = 'Unknown'
-    # Network Information
+
     try:
         local_ip = subprocess.run(['hostname', '-I'], capture_output=True, text=True).stdout.strip()
     except:
         local_ip = 'Unknown'
-    # Shell and Terminal
+
     shell = os.environ.get('SHELL')
     terminal = os.environ.get('TERM_PROGRAM', 'Unknown')
-    # Read .zshrc and .zprofile files
-    zshrc_content = read_file_content(os.path.expanduser('~/.zshrc'))
-    zprofile_content = read_file_content(os.path.expanduser('~/.zprofile'))
+    
+    shell_info = "\n".join([read_file_content(os.path.expanduser(f'~/{f}')) for f in shell_config_files])
+
     return textwrap.dedent(f"""
 OS: {os_info}
 Python: {python_version}
@@ -70,23 +77,14 @@ GPU: {gpu_info}
 Local IP: {local_ip}
 Shell: {shell}
 Terminal: {terminal}
-
-.zshrc Content:
-{zshrc_content}
-
-.zprofile Content:
-{zprofile_content}
 """).strip()
 
 def read_file_content(file_path):
-    """
-    This allows us to grab contents of our config files (.zshrc and .zprofile).
-    """
     try:
         with open(file_path, 'r') as file:
-            return file.read()
+            return f"{file_path} Content:\n{file.read()}"
     except FileNotFoundError:
-        return "File not found"
+        return f"{file_path} Content: File not found"
     except Exception as e:
         return f"Error reading file: {e}"
 
@@ -103,8 +101,11 @@ def query(prompt, system_info):
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
+        if sys.argv[1] == "system_info":
+            print(get_system_info())
+            sys.exit(0)
         input_prompt = " ".join(sys.argv[1:])
         system_info = get_system_info()
         print(query(input_prompt, system_info))
     else:
-        print("Expecting a prompt.")
+        print("Either type a prompt, or type 'system_info' to get system information.")
