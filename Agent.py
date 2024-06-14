@@ -25,6 +25,9 @@ class Agent():
 
         self.system_prompt = system_prompt
         self.tools = tools
+    
+    def __repr__(self):
+        return Chain.standard_repr(self)
 
 class Tool():
     """

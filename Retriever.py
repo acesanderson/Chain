@@ -17,6 +17,9 @@ class Retriever(): # TBD
     def __init__(self):
         pass
 
+    def __repr__(self):
+        return Chain.standard_repr(self)
+
 class DocumentLoader(Retriever): # TBD
     """
     DocumentRetriever class for the Chain framework.

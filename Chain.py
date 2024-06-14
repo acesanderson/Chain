@@ -90,6 +90,15 @@ class Chain():
         models = [m['name'] for m in ollama.list()['models']]
         Chain.models['ollama'] = models
     
+    def standard_repr(object):
+        """
+        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
+        Called from all classes related to Chain project (Model, Prompt, Chat, etc.).
+        """
+        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in object.__dict__.items()])
+        return f"{object.__class__.__name__}({attributes})"
+        # Example output: Chain(prompt=Prompt(string='tell me about {{topic}}', format_in, model=Model(model='mistral'), parser=Parser(parser=<function Chain.<lambda> at 0x7f7c5a
+    
     def find_variables(self, template):    
         """
         This function takes a jinja2 template and returns a set of variables; used for setting input_schema of Chain object.
@@ -119,12 +128,7 @@ class Chain():
         self.prompt.format_instructions = self.parser.format_instructions
     
     def __repr__(self):
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
-        return f"{self.__class__.__name__}({attributes})"
-        # Example output: Chain(prompt=Prompt(string='tell me about {{topic}}', format_in, model=Model(model='mistral'), parser=Parser(parser=<function Chain.<lambda> at 0x7f7c5a
+        return Chain.standard_repr(self)
     
     def run(self, input=None, parsed=True, verbose=True):
         """
@@ -171,11 +175,7 @@ class Prompt():
         self.template = env.from_string(template)
     
     def __repr__(self):
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
-        return f"{self.__class__.__name__}({attributes})"
+        return Chain.standard_repr(self)
     
     def render(self, input):
         """
@@ -221,11 +221,7 @@ class Model():
             raise ValueError(f"Model not found: {model}")
     
     def __repr__(self):
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
-        return f"{self.__class__.__name__}({attributes})"
+        return Chain.standard_repr(self)
     
     def query(self, user_input, verbose=True):
         """
@@ -526,11 +522,7 @@ class Parser():
             raise ValueError(f"Parser is not recognized: {parser}")
     
     def __repr__(self):
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
-        return f"{self.__class__.__name__}({attributes})"
+        return Chain.standard_repr(self)
     
     def parse(self, output):
         return self.parser(output)
@@ -551,11 +543,7 @@ class Response():
         self.duration = duration
     
     def __repr__(self):
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
-        return f"{self.__class__.__name__}({attributes})"
+        return Chain.standard_repr(self)
     
     def __len__(self):
         """
@@ -592,11 +580,7 @@ class Chat():
         self.system_prompt = system_prompt
     
     def __repr__(self):
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
-        return f"{self.__class__.__name__}({attributes})"
+        return Chain.standard_repr(self)
     
     def chat(self):
         """
