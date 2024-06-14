@@ -2,6 +2,7 @@
 """
 from Chain import Chain, Model, Parser, Prompt
 import random # to pick a random skill for demonstration purposes
+import sys
 
 topic_prompt = """
     Come up with a 5-10 module curriculum on the topic of {{topic}}.
@@ -55,7 +56,7 @@ make_edits_prompt = """
 # model = 'gpt-3.5-turbo-0125'
 # parser = 'curriculum_parser'
 
-def chain_curation(topic, critics = 2, model = 'gpt-3.5-turbo-0125'):
+def chain_curation(topic, critics = 2, model = 'gpt'):
     """
     Takes a topic and returns a curated curriculum.
     Curriculum goes through a chain of critics, then is reconsolidated based on their feedback.
@@ -101,5 +102,8 @@ if __name__ == '__main__':
         "Environmental Management",
         "Biotechnology"
     ])
-    result = chain_curation(topic,critics=2)    # Run the chain; just two critics because this is a demo.
+    if len(sys.argv) > 1:
+        topic = sys.argv[1]
+    result = chain_curation(topic,critics=6)    # Run the chain; just two critics because this is a demo.
     print(result)
+

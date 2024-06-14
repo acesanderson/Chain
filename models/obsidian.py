@@ -14,8 +14,17 @@ from download_youtube_transcript import download_transcript
 from Chain import Chain, Model, Prompt
 import sys
 
-obsidian_path = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles'
-summarized_urls = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles/Summarized_URLs.md'
+obsidian_path_pc = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles'
+obsidian_path_mac = '/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles'
+
+# switch this if on different comp
+obsidian_path = obsidian_path_mac
+
+summarized_urls_pc = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles/Summarized_URLs.md'
+summarized_urls_mac = '/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles/Summarized_URLs.md'
+
+# switch this if on different comp
+summarized_urls = summarized_urls_mac
 
 prompt_string = """
 Summarize the key points from the following article or youtube transcript. Structure the summary with clear headings and subheadings.

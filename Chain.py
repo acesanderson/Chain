@@ -46,7 +46,8 @@ import ast                                              # for our list parser ("
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
 # set up our environment
-dotenv.load_dotenv()
+dotenv.load_dotenv(dotenv_path='/Users/bianders/Brian_Code/Chain-Framework/.env')
+# dotenv.load_dotenv()
 client_openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client_anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 client_openai_async = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
@@ -125,7 +126,7 @@ class Chain():
         return f"{self.__class__.__name__}({attributes})"
         # Example output: Chain(prompt=Prompt(string='tell me about {{topic}}', format_in, model=Model(model='mistral'), parser=Parser(parser=<function Chain.<lambda> at 0x7f7c5a
     
-    def run(self, input=None, parsed = True):
+    def run(self, input=None, parsed=True, verbose=True):
         """
         Input should be a dict with named variables that match the prompt.
         Chains are parsed by default, but you can turn this off if you want to see the raw output for debugging purposes.
@@ -137,7 +138,7 @@ class Chain():
             input = {list(self.input_schema)[0]: input}
         prompt = self.prompt.render(input=input)
         time_start = time.time()
-        result = self.model.query(prompt)
+        result = self.model.query(prompt, verbose=verbose)
         time_end = time.time()
         duration = time_end - time_start
         if parsed:
@@ -226,26 +227,29 @@ class Model():
         attributes = ', '.join([f'{k}={repr(v)[:50]}' for k, v in self.__dict__.items()])
         return f"{self.__class__.__name__}({attributes})"
     
-    def query(self, user_input):
+    def query(self, user_input, verbose=True):
         """
         Sorts model to either cloud-based (gpt, claude), ollama, or returns an error.
         """
+        if verbose:
+            print(f"{self.model}: {self.pretty(user_input)}")
         if self.is_message(user_input):              # if this is a message, we use chat function instead of query.
-            return self.chat(user_input)
+            response = self.chat(user_input)
         elif self.model in Chain.models['openai']:
-                return self.query_gpt(user_input)
+            response = self.query_gpt(user_input)
         elif self.model in Chain.models['anthropic']:
-            return self.query_claude(user_input)
+            response = self.query_claude(user_input)
         elif self.model in Chain.models['ollama']:
-            return self.query_ollama(user_input)
+            response = self.query_ollama(user_input)
         elif self.model in Chain.models['google']:
-            return self.query_gemini(user_input)
+            response = self.query_gemini(user_input)
         elif self.model in Chain.models['groq']:
-            return self.query_groq(user_input)
+            response = self.query_groq(user_input)
         elif self.model == 'polonius':
-            return self.query_polonius(user_input)
+            response = self.query_polonius(user_input)
         else:
-            return f"Model not found: {self.model}"
+            response = f"Model not found: {self.model}"
+        return response
     
     def pretty(self, user_input):
         """
@@ -267,7 +271,6 @@ class Model():
                 },
             ]
         )
-        print(f"{self.model}: {self.pretty(user_input)}")
         return response['message']['content']
     
     def query_gpt(self, user_input):
@@ -279,7 +282,6 @@ class Model():
             model = self.model,
             messages = [{"role": "user", "content": user_input}]
         )
-        print(f"{self.model}: {self.pretty(user_input)}")
         return response.choices[0].message.content
     
     async def query_gpt_async(self, user_input):
@@ -290,7 +292,6 @@ class Model():
             model = self.model,
             messages = [{"role": "user", "content": user_input}]
         )
-        print(f"{self.model}: '{self.pretty(user_input)}'")
         return response.choices[0].message.content
     
     def query_claude(self, user_input):
@@ -302,7 +303,6 @@ class Model():
             model = self.model,
             messages = [{"role": "user", "content": user_input}]
         )
-        print(f"{self.model}: {self.pretty(user_input)}")
         return response.content[0].text
     
     def query_gemini(self, user_input):
@@ -311,7 +311,6 @@ class Model():
         """
         gemini_model = client_gemini.GenerativeModel(self.model)
         response = gemini_model.generate_content(user_input)
-        print(f"{self.model}: {self.pretty(user_input)}")
         return response.candidates[0].content.parts[0].text
     
     def query_groq(self, user_input):
