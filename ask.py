@@ -14,7 +14,7 @@ preferred_model = "gpt-3.5-turbo-0125" # cheaper
 # preferred_model = "gpt" # more expensive
 
 system_instructions = """
-You are a helpful IT admin who is patiently trying to assist a new coder.
+You are a helpful IT admin. You are helping a new programmer.
 They use Python and Linux. They are experienced with Python programming but don't know much about how to do the following:
 - package scripts into proper applications
 - use git and GitHub
