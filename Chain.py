@@ -45,8 +45,13 @@ import json                                             # for our jsonparser
 import ast                                              # for our list parser ("eval" is too dangerous)
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
-# set up our environment
-dotenv.load_dotenv(dotenv_path='/Users/bianders/Brian_Code/Chain-Framework/.env')
+
+# set up our environment: dynamically setting the .env location considered best practice for complex projects.
+dir_path = os.path.dirname(os.path.realpath(__file__))
+# Construct the path to the .env file
+env_path = os.path.join(dir_path, '.env')
+# Load the environment variables
+dotenv.load_dotenv(dotenv_path=env_path)
 # dotenv.load_dotenv()
 client_openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client_anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
