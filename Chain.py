@@ -176,7 +176,7 @@ class Prompt():
     
     def __init__(self, template = Chain.examples['prompt_example']):
         self.string = template
-        self.format_instructions = "" # This starts as empty; gets changed if the Chain object has a parser with format_instructions
+        self.format_instructions = "" # This starts as empty; gets changed if the Chain object has a parser with format_instruction
         self.template = env.from_string(template)
     
     def __repr__(self):
@@ -212,6 +212,9 @@ class Model():
         """
         Given that gpt and claude model names are very verbose, let users just ask for claude or gpt.
         """
+        # set up a default query for testing purposes
+        self.example_query = Prompt(Chain.examples['prompt_example']).render(Chain.examples['run_example'])
+        # initialize model
         if model == 'claude':
             self.model = 'claude-3-opus-20240229'                                   # we're defaulting to The Beast model; this is a "finisher"
         elif model == 'gpt':
@@ -228,10 +231,12 @@ class Model():
     def __repr__(self):
         return Chain.standard_repr(self)
     
-    def query(self, user_input, verbose=True):
+    def query(self, user_input = None, verbose=True):
         """
         Sorts model to either cloud-based (gpt, claude), ollama, or returns an error.
         """
+        if user_input is None:
+            user_input = self.example_query
         if verbose:
             print(f"{self.model}: {self.pretty(user_input)}")
         if self.is_message(user_input):              # if this is a message, we use chat function instead of query.
