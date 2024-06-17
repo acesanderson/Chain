@@ -7,6 +7,8 @@ Ingests the following data:
 - article url -> article text (Morphy/extracted_articles)
 
 This uses gpt-4o by default, so it's not free. Switch to an ollama model if you want to use it for free.
+
+Next up: automatically grab html (or PDF) versions of arxiv papers and summarize them.
 """
 
 from download_article import download_article
@@ -14,11 +16,6 @@ from download_youtube_transcript import download_transcript
 from Chain import Chain, Model, Prompt
 import sys
 import os
-
-# obsidian_path_pc = '/mnt/c/Users/brian/iCloudDrive/iCloud~md~obsidian/Morphy/extracted_articles'
-
-# when on mac, put export OBSIDIAN_PATH="/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles" in .zshrc
-# obsidian_path_mac = '/Users/bianders/Library/Mobile Documents/iCloud~md~obsidian/Documents/Morphy/extracted_articles'
 
 # get OBSIDIAN_PATH from environment variable
 obsidian_path = os.environ.get('OBSIDIAN_PATH')
