@@ -430,7 +430,7 @@ class Parser():
     Takes a function and applies it to output.
     At its most basic, it just validates the output.
     For more sophisticated uses (like json), it will also convert the output.
-    Todo: have it append instructions to the actual prompt. ("format_instructions" like in langchain)
+    It also appends format instructions to the prompt.
     """
     def string_parser(output):
         """
@@ -446,22 +446,20 @@ class Parser():
         """
         Converts string to json object.
         """
-        print(output)
         try:
-            return json.loads(output)
+            return json.loads(output.strip())
         except:
-            raise ValueError("Could not convert to json")
+            raise ValueError("Could not convert to json:\n" + output)
     
     def list_parser(output):
         """
         Converts string to list, assuming that the string is well-formed Python list syntax.
         This is VERY finicky; tried my best with the format_instructions.
         """
-        print(output)
         try:
-            return ast.literal_eval(output)
+            return ast.literal_eval(output.strip())
         except:
-            raise ValueError("Could not convert to list")
+            raise ValueError("Could not convert to list:\n" + output)
     
     parsers = {
         "str": {
@@ -479,7 +477,8 @@ class Parser():
             "format_instructions": textwrap.dedent("""
                 Return your answer as a sort of Python list, though with a back slash and a double quote (\") around each item,
                 like this: [\"item1\", \"item2\", \"item3\"]. It is important to escape the double quotes so that we can parse it properly.
-                Only return the list; nothing else. I will be using python ast.literal_eval() to parse this.
+                Only return the list; nothing else. Do not include any formatting like "```json" or "```" around your answer.
+                I will be using python ast.literal_eval() to parse this.
                 """).strip()},
         "curriculum_parser": {
             "function": json_parser,
