@@ -119,7 +119,7 @@ class Chain():
         parsed_content = throwaway_env.parse(template)
         variables = meta.find_undeclared_variables(parsed_content)
         return variables
-
+    
     def __init__(self, prompt=None, model=None, parser=None):
         if prompt is None:              # if inputs are empty, use the defaults from Model.examples
             prompt = Prompt(Chain.examples['prompt_example'])
@@ -141,6 +141,18 @@ class Chain():
     
     def __repr__(self):
         return Chain.standard_repr(self)
+    
+    def create_messages(system_prompt = examples['system_prompt_example'], input = None) -> list[dict]:
+        """
+        Takes a system prompt object (Prompt()) or a string, an optional input object, and returns a list of messages.
+        """
+        if isinstance(system_prompt, str):
+            system_prompt = Prompt(system_prompt)
+        if input:
+            messages = [{'role': 'user', 'content': system_prompt.render(input=input)}]
+        else:
+            messages = [{'role': 'system', 'content': system_prompt.string}]
+        return messages
     
     def run(self, input=None, parsed=True, verbose=True, messages = None):
         """
