@@ -53,6 +53,10 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.join(dir_path, '.env')
 # Load the environment variables
 dotenv.load_dotenv(dotenv_path=env_path)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # dotenv.load_dotenv()
 client_openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client_anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
@@ -70,6 +74,8 @@ class Chain():
     - a parser (a function that takes a string and returns a string)
     Defaults to mistral for model, and empty parser.
     """
+    # Put API keys for convenience across my system.
+    api_keys = [OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY, GOOGLE_API_KEY]
     # Canonical source of models; or if there are new cloud models (fex. Gemini)
     models = {
         "ollama": [m['name'] for m in ollama.list()['models']],
@@ -217,7 +223,7 @@ class Model():
         self.example_query = Prompt(Chain.examples['prompt_example']).render(Chain.examples['run_example'])
         # initialize model
         if model == 'claude':
-            self.model = 'claude-3-5-sonnet-20240620'                               # we're defaulting to The Beast model; this is a "finisher"
+            self.model = 'claude-3-5-sonnet-20240620'                               # newest claude model as of 6/21/2024
         elif model == 'gpt':
             self.model = 'gpt-4o'                                                   # defaulting to the cheap strong model they just announced
         elif model == 'gemini':
