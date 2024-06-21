@@ -94,18 +94,7 @@ class Chain():
         'prompt_example': 'sing a song about {{input}}. Keep it under 200 characters.',
         'system_prompt_example': "You're a helpful assistant.",
     }
-
-    def convert_to_message(input: dict, prompt, messages = []) -> list:
-        """
-        Creates a message object from an input dictionary and a prompt.
-        This is appended to a provided messages list.
-        """
-        
-        
-        return messages
-
-
-
+    
     def update_models():
         """
         If you need to update the ollama model list on the fly, use this function.
@@ -153,11 +142,13 @@ class Chain():
     def __repr__(self):
         return Chain.standard_repr(self)
     
-    def run(self, input=None, parsed=True, verbose=True):
+    def run(self, input=None, parsed=True, verbose=True, messages = None):
         """
         Input should be a dict with named variables that match the prompt.
         Chains are parsed by default, but you can turn this off if you want to see the raw output for debugging purposes.
         """
+        if messages:
+            return self.run_messages(input=input, messages=messages, parsed=parsed, verbose=verbose)
         if input is None:
             input = Chain.examples['run_example']
         # allow users to just put in one string if the prompt is simple <-- for fast iteration
@@ -172,6 +163,33 @@ class Chain():
             result = self.parser.parse(result)
         # Return a response object
         response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration)
+        return response
+    
+    def run_messages(self, input=None, messages = [], parsed=True, verbose=True):
+        """
+        Special version of Chain.run that takes a messages object.
+        Converts input + prompt into a message object, appends to messages list, and runs to Model.chat.
+        Input should be a dict with named variables that match the prompt.
+        Chains are parsed by default, but you can turn this off if you want to see the raw output for debugging purposes.
+        """
+        # allow users to just put in one string if the prompt is simple <-- for fast iteration
+        if isinstance(input, str) and len(self.input_schema) == 1:
+            input = {list(self.input_schema)[0]: input}
+        # Construct user message
+        prompt = self.prompt.render(input=input)
+        user_message = {'role': 'user', 'content': prompt}
+        messages.append(user_message)
+        # Run our query
+        time_start = time.time()
+        result = self.model.chat(messages, verbose=verbose)
+        time_end = time.time()
+        duration = time_end - time_start
+        if parsed:              # This will be a source of many bugs I suspect!
+            result = self.parser.parse(result)
+        # Return a response object
+        assistant_message = {'role': 'assistant', 'content': result}
+        messages.append(assistant_message)
+        response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration, messages = messages)
         return response
     
     def batch(self, input_list=[]):
@@ -366,52 +384,60 @@ class Model():
             """).strip()
         return response
     
-    def chat(self, messages):
+    def chat(self, messages, verbose = True):
         """
         Handle messages (these are lists of dicts).
         Sorts model to either cloud-based (gpt, claude), ollama, or returns an error.
         """
         if self.model in Chain.models['openai']:
-            return self.chat_gpt(messages)
+            return self.chat_gpt(messages, verbose)
         elif self.model in Chain.models['anthropic']:
-            return self.chat_claude(messages)
+            return self.chat_claude(messages, verbose)
         elif self.model in Chain.models['ollama']:
-            return self.chat_ollama(messages)
+            return self.chat_ollama(messages, verbose)
         elif self.model in Chain.models['google']:
-            return self.chat_gemini(messages)
+            return self.chat_gemini(messages, verbose)
         elif self.model in Chain.models['groq']:
-            return self.chat_groq(messages)
+            return self.chat_groq(messages, verbose)
         elif self.model == 'polonius':
-            return self.query_polonius(messages)
+            return self.query_polonius(messages, verbose)
         else:
             return f"Model not found: {self.model}"
     
-    def chat_gpt(self, messages):
+    def chat_gpt(self, messages, verbose = True):
         """
         Chat with OpenAI models.
         """
+        if verbose:
+            print(f"{self.model}: {self.pretty(messages[-1]['content'])}")
         response = client_openai.chat.completions.create(
             model = self.model,
             messages = messages
         )
         return response.choices[0].message.content
     
-    def chat_ollama(self, messages):
+    def chat_ollama(self, messages, verbose = True):
         """
         Queries local models.
         """
+        print('messages ------')
+        print(messages)
+        if verbose:
+            print(f"{self.model}: {self.pretty(messages[-1]['content'])}")
         response = ollama.chat(
             model=self.model,
             messages=messages
         )
         return response['message']['content']
     
-    def chat_claude(self, messages):
+    def chat_claude(self, messages, verbose = True):
         """
         Queries anthropic models.
         Claude doesn't accept system messages within a messages object, sadly, so we switch to 'user'.
         We then add a message where the model ackwnoledges the system prompt.
         """
+        if verbose:
+            print(f"{self.model}: {self.pretty(messages[-1]['content'])}")
         response = client_anthropic.messages.create(
             max_tokens=1024,
             model = self.model,
@@ -419,10 +445,12 @@ class Model():
         )
         return response.content[0].text
     
-    def chat_gemini(self, messages):
+    def chat_gemini(self, messages, verbose = True):
         """
         Queries Google's models.
         """
+        if verbose:
+            print(f"{self.model}: {self.pretty(messages[-1]['content'])}")
         # Gemini uses a different schema than Claude or OpenAI, annoyingly.
         for message in messages:
         # Change 'assistant' to 'model' if the role is 'assistant'
@@ -435,12 +463,33 @@ class Model():
         response = gemini_model.generate_content(messages)
         return response.candidates[0].content.parts[0].text
     
-    def chat_groq(self, messages):
+    def chat_groq(self, messages, verbose = True):
+        if verbose:
+            print(f"{self.model}: {self.pretty(messages[-1]['content'])}")
         chat_completion = client_groq.chat.completions.create(
             messages=messages,
             model = self.model,
             )
         return chat_completion.choices[0].message.content
+    
+    def chat_polonius(self, messages, verbose = True):
+        """
+        Fake model for testing purposes
+        """
+        if verbose:
+            print(f"{self.model}: {self.pretty(messages[-1]['content'])}")
+        _ = messages
+        response = textwrap.dedent("""\
+            My liege, and madam, to expostulate /
+            What majesty should be, what duty is, / 
+            Why day is day, night night, and time is time, / 
+            Were nothing but to waste night, day and time. / 
+            herefore, since brevity is the soul of wit, / And tediousness the limbs and outward flourishes, /
+            I will be brief: your noble son is mad: /
+            Mad call I it; for, to define true madness, /
+            What is't but to be nothing else but mad? / But let that go.
+            """).strip()
+        return response
 
 class Parser():
     """
