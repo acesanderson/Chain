@@ -94,7 +94,18 @@ class Chain():
         'prompt_example': 'sing a song about {{input}}. Keep it under 200 characters.',
         'system_prompt_example': "You're a helpful assistant.",
     }
-    
+
+    def convert_to_message(input: dict, prompt, messages = []) -> list:
+        """
+        Creates a message object from an input dictionary and a prompt.
+        This is appended to a provided messages list.
+        """
+        
+        
+        return messages
+
+
+
     def update_models():
         """
         If you need to update the ollama model list on the fly, use this function.
@@ -551,12 +562,13 @@ class Response():
     TO DO: have chains pass a log from response to response (containing history of conversation).
     """
     
-    def __init__(self, content = "", status = "N/A", prompt = "", model = "", duration = 0.0):
+    def __init__(self, content = "", status = "N/A", prompt = "", model = "", duration = 0.0, messages = []):
         self.content = content
         self.status = status
         self.prompt = prompt
         self.model = model
         self.duration = duration
+        self.messages = messages
     
     def __repr__(self):
         return Chain.standard_repr(self)
