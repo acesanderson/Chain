@@ -6,6 +6,7 @@ A link is an object that takes the following:
 - an output (a dictionary)
 
 Next up:
+- incorporate Instructor for object parsing -- replaces most of Parser class
 x - define input_schema (created backwards from jinja template (using find_variables on the original string))
 x - allow user to edit input_schema
 x - define output_schema (default is just "result", but user can define this)
@@ -216,7 +217,7 @@ class Model():
         self.example_query = Prompt(Chain.examples['prompt_example']).render(Chain.examples['run_example'])
         # initialize model
         if model == 'claude':
-            self.model = 'claude-3-opus-20240229'                                   # we're defaulting to The Beast model; this is a "finisher"
+            self.model = 'claude-3-5-sonnet-20240620'                               # we're defaulting to The Beast model; this is a "finisher"
         elif model == 'gpt':
             self.model = 'gpt-4o'                                                   # defaulting to the cheap strong model they just announced
         elif model == 'gemini':
