@@ -149,7 +149,7 @@ class Chain():
         if isinstance(system_prompt, str):
             system_prompt = Prompt(system_prompt)
         if input:
-            messages = [{'role': 'user', 'content': system_prompt.render(input=input)}]
+            messages = [{'role': 'system', 'content': system_prompt.render(input=input)}]
         else:
             messages = [{'role': 'system', 'content': system_prompt.string}]
         return messages
