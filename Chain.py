@@ -53,10 +53,11 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 env_path = os.path.join(dir_path, '.env')
 # Load the environment variables
 dotenv.load_dotenv(dotenv_path=env_path)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+api_keys = {}
+api_keys['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
+api_keys['ANTHROPIC_API_KEY'] = os.getenv("ANTHROPIC_API_KEY")
+api_keys['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
+api_keys['GOOGLE_API_KEY'] = os.getenv("GOOGLE_API_KEY")
 # dotenv.load_dotenv()
 client_openai = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 client_anthropic = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
@@ -75,7 +76,7 @@ class Chain():
     Defaults to mistral for model, and empty parser.
     """
     # Put API keys for convenience across my system.
-    api_keys = [OPENAI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY, GOOGLE_API_KEY]
+    api_keys = api_keys
     # Canonical source of models; or if there are new cloud models (fex. Gemini)
     models = {
         "ollama": [m['name'] for m in ollama.list()['models']],
@@ -632,14 +633,14 @@ class Response():
     TO DO: have chains pass a log from response to response (containing history of conversation).
     """
     
-    def __init__(self, content = "", status = "N/A", prompt = "", model = "", duration = 0.0, messages = []):
+    def __init__(self, content = "", status = "N/A", prompt = "", model = "", duration = 0.0, messages = [], variables = {}):
         self.content = content
         self.status = status
         self.prompt = prompt
         self.model = model
         self.duration = duration
         self.messages = messages
-        self.variables = {}
+        self.variables = variables
     
     def __repr__(self):
         return Chain.standard_repr(self)
