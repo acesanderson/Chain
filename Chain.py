@@ -174,7 +174,7 @@ class Chain():
         if parsed:
             result = self.parser.parse(result)
         # Return a response object
-        response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration)
+        response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration, variables = input)
         return response
     
     def run_messages(self, input=None, messages = [], parsed=True, verbose=True):
@@ -205,7 +205,7 @@ class Chain():
         # Return a response object
         assistant_message = {'role': 'assistant', 'content': result}
         messages.append(assistant_message)
-        response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration, messages = messages)
+        response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration, messages = messages, variables=input)
         return response
     
     def batch(self, input_list=[]):
@@ -639,6 +639,7 @@ class Response():
         self.model = model
         self.duration = duration
         self.messages = messages
+        self.variables = {}
     
     def __repr__(self):
         return Chain.standard_repr(self)
