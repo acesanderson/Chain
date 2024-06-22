@@ -188,7 +188,11 @@ class Chain():
         if isinstance(input, str) and len(self.input_schema) == 1:
             input = {list(self.input_schema)[0]: input}
         # Construct user message
-        prompt = self.prompt.render(input=input)
+        ## if input is None, just use the prompt, don't render.
+        if input is None:
+            prompt = self.prompt.string
+        else:
+            prompt = self.prompt.render(input=input)
         user_message = {'role': 'user', 'content': prompt}
         messages.append(user_message)
         # Run our query
@@ -445,14 +449,19 @@ class Model():
     def chat_claude(self, messages, verbose = True):
         """
         Queries anthropic models.
-        Claude doesn't accept system messages within a messages object, sadly, so we switch to 'user'.
-        We then add a message where the model ackwnoledges the system prompt.
+        Claude doesn't accept system messages, so we have to remove it and pass it as a special system parameter.
         """
         if verbose:
             print(f"{self.model}: {self.pretty(messages[-1]['content'])}")
+        # Capture and remove the system prompt so we can use Claude's API format properly.
+        if messages[0]['role'] == 'system':
+            system_prompt = messages[0]['content']
+            messages = messages[1:]
+        # Passing the system prompt in our response (this is unique to Anthropic)
         response = client_anthropic.messages.create(
             max_tokens=1024,
             model = self.model,
+            system = system_prompt,
             messages = messages
         )
         return response.content[0].text
