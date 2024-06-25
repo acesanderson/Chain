@@ -406,11 +406,18 @@ class Model():
 		Possibilities:
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
+		Anthropic is quirky about system messsages (The Messages API accepts a top-level `system` parameter, not "system" as an input message role.)
 		"""
+		# Anthropic requires a system variable
+		system = ""
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
 		elif is_messages_object(input):
 			input = input
+			# This is anthropic quirk; we remove the system message and set it as a query parameter.
+			if input[0]['role'] == 'system':
+				system = input[0]['content']
+				input = input[1:]
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
 		# call our client
@@ -419,6 +426,7 @@ class Model():
 			model = model,
 			max_tokens = 1024,
 			max_retries = 0,
+			system = system,
 			messages = input,
 			response_model = pydantic_model,
 		)

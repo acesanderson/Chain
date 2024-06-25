@@ -34,10 +34,10 @@ class Example_List(BaseModel):
 # first, message passing
 messages = Chain.create_messages(system_prompt="You're a goddamn pirate.")
 
-# for m in ['ollama', 'gpt', 'claude']:
-# 	prompt = Prompt("Sing a song in three lines.")
-# 	model = Model(m)
-# 	chain = Chain(prompt, model)
-# 	response = chain.run(messages = messages)
-# 	print(response.messages)
+for m in ['ollama', 'gpt', 'claude']:
+	prompt = Prompt("Sing a song in three lines.")
+	model = Model(m)
+	chain = Chain(prompt, model)
+	response = chain.run(messages = messages)
+	print(response.messages)
 
