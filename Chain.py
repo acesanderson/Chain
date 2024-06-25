@@ -46,6 +46,8 @@ import json                                             # for our jsonparser
 import ast                                              # for our list parser ("eval" is too dangerous)
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
+from pydantic import BaseModel                          # for our input_schema and output_schema; starting with List Parser.
+from typing import List, Dict                           # for our input_schema and output_schema
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -65,6 +67,15 @@ client_openai_async = AsyncOpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))
 client_gemini.configure(api_key=os.environ.get("GOOGLE_API_KEY"))
 env = Environment(undefined=StrictUndefined)            # # set jinja2 to throw errors if a variable is undefined
+
+# Define a pydantic class for list parsing
+"""
+This is a pydantic model for parsing a list of strings.
+.schema() provides format instructions
+.validate checks if response is valid.
+"""
+class Answer_List(BaseModel):
+    answer: List[str]
 
 class Chain():
     """
@@ -543,13 +554,16 @@ class Parser():
     def list_parser(output):
         """
         Converts string to list, assuming that the string is well-formed Python list syntax.
-        This is VERY finicky; tried my best with the format_instructions.
+        This is VERY finicky; tried my best with the format_instructions. We try three times by default.
         """
         try:
-            return ast.literal_eval(output.strip())
+            output = json.loads(output.strip())
+            Answer_List.model_validate(output)
+            output = output['answer']
+            return output
         except:
-            raise ValueError("Could not convert to list:\n" + output)
-    
+            raise ValueError("Could not convert to list:\n" + str(output))
+        
     parsers = {
         "str": {
             "function": string_parser,
@@ -563,12 +577,14 @@ class Parser():
                 """).strip()},
         "list": {
             "function": list_parser,
-            "format_instructions": textwrap.dedent("""
-                Return your answer as a sort of Python list, though with a back slash and a double quote (\") around each item,
-                like this: [\"item1\", \"item2\", \"item3\"]. It is important to escape the double quotes so that we can parse it properly.
-                Only return the list; nothing else. Do not include any formatting like "```json" or "```" around your answer.
-                I will be using python ast.literal_eval() to parse this.
-                """).strip()},
+            "format_instructions": f"""
+Return your answer as a well-formed json object. Only return the json object; nothing else.
+It should match this schema:
+=============================
+{json.dumps(Answer_List.model_json_schema(), indent = 2)}
+=============================
+Do not include any formatting like "```json" or "```" around your answer. I will be parsing this with json.loads().
+                """.strip()},
         "curriculum_parser": {
             "function": json_parser,
             "format_instructions": textwrap.dedent("""
