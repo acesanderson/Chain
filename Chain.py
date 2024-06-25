@@ -279,6 +279,8 @@ class Model():
             self.model = 'claude-3-5-sonnet-20240620'                               # newest claude model as of 6/21/2024
         elif model == 'gpt':
             self.model = 'gpt-4o'                                                   # defaulting to the cheap strong model they just announced
+        elif model == 'gpt3':
+            self.model = 'gpt-3.5-turbo-0125'                                       # defaulting to the turbo model
         elif model == 'gemini':
             self.model = 'gemini-pro'                                               # defaulting to the pro (1.0 )model
         elif model == 'groq':
