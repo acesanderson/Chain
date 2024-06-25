@@ -100,9 +100,6 @@ class Messages(BaseModel):
 	"""
 	messages: List[Message]
 
-class Example_List(BaseModel):
-	examples: List[str]
-
 class Chain():
 	"""
 	How we chain things together.
@@ -305,7 +302,7 @@ class Model():
 		"""
 		# set up a default query for testing purposes
 		self.example_query = Prompt(Chain.examples['prompt_example']).render(Chain.examples['run_example'])
-		# initialize model
+		# route any aliases that I've made for specific models
 		if model == 'claude':
 			self.model = 'claude-3-5-sonnet-20240620'                               # newest claude model as of 6/21/2024
 		elif model == 'gpt':
@@ -323,21 +320,22 @@ class Model():
 	
 	def __repr__(self):
 		return Chain.standard_repr(self)
-		
-	def query(input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model = None) -> Union[BaseModel, str, List]:
+	
+	def query(self, input: Union[str, list], verbose: bool=True, model: str = Chain.examples['model_example'], pydantic_model = None) -> Union[BaseModel, str, List]:
+		model = self.model
 		# input can be message or str
 		if model in Chain.models['openai']:
-			return query_openai(input, verbose, model, pydantic_model)
+			return self.query_openai(input, verbose, model, pydantic_model)
 		if model in Chain.models['anthropic']:
-			return query_anthropic(input, verbose, model, pydantic_model)
-		if model in Chain.models['Google']:
-			return query_google(input, verbose, model, pydantic_model)
-		if model in Chain.models['Ollama']:
-			return query_ollama(input, verbose, model, pydantic_model)
-		if model in Chain.models['Groq']:
-			return query_groq(input, verbose, model, pydantic_model)
+			return self.query_anthropic(input, verbose, model, pydantic_model)
+		if model in Chain.models['google']:
+			return self.query_google(input, verbose, model, pydantic_model)
+		if model in Chain.models['ollama']:
+			return self.query_ollama(input, verbose, model, pydantic_model)
+		if model in Chain.models['groq']:
+			return self.query_groq(input, verbose, model, pydantic_model)
 		if model in Chain.models['testing']:
-			return query_testing(input, verbose, model, pydantic_model)
+			return self.query_testing(input, verbose, model, pydantic_model)
 		else:
 			raise ValueError(f"Model {model} not found in Chain.models")
 	
@@ -365,7 +363,7 @@ class Model():
 			""").strip()
 		return response
 	
-	def query_openai(input: Union[str, list], verbose: bool=True, model: str = 'gpt-4o', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def query_openai(self, input: Union[str, list], verbose: bool=True, model: str = 'gpt-4o', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		Handles all synchronous requests from OpenAI's models.
 		Possibilities:
@@ -392,7 +390,7 @@ class Model():
 		else:
 			return response.choices[0].message.content
 	
-	def query_anthropic(input: Union[str, list], verbose: bool=True, model: str = 'claude-3-5-sonnet-20240620', pydantic_model = None) -> Union[BaseModel, str]:
+	def query_anthropic(self, input: Union[str, list], verbose: bool=True, model: str = 'claude-3-5-sonnet-20240620', pydantic_model = None) -> Union[BaseModel, str]:
 		"""
 		Handles all synchronous requests from Anthropic's models.
 		Possibilities:
@@ -422,7 +420,7 @@ class Model():
 		else:
 			return response.content[0].text
 	
-	def query_ollama(input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def query_ollama(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		Handles all synchronous requests from OpenAI's models.
 		Possibilities:
@@ -449,13 +447,13 @@ class Model():
 		else:
 			return response.choices[0].message.content
 	
-	def query_google(input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def query_google(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		TBD: the API for this is annoying so putting this off.
 		"""
 		pass
 
-	def query_groq(input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def query_groq(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		TBD: Not sure if Instructor plays nice with groq.
 		"""
