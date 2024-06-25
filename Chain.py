@@ -43,11 +43,11 @@ import os                                               # for environment variab
 import dotenv                                           # for loading environment variables
 import itertools                                        # for flattening list of models
 import json                                             # for our jsonparser
-import ast                                              # for our list parser ("eval" is too dangerous)
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
 from pydantic import BaseModel                          # for our input_schema and output_schema; starting with List Parser.
 from typing import List, Dict                           # for our input_schema and output_schema
+import instructor                                       # for parsing objects from LLMs
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -102,7 +102,6 @@ class Chain():
         'batch_example': [{'input': 'John Henry'}, {'input': 'Paul Bunyan'}, {'input': 'Babe the Blue Ox'}, {'input': 'Brer Rabbit'}],
         'run_example': {'input': 'John Henry'},
         'model_example': 'mistral:latest',
-        'parser_example': lambda x: x,
         'prompt_example': 'sing a song about {{input}}. Keep it under 200 characters.',
         'system_prompt_example': "You're a helpful assistant.",
     }
@@ -139,8 +138,6 @@ class Chain():
             prompt = Prompt(prompt)     # if prompt is a string, turn it into a Prompt object <-- for fast iteration
         if model is None:
             model = Model(Chain.examples['model_example'])
-        if parser is None:
-            parser = Parser(Chain.examples['parser_example'])
         self.prompt = prompt
         self.model = model
         self.parser = parser
@@ -148,8 +145,6 @@ class Chain():
         ## Set up input_schema and output_schema
         self.input_schema = self.find_variables(self.prompt.string)  # this is a set
         self.output_schema = {'result'}                         # in the future, we'll allow users to define this, for chaining purposes
-        ## Now add our format instructions from our parser to the prompt
-        self.prompt.format_instructions = self.parser.format_instructions
     
     def __repr__(self):
         return Chain.standard_repr(self)
@@ -180,11 +175,14 @@ class Chain():
             input = {list(self.input_schema)[0]: input}
         prompt = self.prompt.render(input=input)
         time_start = time.time()
-        result = self.model.query(prompt, verbose=verbose)
+        # Here is where we route to the appropriate query function -- likely we'll want to handle this from Model eventually.
+        # for now we're doing gpt as POC.
+        if self.parser:
+            result = self.model.query_with_instructor_gpt(prompt, self.parser.pydantic_model)
+        else:
+            result = self.model.query(prompt, verbose=verbose)
         time_end = time.time()
         duration = time_end - time_start
-        if parsed:
-            result = self.parser.parse(result)
         # Return a response object
         response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration, variables = input)
         return response
@@ -240,7 +238,6 @@ class Prompt():
     
     def __init__(self, template = Chain.examples['prompt_example']):
         self.string = template
-        self.format_instructions = "" # This starts as empty; gets changed if the Chain object has a parser with format_instruction
         self.template = env.from_string(template)
     
     def __repr__(self):
@@ -251,7 +248,6 @@ class Prompt():
         takes a dictionary of variables
         """
         rendered = self.template.render(**input)    # this takes all named variables from the dictionary we pass to this.
-        rendered += self.format_instructions
         return rendered
 
 class Model():
@@ -523,123 +519,40 @@ class Model():
             What is't but to be nothing else but mad? / But let that go.
             """).strip()
         return response
+    
+    def query_with_instructor_gpt(self, prompt, pydantic_model):
+        """
+        Queries OpenAI models using Instructor.
+        """
+        instructor_client = instructor.from_openai(client_openai)
+        response = instructor_client.chat.completions.create(
+            model=self.model,
+            response_model=pydantic_model,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response
+    
+    def chat_with_instructor_gpt(self, messages, pydantic_model):
+        """
+        Chat with OpenAI models using Instructor.
+        """
+        instructor_client = instructor.from_openai(client_openai)
+        response = instructor_client.chat.completions.create(
+            model=self.model,
+            response_model=pydantic_model,
+            messages=messages
+        )
+        return response
 
 class Parser():
     """
-    Our basic parser class.
-    Takes a function and applies it to output.
-    At its most basic, it just validates the output.
-    For more sophisticated uses (like json), it will also convert the output.
-    It also appends format instructions to the prompt.
+    Parser class for use with Instructor and Pydantic models.
     """
-    def string_parser(output):
-        """
-        Validates whether output is a string.
-        """
-        print(output)
-        if isinstance(output, str):
-            return input
-        else:
-            raise TypeError("Expected a string, but got a different type")
-    
-    def json_parser(output):
-        """
-        Converts string to json object.
-        """
-        try:
-            return json.loads(output.strip())
-        except:
-            raise ValueError("Could not convert to json:\n" + output)
-    
-    def list_parser(output):
-        """
-        Converts string to list, assuming that the string is well-formed Python list syntax.
-        This is VERY finicky; tried my best with the format_instructions. We try three times by default.
-        """
-        try:
-            output = json.loads(output.strip())
-            Answer_List.model_validate(output)
-            output = output['answer']
-            return output
-        except:
-            raise ValueError("Could not convert to list:\n" + str(output))
-        
-    parsers = {
-        "str": {
-            "function": string_parser,
-            "format_instructions": ""
-        },
-        "json": {
-            "function": json_parser,
-            "format_instructions": textwrap.dedent("""
-                Return your answer as a well-formed json object. Only return the json object; nothing else.
-                Do not include any formatting like "```json" or "```" around your answer. I will be parsing this with json.loads().
-                """).strip()},
-        "list": {
-            "function": list_parser,
-            "format_instructions": f"""
-Return your answer as a well-formed json object. Only return the json object; nothing else.
-It should match this schema:
-=============================
-{json.dumps(Answer_List.model_json_schema(), indent = 2)}
-=============================
-Do not include any formatting like "```json" or "```" around your answer. I will be parsing this with json.loads().
-                """.strip()},
-        "curriculum_parser": {
-            "function": json_parser,
-            "format_instructions": textwrap.dedent("""
-                Return your answer as a json object with this structure (this is just an example):
-                {
-                    "topic": "ux design",
-                    "curriculum": [
-                        {
-                            "module_number" : 1,
-                            "topic" : "topic",
-                            "rationale" : "rationale",
-                            "description" : "description",
-                        }
-                        {
-                            "module_number" : 2,
-                            "topic" : "topic",
-                            "rationale" : "rationale",
-                            "description" : "description",
-                        }
-                        {
-                            "module_number" : 3,
-                            "topic" : "topic",
-                            "rationale" : "rationale",
-                            "description" : "description",
-                        }
-                    ]
-                }
+    def __init__(self, pydantic_model):
+        self.pydantic_model = pydantic_model
 
-                Return your answer as a well-formed json object. Only return the json object; nothing else.
-                Do not include any formatting like "```json" or "```" around your answer. I will be parsing this with json.loads().
-                """).strip()}
-        }
-    
-    def __init__(self, parser = "str", format_instructions = ""):
-        """
-        User can set parser to set of pre-defined parsers (in Parser.parsers) or a custom parser (a function that takes a string).
-        Default parser is 'str'. Will throw an error if it doesn't get string (that would be a problem!)
-        'str' has empty format_instructions; defaults are added if you use a parser from Parser.parsers.
-        User can also define their own format instructions.
-        When instantiating a Chain object, the format_instructions from the parser are added to the prompt, and included after Prompt.render.
-        """
-        if parser in Parser.parsers:
-            self.parser = Parser.parsers[parser]['function']
-            self.format_instructions = Parser.parsers[parser]['format_instructions']
-        elif callable(parser):
-            self.parser = parser
-            self.format_instructions = format_instructions
-        else: 
-            raise ValueError(f"Parser is not recognized: {parser}")
-    
     def __repr__(self):
-        return Chain.standard_repr(self)
-    
-    def parse(self, output):
-        return self.parser(output)
+        return f"Parser(pydantic_model={self.pydantic_model.__name__})"
 
 class Response():
     """
