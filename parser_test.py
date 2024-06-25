@@ -1,17 +1,21 @@
-from Chain import Prompt, Model, Chain, Parser
-import json
-from typing import List
-from pydantic import BaseModel
+"""
+Commented out so I can save progress.
+"""
 
-class List_Answer(BaseModel):
-    answer: List[str]
+# from Chain import Prompt, Model, Chain, Parser
+# import json
+# from typing import List
+# from pydantic import BaseModel
 
-prompt = Prompt("name ten mammals")
-model = Model('gpt')
-parser = Parser(List_Answer)
+# class List_Answer(BaseModel):
+#     answer: List[str]
 
-chain = Chain(prompt, model, parser)
-response = chain.run()
-print(response.content)
+# prompt = Prompt("name ten mammals")
+# model = Model('gpt')
+# parser = Parser(List_Answer)
+
+# chain = Chain(prompt, model, parser)
+# response = chain.run()
+# print(response.content)
 
 
