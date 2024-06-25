@@ -45,7 +45,7 @@ import itertools                                        # for flattening list of
 import json                                             # for our jsonparser
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
-from pydantic import BaseModel                          # for our input_schema and output_schema; starting with List Parser.
+from pydantic import BaseModel, conlist
 from typing import List, Optional, Type, Union          # for type hints
 import instructor                                       # for parsing objects from LLMs
 
@@ -99,6 +99,16 @@ class Messages(BaseModel):
 	System roles can have some weirdness (like with Anthropic), but role/content is standard.
 	"""
 	messages: List[Message]
+
+def is_messages_object(input):
+	if not input:
+		return False
+	try:
+		Messages(messages=input)
+		return True
+	except Exception as e:
+		print(e)
+		return False
 
 class Chain():
 	"""
@@ -198,7 +208,7 @@ class Chain():
 			prompt = self.prompt.string
 		# Route input; if string, if message
 		if messages:
-			result = self.run_messages(prompt = prompt, messages = messages, model = self.model.model, parsed = parsed, verbose=verbose)
+			result = self.run_messages(prompt = prompt, messages = messages, parsed = parsed, verbose=verbose)
 		else:
 			result = self.run_completion(prompt = prompt, model = self.model.model, parsed = parsed, verbose=verbose)
 		return result
@@ -217,14 +227,14 @@ class Chain():
 		time_start = time.time()
 		if self.parser:
 			result = self.model.query(messages, verbose=verbose, pydantic_model = self.parser.pydantic_model)
+			result = json.dumps(result.__dict__)
 		else:
 			result = self.model.query(messages, verbose=verbose)
 		time_end = time.time()
 		duration = time_end - time_start
 		# Return a response object
 		# Convert result to a string
-		structured_result = json.dumps(result.__dict__)
-		assistant_message = {'role': 'assistant', 'content': structured_result}
+		assistant_message = {'role': 'assistant', 'content': result}
 		messages.append(assistant_message)
 		response = Response(content=result, status="success", prompt=prompt, model=self.model.model, duration=duration, messages = messages, variables=input)
 		return response
@@ -313,6 +323,8 @@ class Model():
 			self.model = 'gemini-pro'                                               # defaulting to the pro (1.0 )model
 		elif model == 'groq':
 			self.model = 'mixtral-8x7b-32768'                                       # defaulting to the mixtral model
+		elif model == "ollama":
+			self.model = 'mistral:latest'                                           # defaulting to the latest mistral model
 		elif model in list(itertools.chain.from_iterable(Chain.models.values())):   # any other model we support (flattened the list)
 			self.model = model
 		else:
@@ -369,12 +381,10 @@ class Model():
 		Possibilities:
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
-		- pydantic object not provided, input is a Messages object -> return Messages object
-		- pydantic object provided, input is a Messages object -> return Messages object (with pydantic object as the Content of the last Message)
 		"""
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
-		elif Messages.model_validate(input):
+		elif is_messages_object(input):
 			input = input
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
@@ -396,12 +406,10 @@ class Model():
 		Possibilities:
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
-		- pydantic object not provided, input is a Messages object -> return Messages object
-		- pydantic object provided, input is a Messages object -> return Messages object (with pydantic object as the Content of the last Message)
 		"""
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
-		elif Messages.model_validate(input):
+		elif is_messages_object(input):
 			input = input
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
@@ -426,12 +434,10 @@ class Model():
 		Possibilities:
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
-		- pydantic object not provided, input is a Messages object -> return Messages object
-		- pydantic object provided, input is a Messages object -> return Messages object (with pydantic object as the Content of the last Message)
 		"""
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
-		elif Messages.model_validate(input):
+		elif is_messages_object(input):
 			input = input
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
