@@ -176,14 +176,14 @@ class Chain():
 	def __repr__(self):
 		return Chain.standard_repr(self)
 	
-	def create_messages(system_prompt = examples['system_prompt_example'], input = None) -> list[dict]:
+	def create_messages(system_prompt = examples['system_prompt_example'], input_variables = None) -> list[dict]:
 		"""
 		Takes a system prompt object (Prompt()) or a string, an optional input object, and returns a list of messages.
 		"""
 		if isinstance(system_prompt, str):
 			system_prompt = Prompt(system_prompt)
 		if input:
-			messages = [{'role': 'system', 'content': system_prompt.render(input=input)}]
+			messages = [{'role': 'system', 'content': system_prompt.render(input_variables=input_variables)}]
 		else:
 			messages = [{'role': 'system', 'content': system_prompt.string}]
 		return messages
