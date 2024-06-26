@@ -63,13 +63,6 @@ api_keys['GOOGLE_API_KEY'] = os.getenv("GOOGLE_API_KEY")
 client_openai = instructor.from_openai(OpenAI(api_key = api_keys['OPENAI_API_KEY']))
 client_anthropic = instructor.from_anthropic(Anthropic(api_key = api_keys['ANTHROPIC_API_KEY']))
 genai.configure(api_key=api_keys["GOOGLE_API_KEY"])
-# client_google = instructor.from_gemini(
-#     client=genai.GenerativeModel(
-#         model_name="models/gemini-1.5-flash-latest",  # model defaults to "gemini-pro"
-#     ),
-#     mode=instructor.Mode.GEMINI_JSON,
-# )
-# https://pypi.org/project/google-generativeai/
 async_client_openai = instructor.from_openai(AsyncOpenAI(api_key = api_keys["OPENAI_API_KEY"]))
 # async_client_anthropic: TBD
 # async_client_google: TBD
@@ -438,7 +431,8 @@ class Model():
 	
 	def query_ollama(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
-		Handles all synchronous requests from OpenAI's models.
+		Handles all synchronous requests from Ollama models.
+		Note: this uses the gpt api.
 		Possibilities:
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
@@ -463,9 +457,20 @@ class Model():
 	
 	def query_google(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
-		TBD: the API for this is annoying so putting this off.
+		Instructor doesn't play with Gemini, despite Gemini's implementation of function calling.
+		May change in future.
+		For now, this only does messages and text completions, no function calls.
 		"""
-		pass
+		if isinstance(input, str):
+			input = [{"role": "user", "content": input}]
+		elif is_messages_object(input):
+			input = input
+		else:
+			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
+		# call our client
+		model = genai.GenerativeModel(model)
+		response = model.generate_content("The opposite of hot is")
+		return response.candidates[0].content.parts[0].text
 
 	def query_groq(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""

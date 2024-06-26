@@ -32,12 +32,23 @@ class Example_List(BaseModel):
 
 # testing chat functionality
 # first, message passing
+
+
+# for m in ['ollama', 'gpt', 'claude']:
+# 	prompt = Prompt("Sing a song in three lines.")
+# 	model = Model(m)
+# 	chain = Chain(prompt, model)
+# 	response = chain.run(messages = messages)
+# 	print(response.messages)
+
+# Gemini testing
+model = Model('gemini')
 messages = Chain.create_messages(system_prompt="You're a goddamn pirate.")
+prompt = Prompt("sing a song in three lines")
 
-for m in ['ollama', 'gpt', 'claude']:
-	prompt = Prompt("Sing a song in three lines.")
-	model = Model(m)
-	chain = Chain(prompt, model)
-	response = chain.run(messages = messages)
-	print(response.messages)
+# basic query
+chain = Chain(prompt, model)
+# print(chain.run())
 
+# query as message
+print(chain.run(messages = messages))
