@@ -2,12 +2,10 @@ from Chain import Model, Chain, Prompt, Parser
 from pydantic import BaseModel                          # for our input_schema and output_schema; starting with List Parser.
 from typing import List, Optional, Type, Union          # for type hints
 import json
+import asyncio
 
 class Example_List(BaseModel):
 	examples: List[str]
-
-
-
 
 # if __name__ == "__main__":
 	# print("OLLAMA\n====================================")
@@ -42,13 +40,30 @@ class Example_List(BaseModel):
 # 	print(response.messages)
 
 # Gemini testing
-model = Model('gemini')
-messages = Chain.create_messages(system_prompt="You're a goddamn pirate.")
-prompt = Prompt("sing a song in three lines")
+# model = Model('gemini')
+# messages = Chain.create_messages(system_prompt="You're a goddamn pirate.")
+# prompt = Prompt("sing a song in three lines")
 
-# basic query
-chain = Chain(prompt, model)
-# print(chain.run())
+# # basic query
+# chain = Chain(prompt, model)
+# # print(chain.run())
 
-# query as message
-print(chain.run(messages = messages))
+# # query as message
+# print(chain.run(messages = messages))
+
+prompt_examples = ['name ten mammals', 'name five birds', 'name 12 lizards', 'name 4 presidents', 'name 5 queens', 'name 6 chess players']
+model = Model("gpt-3.5-turbo-0125")
+
+# async def run_multiple_extracts(prompt_examples):
+# 	tasks = []
+# 	for p in prompt_examples:
+# 		tasks.append(model.query_openai_async(p))
+# 	results = await asyncio.gather(*tasks)  # Run them concurrently
+# 	return results
+
+# results = asyncio.run(run_multiple_extracts(prompt_examples))
+
+results = model.run_async(prompt_examples)
+
+print(results)
+
