@@ -275,11 +275,11 @@ class Prompt():
 	def __repr__(self):
 		return Chain.standard_repr(self)
 	
-	def render(self, input):
+	def render(self, input_variables):
 		"""
 		takes a dictionary of variables
 		"""
-		rendered = self.template.render(**input)    # this takes all named variables from the dictionary we pass to this.
+		rendered = self.template.render(**input_variables)    # this takes all named variables from the dictionary we pass to this.
 		return rendered
 
 class Model():
@@ -584,7 +584,10 @@ class Chat():
 	My first implementation of a chatbot.
 	"""
 	def __init__(self, model=Chain.examples['model_example'], system_prompt=Chain.examples["system_prompt_example"]):
-		self.model = Model(model)
+		if isinstance(model, str):
+			self.model = Model(model)
+		else:
+			self.model = model
 		self.system_prompt = system_prompt
 	
 	def __repr__(self):
