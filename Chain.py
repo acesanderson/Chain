@@ -461,6 +461,8 @@ class Model():
 		May change in future.
 		For now, this only does messages and text completions, no function calls.
 		"""
+		if pydantic_model:
+			raise ValueError("Instructor doesn't support function calling with Gemini currently.")
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
 		elif is_messages_object(input):
