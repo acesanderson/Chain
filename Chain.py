@@ -219,7 +219,7 @@ class Chain():
 		time_start = time.time()
 		if self.parser:
 			result = self.model.query(messages, verbose=verbose, pydantic_model = self.parser.pydantic_model)
-			result = json.dumps(result.__dict__)
+			# result = json.dumps(result.__dict__)
 		else:
 			result = self.model.query(messages, verbose=verbose)
 		time_end = time.time()
