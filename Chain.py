@@ -319,6 +319,8 @@ class Model():
 			self.model = 'mixtral-8x7b-32768'                                       # defaulting to the mixtral model
 		elif model == "ollama":
 			self.model = 'mistral:latest'                                           # defaulting to the latest mistral model
+		elif model == "haiku":
+			self.model = 'claude-3-haiku-20240307'                                  # haiku model
 		elif model in list(itertools.chain.from_iterable(Chain.models.values())):   # any other model we support (flattened the list)
 			self.model = model
 		else:
