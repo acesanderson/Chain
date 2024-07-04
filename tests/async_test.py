@@ -79,3 +79,17 @@
 #     else:
 #         return await response.choices[0].message.content
 
+
+from Chain import Prompt, Model
+from pydantic import BaseModel
+from typing import List
+
+class Objects(BaseModel):
+	objects: List[str]
+
+prompts = ['birds', 'mammals', 'presidents', 'planets', 'countries', 'cities']
+prompt_template = Prompt("Name ten {{objects}}.")
+prompts = [prompt_template.render(input_variables = {'objects': prompt}) for prompt in prompts]
+model = Model('gpt3')
+results = model.run_async(prompts, pydantic_model = Objects)
+

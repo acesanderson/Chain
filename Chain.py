@@ -483,25 +483,30 @@ class Model():
 		"""
 		pass
 	
-	async def query_openai_async(self, input: Union[str, list], verbose: bool=True, model: str = "gpt-3.5-turbo-0125", pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	async def query_openai_async(self, prompt: Union[str, list], verbose: bool=True, model: str = "gpt-3.5-turbo-0125", pydantic_model: Optional[Type[BaseModel]] = None, request_num: int = None) -> Union[BaseModel, str]:
 		"""
 		Handles all asynchronous requests from OpenAI's models.
 		Possibilities:
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
 		"""
-		if isinstance(input, str):
-			input = [{"role": "user", "content": input}]
-		elif is_messages_object(input):
-			input = input
+		if isinstance(prompt, str):
+			prompt = [{"role": "user", "content": prompt}]
+		elif is_messages_object(prompt):
+			prompt = prompt
 		else:
-			raise ValueError(f"Input not recognized as a valid input type: {type(input)}: {input}")
+			raise ValueError(f"Prompt not recognized as a valid prompt type: {type(prompt)}: {prompt}")
+		
+		print(f"Sending request #{request_num} to {model}...") if verbose else None
 		# call our client
 		response = await async_client_openai.chat.completions.create(
 			model = model,
 			response_model = pydantic_model,
-			messages = input
+			messages = prompt
 		)
+		
+		print(f"Received response #{request_num} from {model}") if verbose else None
+		
 		if pydantic_model:
 			return response  # Directly returning the response for pydantic processing
 		else:
@@ -511,18 +516,23 @@ class Model():
 				print("Response structure:", response)  # Debugging line to inspect the structure
 				raise AttributeError("Response object does not have 'choices'")
 	
-	async def run_multiple_extracts(self, prompt_examples: list[str]):
+	async def run_multiple_extracts(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True):
 		tasks = []
-		for p in prompt_examples:
-			tasks.append(self.query_openai_async(p))
+		for i, p in enumerate(prompts, start = 1):
+			print(f"Preparing task #{i} of {len(prompts)}...") if verbose else None
+			tasks.append(self.query_openai_async(p, pydantic_model = pydantic_model, request_num = i, verbose = verbose))
+		print(f"Running {len(prompts)} tasks concurrently...") if verbose else None
+		start_time = time.time()
 		results = await asyncio.gather(*tasks)  # Run them concurrently
+		end_time = time.time()
+		print(f"All {len(prompts)} tasks completed in {end_time - start_time:.2f} seconds.") if verbose else None
 		return results
 	
-	def run_async(self, prompt_examples: list[str]):
+	def run_async(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True):
 		"""
 		Example of how to run multiple extracts asynchronously.
 		"""
-		results = asyncio.run(self.run_multiple_extracts(prompt_examples))
+		results = asyncio.run(self.run_multiple_extracts(prompts, pydantic_model = pydantic_model, verbose = verbose))
 		return results
 
 class Parser():
