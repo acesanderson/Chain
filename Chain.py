@@ -49,6 +49,7 @@ from pydantic import BaseModel, conlist
 from typing import List, Optional, Type, Union          # for type hints
 import instructor                                       # for parsing objects from LLMs
 import asyncio										    # for async
+from ollama import Client               				# for local llms
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -328,6 +329,29 @@ class Model():
 	
 	def __repr__(self):
 		return Chain.standard_repr(self)
+	
+	def custom_ollama_client(self, host: str) -> None:
+		"""
+		Set a custom ollama client -- important if I want to be using my more powerful GPU on my Magnus machine.
+		Invoke with host = "magnus" to get that machine.
+		NOTE: could also use the ngrok url if necessary.
+		"""
+		global client_ollama
+		if host == "magnus":
+			host = 'http://stork-aware-pipefish.ngrok-free.app/v1' 
+		elif host == "default":
+			host ='http://localhost:11434/v1'
+		else:
+			host = f'http://{host}'
+		# Change the client to the new host
+		client_ollama = instructor.from_openai(
+			OpenAI(
+				base_url = host,
+				api_key = "ollama",  # required, but unused
+			),
+			mode=instructor.Mode.JSON,
+		)
+		print(f'Ollama client changed to {host}.')
 	
 	def query(self, input: Union[str, list], verbose: bool=True, model: str = Chain.examples['model_example'], pydantic_model = None) -> Union[BaseModel, str, List]:
 		model = self.model
