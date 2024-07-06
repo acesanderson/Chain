@@ -183,7 +183,7 @@ class Chain():
 		"""
 		if isinstance(system_prompt, str):
 			system_prompt = Prompt(system_prompt)
-		if input:
+		if input_variables:
 			messages = [{'role': 'system', 'content': system_prompt.render(input_variables=input_variables)}]
 		else:
 			messages = [{'role': 'system', 'content': system_prompt.string}]
