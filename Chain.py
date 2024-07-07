@@ -117,8 +117,13 @@ class Chain():
 	# Put API keys for convenience across my system.
 	api_keys = api_keys
 	# Canonical source of models; or if there are new cloud models (fex. Gemini)
+	try:
+		ollama_models = [m['name'] for m in ollama.list()['models']]
+	except:
+		ollama_models = []
+		print('Ollama is not running.')
 	models = {
-		"ollama": [m['name'] for m in ollama.list()['models']],
+		"ollama": ollama_models,
 		"openai": ["gpt-4o","gpt-4-turbo","gpt-3.5-turbo-0125"],
 		"anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-3-5-sonnet-20240620"],
 		"google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro"],
