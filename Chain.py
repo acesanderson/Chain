@@ -338,7 +338,8 @@ class Model():
 		"""
 		global client_ollama
 		if host == "magnus":
-			host = 'http://stork-aware-pipefish.ngrok-free.app/v1' 
+			MAGNUS_URL = os.getenv("MAGNUS_URL")
+			host = MAGNUS_URL
 		elif host == "default":
 			host ='http://localhost:11434/v1'
 		else:
