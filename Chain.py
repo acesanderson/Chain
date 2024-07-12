@@ -408,6 +408,8 @@ class Model():
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
 		"""
+		if verbose:
+			print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
 		elif is_messages_object(input):
@@ -435,6 +437,8 @@ class Model():
 		Anthropic is quirky about system messsages (The Messages API accepts a top-level `system` parameter, not "system" as an input message role.)
 		"""
 		# Anthropic requires a system variable
+		if verbose:
+			print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
 		system = ""
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
@@ -470,6 +474,8 @@ class Model():
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
 		"""
+		if verbose:
+			print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
 		if isinstance(input, str):
 			input = [{"role": "user", "content": input}]
 		elif is_messages_object(input):
@@ -494,6 +500,8 @@ class Model():
 		May change in future.
 		For now, this only does messages and text completions, no function calls.
 		"""
+		if verbose:
+			print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
 		if pydantic_model:
 			raise ValueError("Instructor doesn't support function calling with Gemini currently.")
 		if isinstance(input, str):
@@ -520,6 +528,8 @@ class Model():
 		- pydantic object not provided, input is string -> return string
 		- pydantic object provided, input is string -> return pydantic object
 		"""
+		if verbose:
+			print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
 		if isinstance(prompt, str):
 			prompt = [{"role": "user", "content": prompt}]
 		elif is_messages_object(prompt):
