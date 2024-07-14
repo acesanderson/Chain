@@ -572,6 +572,9 @@ class Model():
 		"""
 		Example of how to run multiple extracts asynchronously.
 		"""
+		if len(prompts) > 50:
+			raise ValueError("You've requested more than 50 prompts; throwing an error to spare you bank account.")
+			return None
 		results = asyncio.run(self.run_multiple_extracts(prompts, pydantic_model = pydantic_model, verbose = verbose))
 		return results
 
