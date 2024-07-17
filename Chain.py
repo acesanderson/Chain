@@ -568,12 +568,12 @@ class Model():
 		print(f"All {len(prompts)} tasks completed in {end_time - start_time:.2f} seconds.") if verbose else None
 		return results
 	
-	def run_async(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True, throttle = True) -> list[Union[BaseModel, str]]:
+	def run_async(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True, throttle = 20) -> list[Union[BaseModel, str]]:
 		"""
 		Example of how to run multiple extracts asynchronously.
 		"""
-		if throttle == True:
-			if len(prompts) > 10:
+		if throttle > 0:
+			if len(prompts) > throttle:
 				raise ValueError("You've requested more than 50 prompts; throwing an error to spare you bank account.")
 		results = asyncio.run(self.run_multiple_extracts(prompts, pydantic_model = pydantic_model, verbose = verbose))
 		return results
