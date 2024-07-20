@@ -4,30 +4,6 @@ A link is an object that takes the following:
 - a prompt (a jinja2 template)
 - a model (a string)
 - an output (a dictionary)
-
-Next up:
-- incorporate Instructor for object parsing -- replaces most of Parser class
-x - define input_schema (created backwards from jinja template (using find_variables on the original string))
-x - allow user to edit input_schema
-x - define output_schema (default is just "result", but user can define this)
-x - add batch function
-x - do more validation
- x - should throw an error if input is not a dictionary with the right schema
-x - edit link.run so that it could take a single string if needed (just turn it into dict in the method)
-x - eidt link.__init__ so that you can just enter a string to initialize as well
-	i.e. instead of topic_chain = Chain(Prompt(topic_prompt)), can you just have Chain(topic_prompt)
-	this would enable fast iteration
-x - add default parsers to Parser class
-x - add gemini models
-x - add groq
-x - handle messages
-- add regex parser (takes a pattern)
-- allow temperature setting for Model
-- Base class is serial, there will be a parallel extension that leverages async
-- a way to chain these together with pipes
-- add an 'empty' model that just returns the input (converting dicts to strings), for tracing purposes
- - similarly, adding a "tracing" flag that logs all inputs and outputs throughout the process
-- consider other format types like [langchain's](https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/output_parsers/format_instructions.py)
 """
 
 # all our packages
@@ -254,6 +230,10 @@ class Chain():
 		return response
 	
 	def run_async(self, input_variables: Union[str, dict] = None, verbose=True):
+		"""
+		Note: async is currently handled by Model class.
+		Didn't make sense to have as a run function given than my main use case is to mass produce prompts and pass a list of them to the query_async function.
+		"""
 		pass
 	
 	def batch(self, input_list=[]):
