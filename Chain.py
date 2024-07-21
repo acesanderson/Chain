@@ -538,6 +538,52 @@ class Model():
 				print("Response structure:", response)  # Debugging line to inspect the structure
 				raise AttributeError("Response object does not have 'choices'")
 	
+	async def query_anthropic_async(prompt: Union[str, list], verbose: bool=True, model: str = "claude-3-5-sonnet-20240620", pydantic_model: Optional[Type[BaseModel]] = None, request_num: int = None) -> Union[BaseModel, str]:
+		"""
+		Handles all asynchronous requests from Anthropic's models using Instructor.
+		Possibilities:
+		- pydantic object not provided, input is string -> return string
+		- pydantic object provided, input is string -> return pydantic object
+		Defaults to 3.5 Sonnet, not Haiku because when we use Claude, we are wanting performance.
+		"""
+		if isinstance(prompt, str):
+			prompt = [{"role": "user", "content": prompt}]
+		elif is_messages_object(prompt):
+			prompt = prompt
+		else:
+			raise ValueError(f"Prompt not recognized as a valid prompt type: {type(prompt)}: {prompt}")
+		
+		print(f"Sending request #{request_num} to {model}...") if verbose else None
+
+		try:
+			if pydantic_model:
+				response = await async_client_anthropic.chat.completions.create(
+					model=model,
+					max_tokens=2000,
+					messages=prompt,
+					response_model=pydantic_model
+				)
+				return response
+			else:
+				# Use a simple string response model when no Pydantic model is provided
+				class StringResponse(BaseModel):
+					content: str
+
+				response = await async_client_anthropic.chat.completions.create(
+					model=model,
+					max_tokens=2000,
+					messages=prompt,
+					response_model=StringResponse
+				)
+				return response.content
+		
+		except Exception as e:
+			print(f"Error in request #{request_num}: {str(e)}")
+			raise
+
+		finally:
+			print(f"Received response #{request_num} from {model}") if verbose else None
+
 	async def run_multiple_extracts(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True):
 		tasks = []
 		for i, p in enumerate(prompts, start = 1):
