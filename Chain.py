@@ -22,10 +22,11 @@ import json                                             # for our jsonparser
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
 from pydantic import BaseModel, conlist
-from typing import List, Optional, Type, Union          # for type hints
+from typing import List, Optional, Type, Union, Literal # for type hints
 import instructor                                       # for parsing objects from LLMs
 import asyncio										    # for async
 from ollama import Client               				# for local llms
+from anthropic import AsyncAnthropic					# for async anthropic
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -42,6 +43,7 @@ client_openai = instructor.from_openai(OpenAI(api_key = api_keys['OPENAI_API_KEY
 client_anthropic = instructor.from_anthropic(Anthropic(api_key = api_keys['ANTHROPIC_API_KEY']))
 genai.configure(api_key=api_keys["GOOGLE_API_KEY"])
 async_client_openai = instructor.from_openai(AsyncOpenAI(api_key = api_keys["OPENAI_API_KEY"]))
+async_client_anthropic = instructor.from_anthropic(AsyncAnthropic(api_key = api_keys['ANTHROPIC_API_KEY']))
 # async_client_anthropic: TBD
 # async_client_google: TBD
 client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))    # Instructor not support!
@@ -538,7 +540,7 @@ class Model():
 				print("Response structure:", response)  # Debugging line to inspect the structure
 				raise AttributeError("Response object does not have 'choices'")
 	
-	async def query_anthropic_async(prompt: Union[str, list], verbose: bool=True, model: str = "claude-3-5-sonnet-20240620", pydantic_model: Optional[Type[BaseModel]] = None, request_num: int = None) -> Union[BaseModel, str]:
+	async def query_anthropic_async(self, prompt: Union[str, list], verbose: bool=True, model: str = "claude-3-5-sonnet-20240620", pydantic_model: Optional[Type[BaseModel]] = None, request_num: int = None) -> Union[BaseModel, str]:
 		"""
 		Handles all asynchronous requests from Anthropic's models using Instructor.
 		Possibilities:
@@ -554,7 +556,7 @@ class Model():
 			raise ValueError(f"Prompt not recognized as a valid prompt type: {type(prompt)}: {prompt}")
 		
 		print(f"Sending request #{request_num} to {model}...") if verbose else None
-
+		
 		try:
 			if pydantic_model:
 				response = await async_client_anthropic.chat.completions.create(
@@ -584,11 +586,14 @@ class Model():
 		finally:
 			print(f"Received response #{request_num} from {model}") if verbose else None
 
-	async def run_multiple_extracts(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True):
+	async def run_multiple_extracts(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True, model = "gpt") -> list[Union[BaseModel, str]]:
 		tasks = []
 		for i, p in enumerate(prompts, start = 1):
 			print(f"Preparing task #{i} of {len(prompts)}...") if verbose else None
-			tasks.append(self.query_openai_async(p, pydantic_model = pydantic_model, request_num = i, verbose = verbose))
+			if model == "gpt":
+				tasks.append(self.query_openai_async(p, pydantic_model = pydantic_model, request_num = i, verbose = verbose))
+			elif model == "claude":
+				tasks.append(self.query_anthropic_async(p, pydantic_model = pydantic_model, request_num = i, verbose = verbose))
 		print(f"Running {len(prompts)} tasks concurrently...") if verbose else None
 		start_time = time.time()
 		results = await asyncio.gather(*tasks)  # Run them concurrently
@@ -596,14 +601,15 @@ class Model():
 		print(f"All {len(prompts)} tasks completed in {end_time - start_time:.2f} seconds.") if verbose else None
 		return results
 	
-	def run_async(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True, throttle = 20) -> list[Union[BaseModel, str]]:
+	def run_async(self, prompts: list[str], pydantic_model: Optional[Type[BaseModel]] = None, verbose: bool = True, throttle = 20, model = Literal["gpt","claude"]) -> list[Union[BaseModel, str]]:
 		"""
 		Example of how to run multiple extracts asynchronously.
+		For now, model is either gpt or claude. (Enum)
 		"""
 		if throttle > 0:
 			if len(prompts) > throttle:
 				raise ValueError("You've requested more than 50 prompts; throwing an error to spare you bank account.")
-		results = asyncio.run(self.run_multiple_extracts(prompts, pydantic_model = pydantic_model, verbose = verbose))
+		results = asyncio.run(self.run_multiple_extracts(prompts, pydantic_model = pydantic_model, verbose = verbose, model = model))
 		return results
 
 class Parser():
