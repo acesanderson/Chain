@@ -7,7 +7,7 @@ A link is an object that takes the following:
 """
 
 # all our packages
-from jinja2 import Environment, meta, StrictUndefined   # we use jinja2 for prompt templates
+from jinja2 import Environment, meta, StrictUndefined, Template   # we use jinja2 for prompt templates
 from openai import OpenAI                               # GPT
 import google.generativeai as genai                     # Google's models
 from openai import AsyncOpenAI                          # for async; not implemented yet
@@ -25,7 +25,6 @@ from pydantic import BaseModel, conlist
 from typing import List, Optional, Type, Union, Literal # for type hints
 import instructor                                       # for parsing objects from LLMs
 import asyncio										    # for async
-from ollama import Client               				# for local llms
 from anthropic import AsyncAnthropic					# for async anthropic
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
@@ -117,14 +116,14 @@ class Chain():
 		'system_prompt_example': "You're a helpful assistant.",
 	}
 	
-	def update_models():
+	def update_models() -> None:
 		"""
 		If you need to update the ollama model list on the fly, use this function.
 		"""
 		models = [m['name'] for m in ollama.list()['models']]
 		Chain.models['ollama'] = models
 	
-	def standard_repr(object):
+	def standard_repr(object) -> str:
 		"""
 		Standard for all of my classes; changes how the object is represented when invoked in interpreter.
 		Called from all classes related to Chain project (Model, Prompt, Chat, etc.).
@@ -133,7 +132,7 @@ class Chain():
 		return f"{object.__class__.__name__}({attributes})"
 		# Example output: Chain(prompt=Prompt(string='tell me about {{topic}}', format_in, model=Model(model='mistral'), parser=Parser(parser=<function Chain.<lambda> at 0x7f7c5a
 	
-	def find_variables(self, template):    
+	def find_variables(self, template: Template) -> set:
 		"""
 		This function takes a jinja2 template and returns a set of variables; used for setting input_schema of Chain object.
 		"""
@@ -314,7 +313,7 @@ class Model():
 		elif model in list(itertools.chain.from_iterable(Chain.models.values())):   # any other model we support (flattened the list)
 			self.model = model
 		else:
-			raise ValueError(f"Model not found: {model}")
+			ValueError(f"WARNING: Model not found locally: {model}. This may cause errors.")
 	
 	def __repr__(self):
 		return Chain.standard_repr(self)
