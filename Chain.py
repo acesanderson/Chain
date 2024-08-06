@@ -98,7 +98,6 @@ class Chain():
 		ollama_models = [m['name'] for m in ollama.list()['models']]
 	except:
 		ollama_models = []
-		print('Ollama is not running.')
 	models = {
 		"ollama": ollama_models,
 		"openai": ["gpt-4o","gpt-4-turbo","gpt-3.5-turbo-0125", "gpt-4o-mini"],
