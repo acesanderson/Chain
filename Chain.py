@@ -681,11 +681,14 @@ class Chat():
 	def __repr__(self):
 		return Chain.standard_repr(self)
 	
-	def chat(self):
+	def chat(self, messages: Messages = []):
 		"""
 		Chat with the model.
 		"""
-		messages = [{'role': 'system', 'content': self.system_prompt}]
+		if messages:
+			messages = messages
+		else:
+			messages = [{'role': 'system', 'content': self.system_prompt}]
 		print("Let's chat! Type '/exit' to leave.")
 		while True:
 			# handle annoying Claude exception (they don't accept system prompts)
