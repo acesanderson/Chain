@@ -78,5 +78,3 @@ if __name__ == "__main__":
         search_term = sys.argv[1]
     results = Search(search_term)
     print(json.dumps(results, indent=4))
-
-"""
