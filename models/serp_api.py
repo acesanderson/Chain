@@ -78,3 +78,21 @@ if __name__ == "__main__":
         search_term = sys.argv[1]
     results = Search(search_term)
     print(json.dumps(results, indent=4))
+
+
+course = "IFRS - A Complete Course on IFRS"
+params = {
+  "engine": "google",
+  "q": f"'{course}' site:udemy.com",
+  "api_key": SERP_API_KEY
+}
+
+search = GoogleSearch(params)
+results = search.get_dict()
+organic_results = results["organic_results"]
+title = course
+snippet = organic_results[0]['snippet']
+combined_query = f"{title}: {snippet}"
+
+print(combined_query)
+
