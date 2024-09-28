@@ -436,7 +436,7 @@ class Model():
 		response = client_anthropic.chat.completions.create(
 			# model = self.model,
 			model = model,
-			max_tokens = 1024,
+			max_tokens = 4096,
 			max_retries = 0,
 			system = system,
 			messages = input,
