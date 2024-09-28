@@ -432,11 +432,16 @@ class Model():
 				input = input[1:]
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
+		# set max_tokens based on model
+		if model == "claude-3-sonnet-20240229":
+			max_tokens = 8192
+		else:
+			max_tokens = 4096
 		# call our client
 		response = client_anthropic.chat.completions.create(
 			# model = self.model,
 			model = model,
-			max_tokens = 4096,
+			max_tokens = max_tokens,
 			max_retries = 0,
 			system = system,
 			messages = input,
