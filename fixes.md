@@ -1,3 +1,7 @@
+- have Model.query also return Response objects
+- performance enhancement -- lazy load imports
+- add spinners from rich library (inspiration from Curate.py)
+- allow for specifying temperature and output tokens ("max output")
 - fix async implementation of openai (anthropic works)
 - more elegant way to manage create_messages
 - allow chunking of async requests (so that it does them in separate chunks of ~10 at a time)
