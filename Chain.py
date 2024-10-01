@@ -1,11 +1,3 @@
-"""
-This is me running my own framework, called Chain.
-A link is an object that takes the following:
-- a prompt (a jinja2 template)
-- a model (a string)
-- an output (a dictionary)
-"""
-
 # all our packages
 from jinja2 import Environment, meta, StrictUndefined, Template   # we use jinja2 for prompt templates
 from openai import OpenAI                               # GPT
