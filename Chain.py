@@ -425,7 +425,7 @@ class Model():
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
 		# set max_tokens based on model
-		if model == "claude-3-sonnet-20240229":
+		if model == "claude-3-5-sonnet-20240620":
 			max_tokens = 8192
 		else:
 			max_tokens = 4096
