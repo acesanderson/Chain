@@ -94,7 +94,7 @@ class Chain():
 		"ollama": ollama_models,
 		"openai": ["gpt-4o","gpt-4-turbo","gpt-3.5-turbo-0125", "gpt-4o-mini", "o1-preview", "o1-mini"],
 		"anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-3-5-sonnet-20240620"],
-		"google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-pro"],
+		"google": ["gemini-1.5-pro-latest", "gemini-1.5-flash-latest", "gemini-1.0-pro-latest"],
 		"groq": ["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma-7b-it"],
 		"testing": ["polonius"]
 	}
@@ -292,7 +292,7 @@ class Model():
 		elif model == 'gpt3':
 			self.model = 'gpt-3.5-turbo-0125'                                       # defaulting to the turbo model
 		elif model == 'gemini':
-			self.model = 'gemini-pro'                                               # defaulting to the pro (1.0 )model
+			self.model = 'gemini-1.5-pro-latest'                                    # defaulting to the pro (1.0 )model
 		elif model == 'groq':
 			self.model = 'mixtral-8x7b-32768'                                       # defaulting to the mixtral model
 		elif model == "ollama":
@@ -473,26 +473,40 @@ class Model():
 		else:
 			return response.choices[0].message.content
 	
-	def query_google(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def query_google(self, input: Union[str, list], verbose: bool=True, model: str = 'gemini-1.5-flash-latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
-		Instructor doesn't play with Gemini, despite Gemini's implementation of function calling.
-		May change in future.
-		For now, this only does messages and text completions, no function calls.
+		Google doesn't take message objects, apparently. (or it's buried in their documentation)
 		"""
 		if verbose:
 			print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-		if pydantic_model:
-			raise ValueError("Instructor doesn't support function calling with Gemini currently.")
 		if isinstance(input, str):
-			input = [{"role": "user", "content": input}]
-		elif is_messages_object(input):
 			input = input
+		elif is_messages_object(input):
+			input = input['content']
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
 		# call our client
-		model = genai.GenerativeModel(model)
-		response = model.generate_content("The opposite of hot is")
-		return response.candidates[0].content.parts[0].text
+		if pydantic_model:  # Use Instructor
+			client = instructor.from_gemini(
+				client=genai.GenerativeModel(
+					model_name = model,
+				),
+				mode=instructor.Mode.GEMINI_JSON,
+			)
+			response = client.chat.completions.create(
+				messages=[
+					{
+						"role": "user",
+						"content": input,
+					}
+				],
+				response_model = pydantic_model,
+			)
+			return response
+		else:   	# Use official gemini library
+			gemini_model = genai.GenerativeModel(model_name = model)
+			response = gemini_model.generate_content(input)
+			response.candidates[0].content.parts[0].text
 	
 	def query_groq(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
