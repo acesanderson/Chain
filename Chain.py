@@ -319,30 +319,6 @@ class Model():
 	def __repr__(self):
 		return Chain.standard_repr(self)
 	
-	def custom_ollama_client(self, host: str) -> None:
-		"""
-		Set a custom ollama client -- important if I want to be using my more powerful GPU on my Magnus machine.
-		Invoke with host = "magnus" to get that machine.
-		NOTE: could also use the ngrok url if necessary.
-		"""
-		global client_ollama
-		if host == "magnus":
-			MAGNUS_URL = os.getenv("MAGNUS_URL")
-			host = MAGNUS_URL
-		elif host == "default":
-			host ='http://localhost:11434/v1'
-		else:
-			host = f'http://{host}'
-		# Change the client to the new host
-		client_ollama = instructor.from_openai(
-			OpenAI(
-				base_url = host,
-				api_key = "ollama",  # required, but unused
-			),
-			mode=instructor.Mode.JSON,
-		)
-		print(f'Ollama client changed to {host}.')
-	
 	def query(self, input: Union[str, list], verbose: bool=True, model: str = Chain.examples['model_example'], pydantic_model = None) -> Union[BaseModel, str, List]:
 		model = self.model
 		# input can be message or str
