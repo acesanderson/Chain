@@ -18,6 +18,7 @@ from typing import List, Optional, Type, Union, Literal # for type hints
 import instructor                                       # for parsing objects from LLMs
 import asyncio										    # for async
 from anthropic import AsyncAnthropic					# for async anthropic
+from collections import defaultdict						# for defaultdict
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -98,6 +99,15 @@ class Chain():
 		"groq": ["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma-7b-it"],
 		"testing": ["polonius"]
 	}
+	# Ollama is throttled at 2048 token context size by default; let's go with 4096 and set even higher for some models.
+	ollama_context_sizes = defaultdict(lambda: 4096) # DefaultDict so that any model not listed here defaults to 2048
+	ollama_context_sizes.update({
+		"mistral:latest": 8192,
+		"llama3.1:latest": 32768,	# Llama3.1 supposedly goes up to 128k; this is an intermediate / performance size.
+		"lama3.1:70b-instruct-q2_K": 32768,
+		'dolphin-mixtral:latest': 16384,
+		'dolphin-mixtral:8x7b': 32768,
+	})
 	# Silly examples for testing; if you declare a Chain() without inputs, these are the defaults.
 	examples = {
 		'batch_example': [{'input': 'John Henry'}, {'input': 'Paul Bunyan'}, {'input': 'Babe the Blue Ox'}, {'input': 'Brer Rabbit'}],
@@ -447,11 +457,9 @@ class Model():
 	
 	def query_ollama(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
-		Handles all synchronous requests from Ollama models.
-		Note: this uses the gpt api.
-		Possibilities:
-		- pydantic object not provided, input is string -> return string
-		- pydantic object provided, input is string -> return pydantic object
+		Handles all synchronous requests from Ollama models.	
+		DOES NOT SUPPORT PYDANTIC MODELS, SINCE I CANNOT FIGURE HOW TO SET CTX FOR INSTRUCTOR.
+		num_ctx = context window size, which is set in Chain.ollama_context_sizes.
 		"""
 		if verbose:
 			print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
@@ -462,16 +470,15 @@ class Model():
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
 		# call our client
-		response = client_ollama.chat.completions.create(
-			# model=self.model,
-			model = model,
-			response_model = pydantic_model,
-			messages = input
+		response = ollama.chat(
+			model=model,
+			messages = input,
+			options = {'num_ctx': Chain.ollama_context_sizes[model]}
 		)
 		if pydantic_model:
-			return response
+			print("Pydantic model not supported for Ollama models currently.")
 		else:
-			return response.choices[0].message.content
+			return response['message']['content']
 	
 	def query_google(self, input: Union[str, list], verbose: bool=True, model: str = 'gemini-1.5-flash-latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
