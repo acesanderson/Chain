@@ -19,11 +19,14 @@ import instructor                                       # for parsing objects fr
 import asyncio										    # for async
 from anthropic import AsyncAnthropic					# for async anthropic
 from collections import defaultdict						# for defaultdict
+from pathlib import Path
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
-dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = Path(__file__).resolve().parent
+# os.path.dirname(os.path.realpath(__file__))
 # Construct the path to the .env file
-env_path = os.path.join(dir_path, '.env')
+# env_path = os.path.join(dir_path, '.env')
+env_path = dir_path / '.env'
 # Load the environment variables
 dotenv.load_dotenv(dotenv_path=env_path)
 api_keys = {}
