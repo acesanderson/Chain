@@ -1,0 +1,9 @@
+LICENSE
+setup.py
+my_project.egg-info/PKG-INFO
+my_project.egg-info/SOURCES.txt
+my_project.egg-info/dependency_links.txt
+my_project.egg-info/top_level.txt
+tests/test_Chain.py
+tests/test_Chain_claude_version.py
+tests/test_Course_Data.py
