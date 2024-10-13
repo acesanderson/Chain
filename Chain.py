@@ -1,11 +1,4 @@
-# all our packages
 from jinja2 import Environment, meta, StrictUndefined, Template   # we use jinja2 for prompt templates
-from openai import OpenAI                               # GPT
-import google.generativeai as genai                     # Google's models
-from openai import AsyncOpenAI                          # for async; not implemented yet
-from anthropic import Anthropic                         # claude
-from groq import Groq                                   # groq
-import ollama                                           # local llms
 import re                                               # for regex
 import os                                               # for environment variables
 import dotenv                                           # for loading environment variables
@@ -13,19 +6,16 @@ import itertools                                        # for flattening list of
 import json                                             # for our jsonparser
 import time                                             # for timing our query calls (saved in Response object)
 import textwrap                                         # to allow for indenting of multiline strings for code readability
-from pydantic import BaseModel, conlist
+from pydantic import BaseModel
 from typing import List, Optional, Type, Union, Literal # for type hints
 import instructor                                       # for parsing objects from LLMs
 import asyncio										    # for async
-from anthropic import AsyncAnthropic					# for async anthropic
 from collections import defaultdict						# for defaultdict
 from pathlib import Path
+import importlib
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
 dir_path = Path(__file__).resolve().parent
-# os.path.dirname(os.path.realpath(__file__))
-# Construct the path to the .env file
-# env_path = os.path.join(dir_path, '.env')
 env_path = dir_path / '.env'
 # Load the environment variables
 dotenv.load_dotenv(dotenv_path=env_path)
@@ -34,21 +24,6 @@ api_keys['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
 api_keys['ANTHROPIC_API_KEY'] = os.getenv("ANTHROPIC_API_KEY")
 api_keys['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
 api_keys['GOOGLE_API_KEY'] = os.getenv("GOOGLE_API_KEY")
-client_openai = instructor.from_openai(OpenAI(api_key = api_keys['OPENAI_API_KEY']))
-client_anthropic = instructor.from_anthropic(Anthropic(api_key = api_keys['ANTHROPIC_API_KEY']))
-genai.configure(api_key=api_keys["GOOGLE_API_KEY"])
-async_client_openai = instructor.from_openai(AsyncOpenAI(api_key = api_keys["OPENAI_API_KEY"]))
-async_client_anthropic = instructor.from_anthropic(AsyncAnthropic(api_key = api_keys['ANTHROPIC_API_KEY']))
-# async_client_anthropic: TBD
-# async_client_google: TBD
-client_groq = Groq(api_key=os.getenv("GROQ_API_KEY"))    # Instructor not support!
-client_ollama = instructor.from_openai(
-	OpenAI(
-		base_url="http://localhost:11434/v1",
-		api_key="ollama",  # required, but unused
-	),
-	mode=instructor.Mode.JSON,
-)
 env = Environment(undefined=StrictUndefined)            # # set jinja2 to throw errors if a variable is undefined
 
 # Pydantic objects for validation
@@ -280,6 +255,7 @@ class Model():
 	This routes to either OpenAI, Anthropic, Google, or Ollama models, in future will have groq.
 	There's also an async method which we haven't connected yet (see gpt_async below).
 	"""
+	_clients = {}	# This is where we store our clients; we don't want to keep creating them. (lazy load implementation)
 	
 	def is_message(self, obj):
 		"""
@@ -291,6 +267,16 @@ class Model():
 			return False
 		return all(isinstance(x, dict) for x in obj)
 	
+	def __repr__(self):
+		return Chain.standard_repr(self)
+	
+	def pretty(self, user_input):
+		"""
+		Truncate input to 150 characters for pretty logging.
+		"""
+		pretty = re.sub(r'\n|\t', ' ', user_input).strip()
+		return pretty[:150]
+
 	def __init__(self, model=Chain.examples['model_example']):
 		"""
 		Given that gpt and claude model names are very verbose, let users just ask for claude or gpt.
@@ -298,6 +284,14 @@ class Model():
 		# set up a default query for testing purposes
 		self.example_query = Prompt(Chain.examples['prompt_example']).render(Chain.examples['run_example'])
 		# route any aliases that I've made for specific models
+		self.model = self._validate_model(model)
+		self._client = None
+		self._client_type = self._get_client_type()
+
+	def _validate_model(self, model: str) -> str:
+		"""
+		This is where you can put in any model aliases you want to support.
+		"""
 		if model == 'claude':
 			self.model = 'claude-3-5-sonnet-20240620'                               # newest claude model as of 6/21/2024
 		elif model == 'gpt':
@@ -318,36 +312,80 @@ class Model():
 			self.model = model
 		else:
 			ValueError(f"WARNING: Model not found locally: {model}. This may cause errors.")
-	
-	def __repr__(self):
-		return Chain.standard_repr(self)
-	
-	def query(self, input: Union[str, list], verbose: bool=True, model: str = Chain.examples['model_example'], pydantic_model = None) -> Union[BaseModel, str, List]:
-		model = self.model
-		# input can be message or str
-		if model in Chain.models['openai']:
-			return self.query_openai(input, verbose, model, pydantic_model)
-		if model in Chain.models['anthropic']:
-			return self.query_anthropic(input, verbose, model, pydantic_model)
-		if model in Chain.models['google']:
-			return self.query_google(input, verbose, model, pydantic_model)
-		if model in Chain.models['ollama']:
-			return self.query_ollama(input, verbose, model, pydantic_model)
-		if model in Chain.models['groq']:
-			return self.query_groq(input, verbose, model, pydantic_model)
-		if model in Chain.models['testing']:
-			return self.query_testing(input, verbose, model, pydantic_model)
+		return self.model
+
+	def _get_client_type(self):
+		"""
+		Setting client_type for Model object is necessary for loading the correct client in the query functions.
+		"""
+		if self.model in Chain.models['openai']:
+			return 'openai'
+		elif self.model in Chain.models['anthropic']:
+			return 'anthropic'
+		elif self.model in Chain.models['google']:
+			return 'google'
+		elif self.model in Chain.models['ollama']:
+			return 'ollama'
+		elif self.model in Chain.models['groq']:
+			return 'groq'
+		elif self.model in Chain.models['testing']:
+			return 'testing'
 		else:
-			raise ValueError(f"Model {model} not found in Chain.models")
-	
-	def pretty(self, user_input):
+			raise ValueError(f"Model {self.model} not found in Chain.models")
+
+	@classmethod
+	def _get_client(cls, client_name):
 		"""
-		Truncate input to 150 characters for pretty logging.
+		This is our lazy load implementation; heavy SDKs like OpenAI and Anthropic are only loaded when needed.
+		At class level because we want to share the clients across all instances of the class / in same session.
 		"""
-		pretty = re.sub(r'\n|\t', '', user_input).strip()
-		return pretty[:150]
+		if client_name not in cls._clients:
+			if client_name == 'openai':
+				OpenAI = importlib.import_module('openai').OpenAI
+				instructor = importlib.import_module('instructor')
+				cls._clients[client_name] = instructor.from_openai(OpenAI(api_key=api_keys['OPENAI_API_KEY']))
+			elif client_name == 'anthropic':
+				Anthropic = importlib.import_module('anthropic').Anthropic
+				instructor = importlib.import_module('instructor')
+				cls._clients[client_name] = instructor.from_anthropic(Anthropic(api_key=api_keys['ANTHROPIC_API_KEY']))
+			elif client_name == 'google':
+				genai = importlib.import_module('google.generativeai')
+				instructor = importlib.import_module('instructor')
+				genai.configure(api_key=api_keys["GOOGLE_API_KEY"])
+				cls._clients[client_name] = genai
+			elif client_name == 'groq':
+				Groq = importlib.import_module('groq').Groq
+				cls._clients[client_name] = Groq(api_key=api_keys['GROQ_API_KEY'])
+			elif client_name == 'ollama':
+				ollama = importlib.import_module('ollama')
+				instructor = importlib.import_module('instructor')
+				cls._clients[client_name] = ollama
+			else:
+				raise ValueError(f"Unknown client type: {client_name}")
+		
+		return cls._clients[client_name]
 	
-	def query_testing(self, user_input):
+	def query(self, input: Union[str, list], verbose: bool=True, pydantic_model = None) -> Union[BaseModel, str, List]:
+		if self._client is None:
+			self._client = self._get_client(self._client_type)
+		# Route to the correct query function based on client type
+		match self._client_type:
+			case 'openai':
+				return self._query_openai(input, verbose, pydantic_model)
+			case 'anthropic':
+				return self._query_anthropic(input, verbose, pydantic_model)
+			case 'google':
+				return self._query_google(input, verbose, pydantic_model)
+			case 'ollama':
+				return self._query_ollama(input, verbose, pydantic_model)
+			case 'groq':
+				return self._query_groq(input, verbose, pydantic_model)
+			case 'testing':
+				return self._query_testing(input, verbose, pydantic_model)
+			case _:
+				raise ValueError(f"Error instantiating client.")
+	
+	def _query_testing(self, user_input):
 		"""
 		Fake model for testing purposes.
 		"""
@@ -364,7 +402,7 @@ class Model():
 			""").strip()
 		return response
 	
-	def query_openai(self, input: Union[str, list], verbose: bool=True, model: str = 'gpt-4o', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def _query_openai(self, input: Union[str, list], verbose: bool=True, pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		Handles all synchronous requests from OpenAI's models.
 		Possibilities:
@@ -380,9 +418,9 @@ class Model():
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
 		# call our client
-		response = client_openai.chat.completions.create(
+		response = self._client.chat.completions.create(
 			# model=self.model,
-			model = model,
+			model = self.model,
 			response_model = pydantic_model,
 			messages = input
 		)
@@ -391,7 +429,7 @@ class Model():
 		else:
 			return response.choices[0].message.content
 	
-	def query_anthropic(self, input: Union[str, list], verbose: bool=True, model: str = 'claude-3-5-sonnet-20240620', pydantic_model = None) -> Union[BaseModel, str]:
+	def _query_anthropic(self, input: Union[str, list], verbose: bool=True, pydantic_model = None) -> Union[BaseModel, str]:
 		"""
 		Handles all synchronous requests from Anthropic's models.
 		Possibilities:
@@ -414,14 +452,14 @@ class Model():
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
 		# set max_tokens based on model
-		if model == "claude-3-5-sonnet-20240620":
+		if self.model == "claude-3-5-sonnet-20240620":
 			max_tokens = 8192
 		else:
 			max_tokens = 4096
 		# call our client
-		response = client_anthropic.chat.completions.create(
+		response = self._client.chat.completions.create(
 			# model = self.model,
-			model = model,
+			model = self.model,
 			max_tokens = max_tokens,
 			max_retries = 0,
 			system = system,
@@ -434,7 +472,7 @@ class Model():
 		else:
 			return response.content[0].text
 	
-	def query_ollama(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def _query_ollama(self, input: Union[str, list], verbose: bool=True, pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		Handles all synchronous requests from Ollama models.	
 		DOES NOT SUPPORT PYDANTIC MODELS, SINCE I CANNOT FIGURE HOW TO SET CTX FOR INSTRUCTOR.
@@ -450,16 +488,16 @@ class Model():
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
 		# call our client
 		response = ollama.chat(
-			model=model,
+			model = self.model,
 			messages = input,
-			options = {'num_ctx': Chain.ollama_context_sizes[model]}
+			options = {'num_ctx': Chain.ollama_context_sizes[self.model]}
 		)
 		if pydantic_model:
 			print("Pydantic model not supported for Ollama models currently.")
 		else:
 			return response['message']['content']
 	
-	def query_google(self, input: Union[str, list], verbose: bool=True, model: str = 'gemini-1.5-flash-latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def _query_google(self, input: Union[str, list], verbose: bool=True, pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		Google doesn't take message objects, apparently. (or it's buried in their documentation)
 		"""
@@ -471,30 +509,28 @@ class Model():
 			input = input['content']
 		else:
 			raise ValueError(f"Input not recognized as a valid input type: {type:input}: {input}")
-		# call our client
-		if pydantic_model:  # Use Instructor
-			client = instructor.from_gemini(
-				client=genai.GenerativeModel(
-					model_name = model,
-				),
-				mode=instructor.Mode.GEMINI_JSON,
-			)
-			response = client.chat.completions.create(
-				messages=[
-					{
-						"role": "user",
-						"content": input,
-					}
-				],
-				response_model = pydantic_model,
-			)
+		# call our client	
+		gemini_client_model = instructor.from_gemini(
+			client=self._client.GenerativeModel(
+				model_name = self.model,
+			),
+			mode=instructor.Mode.GEMINI_JSON,
+		)
+		response = gemini_client_model.chat.completions.create(
+			messages=[
+				{
+					"role": "user",
+					"content": input,
+				}
+			],
+			response_model = pydantic_model,
+		)
+		if pydantic_model:
 			return response
-		else:   	# Use official gemini library
-			gemini_model = genai.GenerativeModel(model_name = model)
-			response = gemini_model.generate_content(input)
-			response.candidates[0].content.parts[0].text
+		else:
+			return response.candidates[0].content.parts[0].text
 	
-	def query_groq(self, input: Union[str, list], verbose: bool=True, model: str = 'mistral:latest', pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
+	def _query_groq(self, input: Union[str, list], verbose: bool=True, pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
 		"""
 		TBD: Not sure if Instructor plays nice with groq.
 		"""
