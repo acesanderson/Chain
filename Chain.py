@@ -1,5 +1,5 @@
+# Our imports; note that LLM SDKs (openai, anthropic, groq, ollama, gemini) are lazy loaded through the Model class.
 from jinja2 import Environment, meta, StrictUndefined, Template   # we use jinja2 for prompt templates
-import re                                               # for regex
 import os                                               # for environment variables
 import dotenv                                           # for loading environment variables
 import itertools                                        # for flattening list of models
@@ -274,7 +274,7 @@ class Model():
 		"""
 		Truncate input to 150 characters for pretty logging.
 		"""
-		pretty = re.sub(r'\n|\t', ' ', user_input).strip()
+		pretty = user_input.replace('\n', ' ').replace('\t', ' ').strip()
 		return pretty[:150]
 
 	def __init__(self, model=Chain.examples['model_example']):
