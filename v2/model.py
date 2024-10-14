@@ -31,8 +31,9 @@ class Model:
 	
 	def __init__(self, model: str = "gpt-4o"):
 		self.model = self._validate_model(model)
-		self._client_type = self._get_client_type()
-		self._client = None  # Will be lazy-loaded when needed
+		self._client_type = self._get_client_type(model)
+		# Add client loading logic
+		self._client = self.__class__._get_client(self._client_type)
 
 	def _validate_model(cls, model: str) -> str:
 		"""
@@ -54,25 +55,25 @@ class Model:
 			ValueError(f"WARNING: Model not found locally: {model}. This may cause errors.")
 		return model
 
-	def _get_client_type(self):
+	def _get_client_type(self, model: str) -> str:
 		"""
 		Setting client_type for Model object is necessary for loading the correct client in the query functions.
 		"""
 		model_list = self.__class__._models
-		if self.model in model_list['openai']:
+		if model in model_list['openai']:
 			return 'openai'
-		elif self.model in model_list['anthropic']:
+		elif model in model_list['anthropic']:
 			return 'anthropic'
-		elif self.model in model_list['google']:
+		elif model in model_list['google']:
 			return 'google'
-		elif self.model in model_list['ollama']:
+		elif model in model_list['ollama']:
 			return 'ollama'
-		elif self.model in model_list['groq']:
+		elif model in model_list['groq']:
 			return 'groq'
-		elif self.model in model_list['testing']:
+		elif model in model_list['testing']:
 			return 'testing'
 		else:
-			raise ValueError(f"Model {self.model} not found in Chain.models")
+			raise ValueError(f"Model {model} not found in Chain.models")
 	
 	@classmethod
 	def _get_client(cls, client_type: str):
