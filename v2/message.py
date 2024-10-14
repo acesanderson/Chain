@@ -2,7 +2,7 @@
 Helper class for generating different types of messages, message store, etc., for generation and chat.
 """
 from pydantic import BaseModel
-
+from prompt import Prompt
 
 class Message(BaseModel):
 	"""
@@ -17,7 +17,7 @@ class Messages(BaseModel):
 	Industry standard, more or less, for messaging with LLMs.
 	System roles can have some weirdness (like with Anthropic), but role/content is standard.
 	"""
-	messages: List[Message]
+	messages: list[Message]
 
 def is_messages_object(input):
 	if not input:
