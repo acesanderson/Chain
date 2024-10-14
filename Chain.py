@@ -5,7 +5,6 @@ import dotenv                                           # for loading environmen
 import itertools                                        # for flattening list of models
 import json                                             # for our jsonparser
 import time                                             # for timing our query calls (saved in Response object)
-import textwrap                                         # to allow for indenting of multiline strings for code readability
 from pydantic import BaseModel
 from typing import List, Optional, Type, Union, Literal # for type hints
 import instructor                                       # for parsing objects from LLMs
@@ -13,20 +12,20 @@ import asyncio										    # for async
 from collections import defaultdict						# for defaultdict
 from pathlib import Path
 import importlib
+import ollama	# Still need to import this since we use it to generate the list of models for Ollama.
 
 # set up our environment: dynamically setting the .env location considered best practice for complex projects.
 dir_path = Path(__file__).resolve().parent
 env_path = dir_path / '.env'
 # Load the environment variables
 dotenv.load_dotenv(dotenv_path=env_path)
-api_keys = {}
-api_keys['OPENAI_API_KEY'] = os.getenv("OPENAI_API_KEY")
-api_keys['ANTHROPIC_API_KEY'] = os.getenv("ANTHROPIC_API_KEY")
-api_keys['GROQ_API_KEY'] = os.getenv("GROQ_API_KEY")
-api_keys['GOOGLE_API_KEY'] = os.getenv("GOOGLE_API_KEY")
+api_keys = {
+	'OPENAI_API_KEY': os.getenv("OPENAI_API_KEY"),
+	'ANTHROPIC_API_KEY': os.getenv("ANTHROPIC_API_KEY"),
+	'GROQ_API_KEY': os.getenv("GROQ_API_KEY"),
+	'GOOGLE_API_KEY': os.getenv("GOOGLE_API_KEY")
+}
 env = Environment(undefined=StrictUndefined)            # # set jinja2 to throw errors if a variable is undefined
-
-# Pydantic objects for validation
 
 class Message(BaseModel):
 	"""
@@ -103,6 +102,7 @@ class Chain():
 		Chain.models['ollama'] = models
 	
 	def standard_repr(object) -> str:
+		# sourcery skip: instance-method-first-arg-name
 		"""
 		Standard for all of my classes; changes how the object is represented when invoked in interpreter.
 		Called from all classes related to Chain project (Model, Prompt, Chat, etc.).
@@ -117,8 +117,7 @@ class Chain():
 		"""
 		throwaway_env = Environment()
 		parsed_content = throwaway_env.parse(template)
-		variables = meta.find_undeclared_variables(parsed_content)
-		return variables
+		return meta.find_undeclared_variables(parsed_content)
 	
 	def __init__(self, prompt=None, model=None, parser=None):
 		if prompt is None:              # if inputs are empty, use the defaults from Model.examples
@@ -383,23 +382,23 @@ class Model():
 			case 'testing':
 				return self._query_testing(input, verbose, pydantic_model)
 			case _:
-				raise ValueError(f"Error instantiating client.")
+				raise ValueError("Error instantiating client.")
 	
 	def _query_testing(self, user_input):
 		"""
 		Fake model for testing purposes.
 		"""
 		_ = user_input
-		response = textwrap.dedent("""\
-			My liege, and madam, to expostulate /
-			What majesty should be, what duty is, / 
-			Why day is day, night night, and time is time, / 
-			Were nothing but to waste night, day and time. / 
-			herefore, since brevity is the soul of wit, / And tediousness the limbs and outward flourishes, /
-			I will be brief: your noble son is mad: /
-			Mad call I it; for, to define true madness, /
-			What is't but to be nothing else but mad? / But let that go.
-			""").strip()
+		response = """
+My liege, and madam, to expostulate /
+What majesty should be, what duty is, / 
+Why day is day, night night, and time is time, / 
+Were nothing but to waste night, day and time. / 
+herefore, since brevity is the soul of wit, / And tediousness the limbs and outward flourishes, /
+I will be brief: your noble son is mad: /
+Mad call I it; for, to define true madness, /
+What is't but to be nothing else but mad? / But let that go.
+		"""
 		return response
 	
 	def _query_openai(self, input: Union[str, list], verbose: bool=True, pydantic_model: Optional[Type[BaseModel]] = None) -> Union[BaseModel, str]:
@@ -777,19 +776,19 @@ class Chat():
 							print(f"Model not found: {new_model}")
 					continue
 				case "/help":
-					print(textwrap.dedent("""\
-						============================
-						Commands:
-							/exit: leave the chat
-							/clear: clear the chat history
-							/show system: show the system prompt
-							/show model: show the current model
-							/show models: show all available models
-							/show messages: show the chat history
-							/set system: set the system prompt
-							/set model: set the model
-						============================
-					""").strip())
+					print("""
+============================
+Commands:
+/exit: leave the chat
+/clear: clear the chat history
+/show system: show the system prompt
+/show model: show the current model
+/show models: show all available models
+/show messages: show the chat history
+/set system: set the system prompt
+/set model: set the model
+============================
+				""").strip()
 					continue
 				case _:
 					pass
