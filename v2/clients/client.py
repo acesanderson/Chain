@@ -40,6 +40,8 @@ class Client(ABC):
 		- an optional Pydantic model to validate the response
 		And returns
 		- either a string (i.e. text generation) or a Pydantic model (function calling)
+
+		Note: we ignore because we don't want to import BaseModel from pydantic here.
 		"""
 		pass
 
