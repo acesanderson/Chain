@@ -1,5 +1,8 @@
 """
 Modularized version of Model class.
+
+NEXT BIG THING TO DO:
+- lazy load should happen on model object initialization, not on query.
 """
 
 import importlib
@@ -36,7 +39,7 @@ class Model:
 		This is where you can put in any model aliases you want to support.
 		"""
 		# Load our aliases from aliases.json
-		with open('models.json') as f:
+		with open('aliases.json', 'r') as f:
 			aliases = json.load(f)
 		# Check data quality.
 		for value in aliases.values():
@@ -51,21 +54,22 @@ class Model:
 			ValueError(f"WARNING: Model not found locally: {model}. This may cause errors.")
 		return model
 
-	def _get_client_type(self, cls):
+	def _get_client_type(self):
 		"""
 		Setting client_type for Model object is necessary for loading the correct client in the query functions.
 		"""
-		if self.model in cls._models['openai']:
+		model_list = self.__class__._models
+		if self.model in model_list['openai']:
 			return 'openai'
-		elif self.model in cls._models['anthropic']:
+		elif self.model in model_list['anthropic']:
 			return 'anthropic'
-		elif self.model in cls._models['google']:
+		elif self.model in model_list['google']:
 			return 'google'
-		elif self.model in cls._models['ollama']:
+		elif self.model in model_list['ollama']:
 			return 'ollama'
-		elif self.model in cls._models['groq']:
+		elif self.model in model_list['groq']:
 			return 'groq'
-		elif self.model in cls._models['testing']:
+		elif self.model in model_list['testing']:
 			return 'testing'
 		else:
 			raise ValueError(f"Model {self.model} not found in Chain.models")
