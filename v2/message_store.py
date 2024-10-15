@@ -1,6 +1,15 @@
 """
-
+A MessageStore object is a class that stores messages in a list and provides methods to interact with the list.
+With MessageStore, you can:
+- implement a log for tracing chains (logging mode: openfile with active updates, you can tail -f the file)
+- view the history of messages
+- dequeue the last message per a history size
+- clear the history
+- add a message to the history
+- get a message from the history
+- automatically convert pydantic objects to readable strings
 """
+
 from message import Message, Messages
 from pydantic import BaseModel
 from rich.console import Console

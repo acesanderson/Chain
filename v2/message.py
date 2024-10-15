@@ -1,5 +1,13 @@
 """
-Helper class for generating different types of messages, message store, etc., for generation and chat.
+This module provides a standard way to generate messages.
+All LLM SDKs work with some variant of a Message object, which is a role/content pair.
+
+Message objects allow us to:
+- quickly validate and maintain consistency in our chains
+- see the history of messages within a Response object
+- easily serialize and deserialize messages
+- use the same message objects across all LLM SDKs (while accounting for differences like with Anthropic)
+- system message generation for more complex chains
 """
 from pydantic import BaseModel
 from prompt import Prompt
