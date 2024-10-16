@@ -1,9 +1,0 @@
-- [x] performance enhancement -- lazy load imports
-- [ ] have Model.query also return Response objects
-- [ ] add spinners from rich library (inspiration from Curate.py)
-- [ ] allow for specifying temperature and output tokens ("max output")
-- [ ] fix async implementation of openai (anthropic works)
-- [ ] more elegant way to manage create_messages
-- [ ] allow chunking of async requests (so that it does them in separate chunks of ~10 at a time)
-- [ ] fix Gemini scripts so they actually work, and so you can use Gemini's fat context window
-- [ ] allow for text completions API from OpenAI so that you can experiment with base models
