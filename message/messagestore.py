@@ -13,15 +13,16 @@ Under the hood, a messagestore is a list that may contain either Response or Mes
 or a mix of both, but the interaction with them is as a list of messages unless otherwise specified.
 """
 
-from message import Message 
+from message import Message
 from rich.console import Console
-import os 
+import os
 import json
 from pathlib import Path
 
 dir_path = Path(__file__).parent
 
-class MessageStore():
+
+class MessageStore:
     """
     Defines a message store object.
     """
@@ -44,7 +45,7 @@ class MessageStore():
             self.load()
         if log_file:
             self.logging = True
-    
+
     def load(self):
         """
         Loads the history from a file.
@@ -58,7 +59,7 @@ class MessageStore():
             self.prune()
         except FileNotFoundError:
             self.save()
-    
+
     def save(self):
         """
         Saves the history to a file.
@@ -75,14 +76,14 @@ class MessageStore():
             with open(self.log_file, "a") as file:
                 for message in self.messages:
                     file.write(f"{message.role}: {message.content}\n\n")
-    
+
     def prune(self):
         """
         Prunes the history to the last 20 messages.
         """
         if len(self.messages) > 20:
             self.messages = self.messages[-20:]
-    
+
     def add(self, role: str, content: str):
         """
         Adds a message to the history.
@@ -90,7 +91,7 @@ class MessageStore():
         self.messages.append(Message(role=role, content=content))
         self.prune()
         self.save()
-    
+
     def last(self):
         """
         Gets the last message from the history.
@@ -103,7 +104,7 @@ class MessageStore():
         Gets a message from the history.
         """
         if self.messages:
-            return self.messages[index-1]
+            return self.messages[index - 1]
 
     def delete(self):
         """
@@ -113,21 +114,23 @@ class MessageStore():
             try:
                 os.remove(self.json_file)
             except FileNotFoundError:
-                pass 
+                pass
         if self.logging:
             try:
                 os.remove(self.log_file)
             except FileNotFoundError:
                 pass
-    
+
     def view_history(self):
         """
         Pretty prints the history.
         """
         for index, message in enumerate(self.messages):
             content = message.content[:50].replace("\n", " ")
-            self.console.print(f"[green]{index+1}.[/green] [bold white]{message.role}:[/bold white] [yellow]{content}[/yellow]")
-    
+            self.console.print(
+                f"[green]{index+1}.[/green] [bold white]{message.role}:[/bold white] [yellow]{content}[/yellow]"
+            )
+
     def clear(self):
         """
         Clears the history.
@@ -153,6 +156,6 @@ class MessageStore():
 
     def __len__(self):
         return len(self.messages)
-    
+
     def __repr__(self):
         return repr(self.messages)
