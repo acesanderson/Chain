@@ -1,0 +1,26 @@
+(petroff) bianders@bianders-mn7180 ~/Brian_Code/Chain-Framework/chain % head -n 20 chain.py
+"""
+A Chain is a convenience wrapper for models, prompts, parsers, messages, and response objects.
+A chain needs to have at least a prompt and a model.
+Chains are immutable, treat them like tuples.
+This used to be a monolith, but now I've separated out various classes, and created Message as a new one.
+"""
+
+import time  # for timing our query calls (saved in Response object)
+
+# The rest of our package.
+from ..prompt.prompt import Prompt
+from ..model.model import Model
+from ..response.response import Response
+from ..parser.parser import Parser
+from ..message.message import Message
+from ..message.message_store import MessageStore
+
+
+class Chain:
+    """
+(petroff) bianders@bianders-mn7180 ~/Brian_Code/Chain-Framework/chain % python chain.py
+Traceback (most recent call last):
+  File "/Users/bianders/Brian_Code/Chain-Framework/chain/chain.py", line 11, in <module>
+    from ..prompt.prompt import Prompt
+ImportError: attempted relative import with no known parent package
