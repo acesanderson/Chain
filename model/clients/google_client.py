@@ -1,10 +1,9 @@
-
 """
 For Google Gemini models.
 """
 
 from .client import Client
-import google.generativeai
+import google.generativeai as genai
 import instructor
 from pydantic import BaseModel
 import os
@@ -13,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class OpenAIClient(Client):
+class GeminiClient(Client):
     def __init__(self):
         self._client = self._initialize_client()
 
@@ -30,65 +29,9 @@ class OpenAIClient(Client):
         else:
             return os.getenv("GOOGLE_API_KEY")
 
-    def query(
+    def _query_google(
         self, model: str, input: "str | list", pydantic_model: BaseModel = None
     ) -> "str | BaseModel":
-        if isinstance(input, str):
-            input = [{"role": "user", "content": input}]
-
-        response = self._client.chat.completions.create(
-            model=model, response_model=pydantic_model, messages=input
-        )
-
-        if pydantic_model:
-            return response
-        else:
-            return response.choices[0].message.content
-
-    async def query_async(
-        self, model: str, input: "str | list", pydantic_model: "BaseModel" = None
-    ) -> "BaseModel | str":
-        # Implement asynchronous query logic here
-        # This would be similar to the synchronous version but using async calls
-        pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-dotenv.load_dotenv(dotenv_path=env_path)
-api_keys = {
-    "OPENAI_API_KEY": os.getenv("OPENAI_API_KEY"),
-    "ANTHROPIC_API_KEY": os.getenv("ANTHROPIC_API_KEY"),
-    "GROQ_API_KEY": os.getenv("GROQ_API_KEY"),
-    "GOOGLE_API_KEY": os.getenv("GOOGLE_API_KEY"),
-}
-
-genai = importlib.import_module("google.generativeai")
-instructor = importlib.import_module("instructor")
-genai.configure(api_key=api_keys["GOOGLE_API_KEY"])
-
-
-    def _query_google(
-        self,
-        input: Union[str, list],
-        verbose: bool = True,
-        pydantic_model: Optional[Type[BaseModel]] = None,
-    ) -> Union[BaseModel, str]:
         """
         Google doesn't take message objects, apparently. (or it's buried in their documentation)
         """
@@ -103,7 +46,7 @@ genai.configure(api_key=api_keys["GOOGLE_API_KEY"])
                 f"Input not recognized as a valid input type: {type:input}: {input}"
             )
         # call our client
-        gemini_client_model = instructor.from_gemini(
+        gemini_client_model = self._client(
             client=self._client.GenerativeModel(
                 model_name=self.model,
             ),
