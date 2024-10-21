@@ -22,7 +22,7 @@ GOOGLE_API_KEY=your_google_api_key
 GROQ_API_KEY=your_groq_api_key
 ```
 
-If you wish to use local models, you will need to install Ollama.
+If you wish to use local models, you will need to install [Ollama](https://github.com/ollama/ollama). Recommended models (from personal experience): llama3.1:latest, mistral:latest.
 
 ## Usage
 
@@ -65,7 +65,7 @@ response = chain.run(input_variables={"things": "frogs"})
 
 ### Working with structured output (function calling)
 
-Chain uses the Instructor library to get pydantic objects from LLM calls. You can use the `Parser` class to parse the output of a chain into a pydantic object.
+Chain uses the excellent [Instructor](https://github.com/instructor-ai/instructor) library to get pydantic objects from LLM calls. You can use the `Parser` class to parse the output of a chain into a pydantic object.
 
 ```python
 from pydantic import BaseModel
