@@ -8,9 +8,10 @@ import instructor
 from pydantic import BaseModel
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-load_dotenv()
-
+root_dir = Path(__file__).resolve().parent.parent.parent
+load_dotenv(dotenv_path=root_dir / '.env')
 
 class AnthropicClient(Client):
     def __init__(self):
