@@ -39,7 +39,7 @@ class Model:
         This is where you can put in any model aliases you want to support.
         """
         # Load our aliases from aliases.json
-        with open("aliases.json", "r") as f:
+        with open(dir_path / "aliases.json", "r") as f:
             aliases = json.load(f)
         # Check data quality.
         for value in aliases.values():
@@ -83,7 +83,7 @@ class Model:
 
     @classmethod
     def _get_client(cls, client_type: str):
-        print(f"client type: {client_type}")
+        # print(f"client type: {client_type}")
         if client_type[0] not in cls._clients:
             try:
                 module = importlib.import_module(
