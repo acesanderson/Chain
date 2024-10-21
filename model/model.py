@@ -87,7 +87,7 @@ class Model:
         if client_type[0] not in cls._clients:
             try:
                 module = importlib.import_module(
-                    f"clients.{client_type[0].lower()}_client"
+                    f"Chain.model.clients.{client_type[0].lower()}_client"
                 )
                 client_class = getattr(module, f"{client_type[1]}")
                 cls._clients[client_type[0]] = client_class()
