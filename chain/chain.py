@@ -8,12 +8,12 @@ This used to be a monolith, but now I've separated out various classes, and crea
 import time  # for timing our query calls (saved in Response object)
 
 # The rest of our package.
-from .chain_framework.prompt.prompt import Prompt
-from .chain_framework.model.model import Model
-from .chain_framework.response.response import Response
-from .chain_framework.parser.parser import Parser
-from .chain_framework.message.message import Message
-from .chain_framework.message.message_store import MessageStore
+from ..prompt.prompt import Prompt
+from ..model.model import Model
+from ..response.response import Response
+from ..parser.parser import Parser
+from ..message.message import Message
+from ..message.message_store import MessageStore
 
 
 class Chain:
