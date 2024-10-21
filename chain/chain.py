@@ -40,7 +40,7 @@ class Chain:
 		if input_variables:
 			prompt = self.prompt.render(input_variables=input_variables)
 		else:
-			prompt = self.prompt.string
+			prompt = self.prompt.prompt_string
 		# Route input; if string, if message
 		if messages:
 			result = self.run_messages(

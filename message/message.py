@@ -41,5 +41,5 @@ def create_messages(system_prompt: str, input_variables=None) -> list[dict]:
 			}
 		]
 	else:
-		messages = [{"role": "system", "content": system_prompt.string}]
+		messages = [{"role": "system", "content": system_prompt.prompt_string}]
 	return messages
