@@ -3,7 +3,7 @@ Very lightweight pydantic class, used to validate messages.
 """
 
 from pydantic import BaseModel
-from ..prompt import Prompt
+from ..prompt.prompt import Prompt
 
 
 class Message(BaseModel):
