@@ -13,7 +13,7 @@ from ..model.model import Model
 from ..response.response import Response
 from ..parser.parser import Parser
 from ..message.message import Message
-from ..message.message_store import MessageStore
+from ..message.messagestore import MessageStore
 
 
 class Chain:
