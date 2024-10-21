@@ -51,7 +51,7 @@ print(response.content)
 
 ### Working with input variables
 
-Chain uses Jinja templating to allow for dynamic prompts and models. You can pass variables to the prompt and model using the `input_variables` parameter in the `Chain` and `Prompt` classes.
+Chain uses Jinja templating to allow for dynamic prompts. You can pass variables to the prompt and model using the `input_variables` parameter in the `Chain` and `Prompt` classes.
 
 ```python
 prompt_string = "Name ten {{things}} that are red."
