@@ -13,7 +13,7 @@ Under the hood, a messagestore is a list that may contain either Response or Mes
 or a mix of both, but the interaction with them is as a list of messages unless otherwise specified.
 """
 
-from message import Message
+from .message import Message
 from rich.console import Console
 import os
 import json
