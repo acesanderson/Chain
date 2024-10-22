@@ -126,9 +126,25 @@ class MessageStore:
         if len(self.messages) > 20:
             self.messages = self.messages[-20:]
 
-    def add(self, role: str, content: str):
+    def add(self, message: "Message | list[Message]"):
         """
-        Adds a message to the history.
+        Add an existing message object to messages.
+        """
+        if isinstance(message, list):
+            self.messages.extend(message)
+            if self.logging:
+                for msg in message:
+                    self.write_to_log(msg)
+        else:
+            self.messages.append(message)
+            if self.logging:
+                self.write_to_log(message)
+        if self.persistent:
+            self.save()
+
+    def add_new(self, role: str, content: str):
+        """
+        Adds a message to the history, constructed from role and content vars.
         """
         self.messages.append(Message(role=role, content=content))
         if self.persistent:

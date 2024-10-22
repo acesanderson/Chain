@@ -101,8 +101,8 @@ class Chain:
         duration = time_end - time_start
         # Create a new messages object, to be passed to Response object.
         new_messages_object = [
-            {"role": "user", "content": prompt},
-            {"role": "assistant", "content": result},
+            Message(role="user", content=prompt),
+            Message(role="assistance", content=result),
         ]
         response = Response(
             content=result,
