@@ -25,10 +25,6 @@ from rich.rule import Rule
 from pydantic import BaseModel
 import os
 import json
-from pathlib import Path
-
-
-dir_path = Path(__file__).parent
 
 
 class MessageStore:
@@ -84,9 +80,16 @@ class MessageStore:
         if isinstance(item, Message):
             with open(self.log_file, "w") as file:
                 file_console = Console(file=file, force_terminal=True)
-                file_console.print(Rule(title="New Message", style="bold green"))
-                file_console.print(f"[bold magenta]{item.role}:[/bold magenta]")
-                file_console.print(f"[yellow]{item.content}[/yellow]\n")
+                file_console.print(Rule(title="Message", style="bold green"))
+                file_console.print(f"[bold cyan]{item.role}:[/bold cyan]")
+                if item.role == "user":
+                    file_console.print(f"[yellow]{item.content}[/yellow]\n")
+                elif item.role == "assistant":
+                    file_console.print(f"[blue]{item.content}[/blue]\n")
+                elif item.role == "system":
+                    file_console.print(f"[green]{item.content}[/green]\n")
+                else:
+                    file_console.print(f"[white]{item.content}[/white]\n")
 
     def load(self):
         """
@@ -214,13 +217,11 @@ class MessageStore:
         """
         return True
 
-
     def __len__(self):
         """
         Note: see the __bool__ method above for extra context.
         """
         return len(self.messages)
-
 
     def __repr__(self) -> str:
         """
@@ -230,4 +231,3 @@ class MessageStore:
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
         )
         return f"{self.__class__.__name__}({attributes})"
-

@@ -76,13 +76,13 @@ class Chain:
             result = self.model.query(messages, verbose=verbose)
         time_end = time.time()
         duration = time_end - time_start
-        # Return a response object
         # Convert result to a string
         assistant_message = {"role": "assistant", "content": result}
         # If we have class-level logging
         if Chain._message_store:
             Chain._message_store.add(assistant_message)
         messages.append(assistant_message)
+        # Return a response object
         response = Response(
             content=result,
             status="success",
