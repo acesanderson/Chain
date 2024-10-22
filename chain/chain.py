@@ -25,6 +25,9 @@ class Chain:
     - a parser (a function that takes a string and returns a string)
     """
 
+    # Allow the possibility of a MessageStore to be stored at the class level.
+    _message_store = None
+
     def __init__(self, prompt: Prompt, model: Model, parser: Parser = None):
         self.prompt = prompt
         self.model = model
@@ -59,6 +62,9 @@ class Chain:
         # Add new query to messages list
         message = {"role": "user", "content": prompt}
         messages.append(message)
+        # If we have class-level logging
+        if Chain._message_store:
+            Chain._message_store.add(messages)
         # Run our query
         time_start = time.time()
         if self.parser:
@@ -73,6 +79,9 @@ class Chain:
         # Return a response object
         # Convert result to a string
         assistant_message = {"role": "assistant", "content": result}
+        # If we have class-level logging
+        if Chain._message_store:
+            Chain._message_store.add(assistant_message)
         messages.append(assistant_message)
         response = Response(
             content=result,
@@ -91,6 +100,10 @@ class Chain:
         Input should be a dict with named variables that match the prompt.
         """
         time_start = time.time()
+        user_message = Message(role="user", content=prompt)
+        # If we have class-level logging
+        if Chain._message_store:
+            Chain._message_store.add(user_message)
         if self.parser:
             result = self.model.query(
                 prompt, verbose=verbose, pydantic_model=self.parser.pydantic_model
@@ -100,10 +113,11 @@ class Chain:
         time_end = time.time()
         duration = time_end - time_start
         # Create a new messages object, to be passed to Response object.
-        new_messages_object = [
-            Message(role="user", content=prompt),
-            Message(role="assistance", content=result),
-        ]
+        assistant_message = Message(role="assistant", content=result)
+        # If we have class-level logging
+        if Chain._message_store:
+            Chain._message_store.add(assistant_message)
+        new_messages_object = [user_message, assistant_message]
         response = Response(
             content=result,
             status="success",

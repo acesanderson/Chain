@@ -21,7 +21,7 @@ or a mix of both, but the interaction with them is as a list of messages unless 
 
 from Chain.message.message import Message
 from rich.console import Console
-from rich.text import Text
+from rich.rule import Rule
 from pydantic import BaseModel
 import os
 import json
@@ -54,13 +54,13 @@ class MessageStore:
         self.messages = []  # The list of messages
         # Config history and log if requested
         if history_file:
-            self.history_file = dir_path / history_file
+            self.history_file = history_file
             self.persistent = True
         else:
             self.history_file = ""
             self.persistent = False
         if log_file:
-            self.log_file = dir_path / log_file
+            self.log_file = log_file
             self.logging = True
         else:
             self.log_file = ""
@@ -68,28 +68,25 @@ class MessageStore:
         # Set the prune flag
         self.pruning = pruning
 
-    def write_to_log(item: "str | BaseModel") -> None:
+    def write_to_log(self, item: "str | BaseModel") -> None:
         """
         Writes a log to the log file.
         Need to handle individual strings (i.e. prompts and text completions) as well as pydantic objects.
         """
         if isinstance(item, str):
-            # Use a context manager to safely open and close the file
+            # We're using a Rich console to write the log to the file with colors
             with open(self.log_file, "w") as file:
                 file_console = Console(
                     file=file, force_terminal=True
                 )  # force_terminal = treat file as terminal
-                # Create a formatted text string using Rich's Text class
-                formatted_text = Text(item + "\n")
-                formatted_text.stylize("bold magenta")
                 # Write the formatted text to the file (won't be printed to terminal)
-                file_console.print(formatted_text)
+                file_console.print(f"[bold magenta]{item}[/bold magenta]\n")
         if isinstance(item, Message):
             with open(self.log_file, "w") as file:
                 file_console = Console(file=file, force_terminal=True)
-                formatted_text = Text(f"{item.role}: {item.content}\n")
-                formatted_text.stylize("bold white")
-                file_console.print(formatted_text)
+                file_console.print(Rule(title="New Message", style="bold green"))
+                file_console.print(f"[bold magenta]{item.role}:[/bold magenta]")
+                file_console.print(f"[yellow]{item.content}[/yellow]\n")
 
     def load(self):
         """
@@ -130,15 +127,15 @@ class MessageStore:
         """
         Add an existing message object to messages.
         """
-        if isinstance(message, list):
+        if isinstance(message, Message):
+            self.messages.append(message)
+            if self.logging:
+                self.write_to_log(message)
+        elif isinstance(message, list):
             self.messages.extend(message)
             if self.logging:
                 for msg in message:
                     self.write_to_log(msg)
-        else:
-            self.messages.append(message)
-            if self.logging:
-                self.write_to_log(message)
         if self.persistent:
             self.save()
 
@@ -209,8 +206,28 @@ class MessageStore:
         """
         return self.messages[index]
 
+    def __bool__(self):
+        """
+        We want this to return True if the object is initialized.
+        We wouldn't need this if we didn't also want a __len__ method.
+        (If __len__ returns 0, bool() returns False for your average object).
+        """
+        return True
+
+
     def __len__(self):
+        """
+        Note: see the __bool__ method above for extra context.
+        """
         return len(self.messages)
 
-    def __repr__(self):
-        return repr(self.messages)
+
+    def __repr__(self) -> str:
+        """
+        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
+        """
+        attributes = ", ".join(
+            [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
+        )
+        return f"{self.__class__.__name__}({attributes})"
+
