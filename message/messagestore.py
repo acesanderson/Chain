@@ -139,6 +139,10 @@ class MessageStore:
             if self.logging:
                 for msg in message:
                     self.write_to_log(msg)
+        else:
+            raise TypeError(
+                "Message must be a Message object or list of Message objects"
+            )
         if self.persistent:
             self.save()
 

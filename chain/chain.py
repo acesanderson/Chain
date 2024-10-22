@@ -60,7 +60,7 @@ class Chain:
         Input should be a dict with named variables that match the prompt.
         """
         # Add new query to messages list
-        message = {"role": "user", "content": prompt}
+        message = Message(role="user", content=prompt)
         messages.append(message)
         # If we have class-level logging
         if Chain._message_store:
@@ -77,7 +77,7 @@ class Chain:
         time_end = time.time()
         duration = time_end - time_start
         # Convert result to a string
-        assistant_message = {"role": "assistant", "content": result}
+        assistant_message = Message(role="assistant", content=result)
         # If we have class-level logging
         if Chain._message_store:
             Chain._message_store.add(assistant_message)
