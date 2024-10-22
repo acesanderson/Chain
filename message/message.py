@@ -13,7 +13,19 @@ class Message(BaseModel):
     """
 
     role: str
-    content: str
+    content: str | BaseModel
+
+    def __str__(self):
+        """
+        Returns the message in a human-readable format.
+        """
+        return f"{self.role}: {self.content}"
+
+    def __getitem__(self, key):
+        """
+        Allows for dictionary-style access to the object.
+        """
+        return getattr(self, key)
 
 
 class Messages(BaseModel):
