@@ -13,7 +13,6 @@ from ..model.model import Model
 from ..response.response import Response
 from ..parser.parser import Parser
 from ..message.message import Message
-from ..message.messagestore import MessageStore
 
 
 class Chain:
@@ -28,14 +27,14 @@ class Chain:
     # Allow the possibility of a MessageStore to be stored at the class level.
     _message_store = None
 
-    def __init__(self, prompt: Prompt, model: Model, parser: Parser = None):
+    def __init__(self, prompt: Prompt, model: Model, parser: Parser | None = None):
         self.prompt = prompt
         self.model = model
         self.parser = parser
         self.input_schema = self.prompt.input_schema()  # this is a set
         # self.output_schema = {'result'}                   # could be useful to define this in future
 
-    def run(self, input_variables: dict = None, verbose=True, messages=[]):
+    def run(self, input_variables: dict = {}, verbose=True, messages=[]):
         """
         Input should be a dict with named variables that match the prompt.
         """
