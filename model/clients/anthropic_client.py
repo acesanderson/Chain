@@ -49,8 +49,8 @@ class AnthropicClient(Client):
         elif isinstance(input, list):
             input = input
             # This is anthropic quirk; we remove the system message and set it as a query parameter.
-            if input[0].role == "system":
-                system = input[0].content
+            if input[0]["role"] == "system":
+                system = input[0]["content"]
                 input = input[1:]
         else:
             raise ValueError(
@@ -69,7 +69,8 @@ class AnthropicClient(Client):
             max_tokens=max_tokens,
             max_retries=0,
             system=system,  # This is the system message we grabbed earlier
-            messages=[i.model_dump() for i in input],  # Splatting our pydantic models to dict
+            messages=input,
+            # Splatting our pydantic models to dict
             response_model=pydantic_model,
         )
         # only two possibilities here
