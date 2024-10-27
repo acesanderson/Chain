@@ -13,7 +13,7 @@ Under the hood, a messagestore is a list that may contain either Response or Mes
 or a mix of both, but the interaction with them is as a list of messages unless otherwise specified.
 
 "History" vs. "Log":
-    - The history is a hardcode list of messages in json format.
+    - The history is a hardcode list of messages in pickle format.
     - The log is a file that is automatically updated with the messages, and is formatted for human readability.
     - History is invoked by the user.
     - Log is automatically updated with the messages and therefore a flag for several methods.
@@ -24,7 +24,8 @@ from rich.console import Console
 from rich.rule import Rule
 from pydantic import BaseModel
 import os
-import json
+import pickle
+
 
 class MessageStore:
     """
@@ -99,7 +100,7 @@ class MessageStore:
             return
         try:
             with open(self.history_file, "rb") as file:
-                self.messages = json.loads(file)
+                self.messages = pickle.load(file)
             if self.pruning:
                 self.prune()
         except FileNotFoundError:
@@ -115,8 +116,8 @@ class MessageStore:
             print("This message store is not persistent.")
             return
         if self.persistent:
-            with open(self.history_file, "w") as file:
-                json.dump(self.messages, file)
+            with open(self.history_file, "wb") as file:
+                pickle.dump(self.messages, file)
 
     def prune(self):
         """
@@ -175,7 +176,7 @@ class MessageStore:
         """
         if self.persistent:
             try:
-                os.remove(self.json_file)
+                os.remove(self.history_file)
             except FileNotFoundError:
                 pass
 
