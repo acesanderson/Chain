@@ -19,13 +19,12 @@ or a mix of both, but the interaction with them is as a list of messages unless 
     - Log is automatically updated with the messages and therefore a flag for several methods.
 """
 
-from Chain.message.message import Message
+from Chain.message.message import Message, Messages
 from rich.console import Console
 from rich.rule import Rule
 from pydantic import BaseModel
 import os
 import json
-
 
 class MessageStore:
     """
@@ -99,7 +98,7 @@ class MessageStore:
             print("This message store is not persistent.")
             return
         try:
-            with open(self.file_path, "rb") as file:
+            with open(self.history_file, "rb") as file:
                 self.messages = json.loads(file)
             if self.pruning:
                 self.prune()
@@ -116,8 +115,8 @@ class MessageStore:
             print("This message store is not persistent.")
             return
         if self.persistent:
-            with open(self.file_path, "wb") as file:
-                json.dumps(self.messages, file)
+            with open(self.history_file, "w") as file:
+                json.dump(self.messages, file)
 
     def prune(self):
         """
