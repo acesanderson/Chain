@@ -13,7 +13,7 @@ Under the hood, a messagestore is a list that may contain either Response or Mes
 or a mix of both, but the interaction with them is as a list of messages unless otherwise specified.
 
 "History" vs. "Log":
-    - The history is a hardcode list of messages in json format.
+    - The history is a hardcode list of messages in pickle format.
     - The log is a file that is automatically updated with the messages, and is formatted for human readability.
     - History is invoked by the user.
     - Log is automatically updated with the messages and therefore a flag for several methods.
@@ -24,7 +24,8 @@ from rich.console import Console
 from rich.rule import Rule
 from pydantic import BaseModel
 import os
-import json
+import pickle
+from pathlib import Path
 
 
 class MessageStore:
@@ -34,9 +35,9 @@ class MessageStore:
 
     def __init__(
         self,
-        console: Console = [],
-        history_file: str = "",
-        log_file: str = "",
+        console: Console | None = None,
+        history_file: str | Path = "",
+        log_file: str | Path = "",
         pruning: bool = False,
     ):
         """
@@ -64,7 +65,7 @@ class MessageStore:
         # Set the prune flag
         self.pruning = pruning
 
-    def write_to_log(self, item: "str | BaseModel") -> None:
+    def write_to_log(self, item: str | BaseModel) -> None:
         """
         Writes a log to the log file.
         Need to handle individual strings (i.e. prompts and text completions) as well as pydantic objects.
@@ -100,7 +101,7 @@ class MessageStore:
             return
         try:
             with open(self.history_file, "rb") as file:
-                self.messages = json.loads(file)
+                self.messages = pickle.load(file)
             if self.pruning:
                 self.prune()
         except FileNotFoundError:
@@ -117,7 +118,7 @@ class MessageStore:
             return
         if self.persistent:
             with open(self.history_file, "wb") as file:
-                json.dumps(self.messages, file)
+                pickle.dump(self.messages, file)
 
     def prune(self):
         """
@@ -132,17 +133,14 @@ class MessageStore:
         """
         if isinstance(message, Message):
             self.messages.append(message)
-            if self.logging:
-                self.write_to_log(message)
         elif isinstance(message, list):
             self.messages.extend(message)
-            if self.logging:
-                for msg in message:
-                    self.write_to_log(msg)
         else:
             raise TypeError(
                 "Message must be a Message object or list of Message objects"
             )
+        if self.logging:
+            self.write_to_log(self.messages[-1])
         if self.persistent:
             self.save()
 
@@ -151,10 +149,10 @@ class MessageStore:
         Adds a message to the history, constructed from role and content vars.
         """
         self.messages.append(Message(role=role, content=content))
-        if self.persistent:
-            self.save()
         if self.logging:
             self.write_to_log(self.messages[-1])
+        if self.persistent:
+            self.save()
 
     def last(self):
         """
@@ -176,7 +174,7 @@ class MessageStore:
         """
         if self.persistent:
             try:
-                os.remove(self.json_file)
+                os.remove(self.history_file)
             except FileNotFoundError:
                 pass
 
@@ -205,6 +203,7 @@ class MessageStore:
         if self.logging:
             with open(self.log_file, "w") as file:
                 # clear the file
+                file.write("")
                 pass
 
     def __getitem__(self, index: int):
