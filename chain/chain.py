@@ -24,7 +24,7 @@ class Chain:
     - a parser (a function that takes a string and returns a string)
     """
 
-    # Allow the possibility of a MessageStore to be stored at the class level.
+    # If you want logging, initialize a message store with log_file_path parameter, and assign it to your Chain class.
     _message_store = None
 
     def __init__(self, prompt: Prompt, model: Model, parser: Parser | None = None):

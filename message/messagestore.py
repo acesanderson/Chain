@@ -25,6 +25,7 @@ from rich.rule import Rule
 from pydantic import BaseModel
 import os
 import pickle
+from pathlib import Path
 
 
 class MessageStore:
@@ -34,9 +35,9 @@ class MessageStore:
 
     def __init__(
         self,
-        console: Console = [],
-        history_file: str = "",
-        log_file: str = "",
+        console: Console | None = None,
+        history_file: str | Path = "",
+        log_file: str | Path = "",
         pruning: bool = False,
     ):
         """
@@ -64,7 +65,7 @@ class MessageStore:
         # Set the prune flag
         self.pruning = pruning
 
-    def write_to_log(self, item: "str | BaseModel") -> None:
+    def write_to_log(self, item: str | BaseModel) -> None:
         """
         Writes a log to the log file.
         Need to handle individual strings (i.e. prompts and text completions) as well as pydantic objects.
@@ -132,13 +133,8 @@ class MessageStore:
         """
         if isinstance(message, Message):
             self.messages.append(message)
-            if self.logging:
-                self.write_to_log(message)
         elif isinstance(message, list):
             self.messages.extend(message)
-            if self.logging:
-                for msg in message:
-                    self.write_to_log(msg)
         else:
             raise TypeError(
                 "Message must be a Message object or list of Message objects"
@@ -153,8 +149,6 @@ class MessageStore:
         self.messages.append(Message(role=role, content=content))
         if self.persistent:
             self.save()
-        if self.logging:
-            self.write_to_log(self.messages[-1])
 
     def last(self):
         """
@@ -205,6 +199,7 @@ class MessageStore:
         if self.logging:
             with open(self.log_file, "w") as file:
                 # clear the file
+                file.write("")
                 pass
 
     def __getitem__(self, index: int):
