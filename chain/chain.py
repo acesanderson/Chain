@@ -12,7 +12,7 @@ from ..prompt.prompt import Prompt
 from ..model.model import Model
 from ..response.response import Response
 from ..parser.parser import Parser
-from ..message.message import Message
+from ..message.message import Message, MessageStore
 
 
 class Chain:
@@ -25,7 +25,7 @@ class Chain:
     """
 
     # If you want logging, initialize a message store with log_file_path parameter, and assign it to your Chain class.
-    _message_store = None
+    _message_store: MessageStore = None
 
     def __init__(self, prompt: Prompt, model: Model, parser: Parser | None = None):
         self.prompt = prompt

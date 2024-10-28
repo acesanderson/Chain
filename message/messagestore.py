@@ -139,6 +139,8 @@ class MessageStore:
             raise TypeError(
                 "Message must be a Message object or list of Message objects"
             )
+        if self.logging:
+            self.write_to_log(self.messages[-1])
         if self.persistent:
             self.save()
 
@@ -147,6 +149,8 @@ class MessageStore:
         Adds a message to the history, constructed from role and content vars.
         """
         self.messages.append(Message(role=role, content=content))
+        if self.logging:
+            self.write_to_log(self.messages[-1])
         if self.persistent:
             self.save()
 
