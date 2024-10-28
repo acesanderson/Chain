@@ -55,9 +55,13 @@ class MessageStore:
             self.persistent = True
         else:
             self.history_file = ""
+            with open(self.history_file, "a"):
+                os.utime(self.history_file, None)
             self.persistent = False
         if log_file:
             self.log_file = log_file
+            with open(self.log_file, "a"):
+                os.utime(self.log_file, None)
             self.logging = True
         else:
             self.log_file = ""
