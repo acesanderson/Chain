@@ -71,7 +71,7 @@ class MessageStore:
         """
         if isinstance(item, str):
             # We're using a Rich console to write the log to the file with colors
-            with open(self.log_file, "w") as file:
+            with open(self.log_file, "a") as file:
                 file_console = Console(
                     file=file, force_terminal=True
                 )  # force_terminal = treat file as terminal
@@ -99,7 +99,7 @@ class MessageStore:
             print("This message store is not persistent.")
             return
         try:
-            with open(self.file_path, "rb") as file:
+            with open(self.history_file, "rb") as file:
                 self.messages = json.loads(file)
             if self.pruning:
                 self.prune()
@@ -116,7 +116,7 @@ class MessageStore:
             print("This message store is not persistent.")
             return
         if self.persistent:
-            with open(self.file_path, "wb") as file:
+            with open(self.history_file, "wb") as file:
                 json.dumps(self.messages, file)
 
     def prune(self):
