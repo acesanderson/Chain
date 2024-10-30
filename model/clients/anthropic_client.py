@@ -49,9 +49,13 @@ class AnthropicClient(Client):
         elif isinstance(input, list):
             input = input
             # This is anthropic quirk; we remove the system message and set it as a query parameter.
-            if input[0]["role"] == "system":
+            if input[0].role == "system":
                 system = input[0]["content"]
                 input = input[1:]
+                # Remote "system" role from any messages in input. Another annoying quirk.
+                for message in input:
+                    if message.role == "system":
+                        message.role = "user"
         else:
             raise ValueError(
                 f"Input not recognized as a valid input type: {type(input)}: {input}"

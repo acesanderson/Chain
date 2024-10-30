@@ -39,19 +39,19 @@ class Messages(BaseModel):
 # Some helpful functions
 
 
-def create_messages(system_prompt: str, input_variables=None) -> list[dict]:
+def create_system_message(system_prompt: str, input_variables=None) -> Message:
     """
-    Takes a system prompt object (Prompt()) or a string, an optional input object, and returns a list of messages.
+    Takes a system prompt object (Prompt()) or a string, an optional input object, and returns a Message object.
     """
     if isinstance(system_prompt, str):
         system_prompt = Prompt(system_prompt)
     if input_variables:
-        messages = [
+        system_message = [
             Message(
                 role="system",
                 content=system_prompt.render(input_variables=input_variables),
             )
         ]
     else:
-        messages = [Message(role="system", content=system_prompt.prompt_string)]
-    return messages
+        system_message = Message(role="system", content=system_prompt.prompt_string)
+    return system_message

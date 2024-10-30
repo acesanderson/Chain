@@ -115,8 +115,6 @@ class MessageStore:
         """
         Saves the history to a file.
         """
-        if not self.messages:
-            return
         if not self.persistent:
             print("This message store is not persistent.")
             return
