@@ -53,10 +53,10 @@ class MessageStore:
         if history_file:
             self.history_file = history_file
             self.persistent = True
-        else:
-            self.history_file = ""
             with open(self.history_file, "a"):
                 os.utime(self.history_file, None)
+        else:
+            self.history_file = ""
             self.persistent = False
         if log_file:
             self.log_file = log_file
