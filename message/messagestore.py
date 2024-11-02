@@ -110,6 +110,9 @@ class MessageStore:
                 self.prune()
         except FileNotFoundError:
             self.save()
+        except EOFError:
+            self.messages = []
+            self.save()
 
     def save(self):
         """
