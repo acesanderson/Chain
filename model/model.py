@@ -120,7 +120,7 @@ class Model:
 
     def pretty(self, user_input):
         pretty = user_input.replace("\n", " ").replace("\t", " ").strip()
-        return pretty[:150]
+        return pretty[:100]
 
     def __repr__(self):
         attributes = ", ".join(
