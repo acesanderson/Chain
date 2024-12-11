@@ -25,8 +25,8 @@ class Chain:
     - a parser (a function that takes a string and returns a string)
     """
 
-    # If you want logging, initialize a message store with log_file_path parameter, and assign it to your Chain class.
-    _message_store: MessageStore = None
+    # If you want logging, initialize a message store with log_file_path parameter, and assign it to your Chain class as a singleton.
+    _message_store: MessageStore | None = None
 
     def __init__(self, prompt: Prompt, model: Model, parser: Parser | None = None):
         self.prompt = prompt
