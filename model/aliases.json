@@ -2,7 +2,7 @@
     "claude": "claude-3-5-sonnet-20241022",
     "gpt": "gpt-4o",
     "gpt3": "gpt-3.5-turbo-0125",
-    "gemini": "gemini-1.5-pro-latest",
+    "gemini": "gemini-2.0-flash-exp",
     "groq": "mixtral-8x7b-32768",
     "ollama": "mistral:latest",
     "haiku": "claude-3-5-haiku-20241022",
