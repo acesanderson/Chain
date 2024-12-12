@@ -129,8 +129,8 @@ class MessageStore:
         """
         Prunes the history to the last 20 messages.
         """
-        if len(self.messages) > 20:
-            self.messages = self.messages[-20:]
+        if len(self.messages) > 10:
+            self.messages = self.messages[-10:]
 
     def add(self, message: "Message | list[Message]"):
         """
