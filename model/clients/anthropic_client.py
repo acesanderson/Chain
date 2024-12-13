@@ -4,15 +4,11 @@ Client subclass for Anthropic models.
 
 from .client import Client
 from ...message.message import Message
+from model.clients.load_env import load_env
 from anthropic import Anthropic
 import instructor
 from pydantic import BaseModel
 import os
-from dotenv import load_dotenv
-from pathlib import Path
-
-root_dir = Path(__file__).resolve().parent.parent.parent
-load_dotenv(dotenv_path=root_dir / ".env")
 
 
 class AnthropicClient(Client):
@@ -23,6 +19,7 @@ class AnthropicClient(Client):
         """
         We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.
         """
+        api_key = load_env("ANTHROPIC_API_KEY")
         anthropic_client = Anthropic(api_key=self._get_api_key())
         return instructor.from_anthropic(anthropic_client)
 

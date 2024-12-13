@@ -3,15 +3,10 @@ For Google Gemini models.
 """
 
 from .client import Client
+from model.clients.load_env import load_env
 from openai import OpenAI
 import instructor
 from pydantic import BaseModel
-import os
-from dotenv import load_dotenv
-from pathlib import Path
-
-root_dir = Path(__file__).resolve().parent.parent.parent
-load_dotenv(dotenv_path=root_dir / ".env")
 
 
 class GoogleClient(Client):
@@ -30,10 +25,8 @@ class GoogleClient(Client):
         return instructor.from_openai(gemini_client)
 
     def _get_api_key(self):
-        if os.getenv("GOOGLE_API_KEY") is None:
-            raise ValueError("No Google API key found in environment variables")
-        else:
-            return os.getenv("GOOGLE_API_KEY")
+        api_key = load_env("GOOGLE_API_KEY")
+        return api_key
 
     def query(
         self, model: str, input: "str | list", pydantic_model: BaseModel = None
