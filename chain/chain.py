@@ -28,40 +28,51 @@ class Chain:
     # If you want logging, initialize a message store with log_file_path parameter, and assign it to your Chain class as a singleton.
     _message_store: MessageStore | None = None
 
-    def __init__(self, prompt: Prompt, model: Model, parser: Parser | None = None):
+    def __init__(
+        self, model: Model, prompt: Prompt | None = None, parser: Parser | None = None
+    ):
         self.prompt = prompt
         self.model = model
         self.parser = parser
-        self.input_schema = self.prompt.input_schema()  # this is a set
-        # self.output_schema = {'result'}                   # could be useful to define this in future
+        if self.prompt:
+            self.input_schema = self.prompt.input_schema()  # this is a set
+        else:
+            self.input_schema = set()
 
     def run(self, input_variables: dict = {}, verbose=True, messages=[]):
         """
         Input should be a dict with named variables that match the prompt.
         """
         # Render our prompt with the input_variables if variables are passed. Should throw a jinja error if it doesn't match.
-        if input_variables:
+        if input_variables and self.prompt:
             prompt = self.prompt.render(input_variables=input_variables)
-        else:
+        elif self.prompt:
             prompt = self.prompt.prompt_string
+        else:
+            prompt = None
         # Route input; if string, if message
         if messages:
             result = self.run_messages(
                 prompt=prompt, messages=messages, verbose=verbose
             )
-        else:
+        elif prompt:
             result = self.run_completion(prompt=prompt, verbose=verbose)
+        else:
+            raise ValueError("No prompt or messages passed to Chain.run.")
         return result
 
-    def run_messages(self, prompt: str, messages, verbose=True):
+    def run_messages(
+        self, messages: list[Message], prompt: str | None = None, verbose=True
+    ):
         """
         Special version of Chain.run that takes a messages object.
         Converts input + prompt into a message object, appends to messages list, and runs to Model.chat.
         Input should be a dict with named variables that match the prompt.
         """
-        # Add new query to messages list
-        message = Message(role="user", content=prompt)
-        messages.append(message)
+        if prompt:
+            # Add new query to messages list
+            message = Message(role="user", content=prompt)
+            messages.append(message)
         # If we have class-level logging
         if Chain._message_store:
             Chain._message_store.add(messages)
@@ -71,7 +82,6 @@ class Chain:
             result = self.model.query(
                 messages, verbose=verbose, pydantic_model=self.parser.pydantic_model
             )
-            # result = json.dumps(result.__dict__)
         else:
             result = self.model.query(messages, verbose=verbose)
         time_end = time.time()
@@ -90,7 +100,6 @@ class Chain:
             model=self.model.model,
             duration=duration,
             messages=messages,
-            variables=input,
         )
         return response
 
@@ -125,7 +134,6 @@ class Chain:
             model=self.model.model,
             duration=duration,
             messages=new_messages_object,
-            variables=input,
         )
         return response
 
@@ -137,4 +145,3 @@ class Chain:
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
         )
         return f"{self.__class__.__name__}({attributes})"
-        # Example output: Chain(prompt=Prompt(string='tell me about {{topic}}', format_in, model=Model(model='mistral'), parser=Parser(parser=<function Chain.<lambda> at 0x7f7c5a
