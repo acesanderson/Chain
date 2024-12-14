@@ -1,10 +1,10 @@
-from .chain.chain import Chain
-from .prompt.prompt import Prompt
-from .model.model import Model
-from .response.response import Response
-from .parser.parser import Parser
-from .message.message import Message, Messages, create_system_message
-from .message.messagestore import MessageStore
+from Chain.chain.chain import Chain
+from Chain.prompt.prompt import Prompt
+from Chain.model.model import Model
+from Chain.response.response import Response
+from Chain.parser.parser import Parser
+from Chain.message.message import Message, Messages, create_system_message
+from Chain.message.messagestore import MessageStore
 
 __all__ = [
     "Chain",

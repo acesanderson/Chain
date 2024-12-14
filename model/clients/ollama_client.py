@@ -4,7 +4,7 @@ This doesn't require an API key since these are locally hosted models.
 This has special logic for updating the models.json file, since the available Ollama models will depend on what we have pulled.
 """
 
-from .client import Client
+from Chain.model.clients.client import Client
 import ollama
 from pydantic import BaseModel
 
@@ -12,7 +12,7 @@ from pydantic import BaseModel
 from pathlib import Path
 import json
 from collections import defaultdict
-from ...message.message import Message
+from Chain.message.message import Message
 
 dir_path = Path(__file__).resolve().parent
 

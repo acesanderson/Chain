@@ -2,7 +2,7 @@
 For Google Gemini models.
 """
 
-from .client import Client
+from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
 from openai import OpenAI
 import instructor

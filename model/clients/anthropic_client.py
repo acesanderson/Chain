@@ -2,8 +2,8 @@
 Client subclass for Anthropic models.
 """
 
-from .client import Client
-from ...message.message import Message
+from Chain.model.clients.client import Client
+from Chain.message.message import Message
 from Chain.model.clients.load_env import load_env
 from anthropic import Anthropic
 import instructor

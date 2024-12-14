@@ -3,7 +3,7 @@ This script updates the list of Ollama models in the Chain module.
 Use this when switching environments, ssh tunnels, or when new models are added.
 """
 
-from Chain import Model
+from Chain.model.model import Model
 from rich import console
 
 console = console.Console(width=80)
