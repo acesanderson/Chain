@@ -1,11 +1,3 @@
-"""
-Modularized version of Model class.
-
-NEXT BIG THING TO DO:
-- [x] lazy load should happen on model object initialization, not on query.
-- 
-"""
-
 from pathlib import Path
 import importlib
 import json
@@ -77,13 +69,11 @@ class Model:
             return "ollama", "OllamaClient"
         elif model in model_list["groq"]:
             return "groq", "GroqClient"
-        elif model in model_list["testing"]:
-            return "testing", "TestingClient"
         else:
             raise ValueError(f"Model {model} not found in models")
 
     @classmethod
-    def _get_client(cls, client_type: str):
+    def _get_client(cls, client_type: tuple):
         # print(f"client type: {client_type}")
         if client_type[0] not in cls._clients:
             try:

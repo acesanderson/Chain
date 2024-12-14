@@ -2,7 +2,6 @@
 A Chain is a convenience wrapper for models, prompts, parsers, messages, and response objects.
 A chain needs to have at least a prompt and a model.
 Chains are immutable, treat them like tuples.
-This used to be a monolith, but now I've separated out various classes, and created Message as a new one.
 """
 
 import time  # for timing our query calls (saved in Response object)
@@ -41,14 +40,31 @@ class Chain:
             self.input_schema = set()
 
     @overload
-    def run(self, input_variables: dict, verbose: bool = True) -> Response: ...
+    def run(self) -> Response:
+        """Run a completion, if no args provided, use the prompt and model already defined in the chain object."""
+        ...
 
     @overload
-    def run(
-        self, input_variables: dict, verbose: bool, messages: list[Message]
-    ) -> Response: ...
+    def run(self, input_variables: dict) -> Response:
+        """Run a completion with input variables."""
+        ...
 
-    def run(self, input_variables: dict = {}, verbose=True, messages=[]):
+    @overload
+    def run(self, *, messages: list[Message]) -> Response:
+        """Run a completion with messages."""
+        ...
+
+    @overload
+    def run(self, input_variables: dict, messages: list[Message]) -> Response:
+        """Run a completion with input variables and messages."""
+        ...
+
+    def run(
+        self,
+        input_variables: dict | None = None,
+        messages: list[Message] | None = [],
+        verbose: bool = True,
+    ):
         """
         Input should be a dict with named variables that match the prompt.
         """
@@ -71,15 +87,21 @@ class Chain:
         return result
 
     @overload
-    def run_messages(self, messages: list[Message]) -> Response: ...
+    def run_messages(self, messages: list[Message]) -> Response:
+        """Run a completion with messages."""
+        ...
 
     @overload
-    def run_messages(self, messages: list[Message], prompt: str) -> Response: ...
+    def run_messages(self, messages: list[Message], prompt: str) -> Response:
+        """Run a completion with messages and a prompt."""
+        ...
 
     @overload
     def run_messages(
-        self, messages: list[Message], prompt: str, verbose=True
-    ) -> Response: ...
+        self, messages: list[Message], prompt: str | None, verbose: bool
+    ) -> Response:
+        """Run a completion with messages, a prompt, and verbose."""
+        ...
 
     def run_messages(
         self, messages: list[Message], prompt: str | None = None, verbose=True

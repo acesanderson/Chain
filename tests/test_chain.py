@@ -1,55 +1,58 @@
 from Chain import Chain, Model, Prompt, Message
+import pytest
 
 
-def test_chain_init():
-    model = Model()
-    prompt = Prompt("What is the capital of France?")
-    chain = Chain(prompt=prompt, model=model)
-    assert chain.prompt == prompt
-    assert chain.model == model
+@pytest.fixture
+def default_model():
+    return Model("haiku")
+
+
+@pytest.fixture
+def sample_prompt():
+    return Prompt("What is the capital of France?")
+
+
+def test_chain_init(default_model, sample_prompt):
+    chain = Chain(prompt=sample_prompt, model=default_model)
+    assert chain.prompt == sample_prompt
+    assert chain.model == default_model
     assert chain.parser == None
-    assert chain.input_schema == prompt.input_schema()
+    assert chain.input_schema == sample_prompt.input_schema()
 
 
-def test_chain_run_completion():
-    model = Model("haiku")
-    prompt = Prompt("What is the capital of France?")
-    chain = Chain(prompt=prompt, model=model)
+def test_chain_run_completion(default_model, sample_prompt):
+    chain = Chain(prompt=sample_prompt, model=default_model)
     response = chain.run()
     assert response.status == "success"
-    assert response.prompt == prompt.prompt_string
-    assert response.model == model.model
+    assert response.prompt == sample_prompt.prompt_string
+    assert response.model == default_model.model
     assert response.duration > 0
     assert response.messages[0].role == "user"
     assert response.messages[1].role == "assistant"
 
 
-def test_chain_run_messages():
+def test_chain_run_messages(default_model):
     system_message = Message(role="system", content="You talk like a pirate.")
     user_message = Message(role="user", content="Name ten things on the high seas.")
     messages = [system_message, user_message]
-    model = Model("haiku")
-    chain = Chain(model=model)
+    chain = Chain(model=default_model)
     response = chain.run_messages(messages=messages)
     assert response.status == "success"
     assert response.prompt == None
 
 
-def test_chain_run_prompt_and_messages():
+def test_chain_run_prompt_and_messages(default_model, sample_prompt):
     system_message = Message(role="system", content="You talk like a pirate.")
-    prompt = Prompt("What is the capital of France?")
-    model = Model("haiku")
-    chain = Chain(prompt=prompt, model=model)
+    chain = Chain(prompt=sample_prompt, model=default_model)
     response = chain.run(messages=[system_message])
     assert response.status == "success"
-    assert response.prompt == prompt.prompt_string
+    assert response.prompt == sample_prompt.prompt_string
     assert response.messages[0].role == "system"
 
 
-def test_chain_single_variable():
-    model = Model("haiku")
+def test_chain_single_variable(default_model):
     prompt = Prompt("What is the capital of {{country}}?")
-    chain = Chain(prompt=prompt, model=model)
+    chain = Chain(prompt=prompt, model=default_model)
     response = chain.run(input_variables={"country": "France"})
     assert response.status == "success"
     assert response.prompt == prompt.render({"country": "France"})
