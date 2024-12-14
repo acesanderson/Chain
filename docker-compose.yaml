@@ -1,0 +1,7 @@
+services:
+  test:
+    build: .
+    volumes:
+      - .:/pytest_project
+    stdin_open: true
+    tty: true
