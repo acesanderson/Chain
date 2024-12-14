@@ -14,6 +14,7 @@ from Chain.response.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
+from typing import overload
 
 
 class Chain:
@@ -39,6 +40,14 @@ class Chain:
         else:
             self.input_schema = set()
 
+    @overload
+    def run(self, input_variables: dict, verbose: bool = True) -> Response: ...
+
+    @overload
+    def run(
+        self, input_variables: dict, verbose: bool, messages: list[Message]
+    ) -> Response: ...
+
     def run(self, input_variables: dict = {}, verbose=True, messages=[]):
         """
         Input should be a dict with named variables that match the prompt.
@@ -60,6 +69,17 @@ class Chain:
         else:
             raise ValueError("No prompt or messages passed to Chain.run.")
         return result
+
+    @overload
+    def run_messages(self, messages: list[Message]) -> Response: ...
+
+    @overload
+    def run_messages(self, messages: list[Message], prompt: str) -> Response: ...
+
+    @overload
+    def run_messages(
+        self, messages: list[Message], prompt: str, verbose=True
+    ) -> Response: ...
 
     def run_messages(
         self, messages: list[Message], prompt: str | None = None, verbose=True
