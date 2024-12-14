@@ -28,7 +28,19 @@ def load_model_list():
     assert "gemini-1.5-pro-latest" in model_list["google"]
 
 
-def test_model_get_client():
-    model = Model("gpt-4o")
-    client = model._get_client(("openai", "OpenAIClient"))
+@pytest.mark.parametrize(
+    "model_name, provider, client",
+    [
+        ("gpt-4o", "openai", "OpenAIClient"),
+        ("claude-3-5-sonnet-20241022", "anthropic", "AnthropicClient"),
+        ("gemini-1.5-pro-latest", "google", "GoogleClient"),
+    ],
+)
+def test_model_get_client(model_name, provider, client):
+    """
+    Testing all our models and clients.
+    NOTE: ollama testing is not yet figured out for our containerized environment; need port forwarding to work.
+    """
+    model = Model(model_name)
+    client = model._get_client((provider, client))
     assert isinstance(client, Client)
