@@ -4,7 +4,7 @@ Client subclass for Anthropic models.
 
 from .client import Client
 from ...message.message import Message
-from model.clients.load_env import load_env
+from Chain.model.clients.load_env import load_env
 from anthropic import Anthropic
 import instructor
 from pydantic import BaseModel

@@ -3,7 +3,7 @@ Our first client subclass.
 """
 
 from .client import Client
-from model.clients.load_env import load_env
+from Chain.model.clients.load_env import load_env
 from openai import OpenAI
 import instructor
 from pydantic import BaseModel
