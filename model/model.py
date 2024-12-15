@@ -98,15 +98,13 @@ class Model:
 
     async def query_async(
         self,
-        input: "str | list",
+        input: str | list,
         verbose: bool = True,
-        pydantic_model: "BaseModel" = None,
-    ) -> "BaseModel | str":
-        if self._client is None:
-            self._client = self._get_client(self._client_type)
+        pydantic_model: BaseModel | None = None,
+    ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        return await self._client.query_async(self.model, input, pydantic_model)
+        return self._client.query_async(self.model, input, pydantic_model)
 
     def pretty(self, user_input):
         pretty = user_input.replace("\n", " ").replace("\t", " ").strip()
