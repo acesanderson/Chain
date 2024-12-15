@@ -38,10 +38,9 @@ import instructor
 import asyncio
 from pprint import pprint
 
-client = instructor.from_openai(openai.AsyncOpenAI())
 
-
-async def query(input: str):
+async def instructor_query(input: str):
+    client = instructor.from_openai(openai.AsyncOpenAI())
     print(f"Querying {input}.")
     return await client.chat.completions.create(
         model="gpt-4-turbo-preview",
@@ -65,7 +64,7 @@ things = ["Name ten " + thing + "." for thing in list_of_things]
 
 
 async def main(things):
-    coroutines = [query(thing) for thing in things]
+    coroutines = [instructor_query(thing) for thing in things]
     responses = await asyncio.gather(*coroutines)
     pprint(responses)
 
@@ -95,7 +94,7 @@ import openai
 class Async_Chain(Chain):
 
     @overload
-    async def run_async(self, input_variables: list[dict]) -> list[Response]: ...
+    async def run_async(self, input_variables_list: list[dict]) -> list[Response]: ...
 
     @overload
     async def run_async(self, *, prompt_strings: list[str]) -> list[Response]: ...

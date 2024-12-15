@@ -104,7 +104,7 @@ class Model:
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        return self._client.query_async(self.model, input, pydantic_model)
+        return await self._client.query_async(self.model, input, pydantic_model)
 
     def pretty(self, user_input):
         pretty = user_input.replace("\n", " ").replace("\t", " ").strip()
