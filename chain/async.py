@@ -128,4 +128,4 @@ class Async_Chain(Chain):
 
 
 # The above code is a rough sketch of what I want to implement, now we return to the OpenAIClient class.
-# First, sketch out the type of call I want to make.
+# First, sketch out the type of call I want to make -- this will go in the associated pytest script.
