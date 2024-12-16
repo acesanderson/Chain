@@ -46,13 +46,6 @@ class Client(ABC):
         """
         pass
 
-    @abstractmethod
-    async def query_async(self, model: str, input: "str | list", pydantic_model: "BaseModel" = None) -> "BaseModel | str":  # type: ignore
-        """
-        This precisely mirrors the query method, but is async.
-        """
-        pass
-
     def __repr__(self):
         """
         Standard repr.

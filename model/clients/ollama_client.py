@@ -73,13 +73,6 @@ class OllamaClient(Client):
         else:
             return response["message"]["content"]
 
-    async def query_async(
-        self, model: str, input: "str | list", pydantic_model: "BaseModel" = None
-    ) -> "BaseModel | str":
-        # Implement asynchronous query logic here
-        # This would be similar to the synchronous version but using async calls
-        pass
-
     def update_ollama_models(self):
         """
         Updates the list of Ollama models.

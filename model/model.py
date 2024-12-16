@@ -60,7 +60,7 @@ class Model:
         """
         model_list = self.__class__.models
         if model in model_list["openai"]:
-            return "openai", "OpenAIClient"
+            return "openai", "OpenAIClientSync"
         elif model in model_list["anthropic"]:
             return "anthropic", "AnthropicClient"
         elif model in model_list["google"]:
@@ -115,3 +115,24 @@ class Model:
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
         )
         return f"{self.__class__.__name__}({attributes})"
+
+
+class ModelAsync(Model):
+
+    def _get_client_type(self, model: str) -> tuple:
+        """
+        Overrides the parent method to return the async version of each client type.
+        """
+        model_list = self.__class__.models
+        if model in model_list["openai"]:
+            return "openai", "OpenAIClientAsync"
+        # elif model in model_list["anthropic"]:
+        #     return "anthropic", "AnthropicClient"
+        # elif model in model_list["google"]:
+        #     return "google", "GoogleClient"
+        # elif model in model_list["ollama"]:
+        #     return "ollama", "OllamaClient"
+        # elif model in model_list["groq"]:
+        #     return "groq", "GroqClient"
+        else:
+            raise ValueError(f"Model {model} not found in models")

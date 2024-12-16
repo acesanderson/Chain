@@ -1,17 +1,35 @@
-from Chain.chain.chain import Chain
+from Chain.chain.chain import Chain, Prompt
+from Chain.model.model import ModelAsync
 from Chain.response.response import Response
+from Chain.parser.parser import Parser
 import asyncio
 from typing import overload
 
 
 class AsyncChain(Chain):
-    @overload
-    def run_async(self, input_variables_list: list[dict]) -> list[Response]: ...
+
+    def __init__(
+        self,
+        model: ModelAsync,
+        prompt: Prompt | None = None,
+        parser: Parser | None = None,
+    ):
+        """Override to use ModelAsync"""
+        self.prompt = prompt
+        self.model = model
+        self.parser = parser
+        if self.prompt:
+            self.input_schema = self.prompt.input_schema()  # this is a set
+        else:
+            self.input_schema = set()
 
     @overload
-    def run_async(self, *, prompt_strings: list[str]) -> list[Response]: ...
+    def run(self, input_variables_list: list[dict]) -> list[Response]: ...
 
-    def run_async(
+    @overload
+    def run(self, *, prompt_strings: list[str]) -> list[Response]: ...
+
+    def run(
         self,
         input_variables_list: list[dict] | None = None,
         prompt_strings: list[str] | None = None,
@@ -39,6 +57,3 @@ class AsyncChain(Chain):
         ]
         # Need to convert these to Response objects
         return await asyncio.gather(*coroutines)
-
-    def batch(self):
-        pass

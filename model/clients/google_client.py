@@ -50,10 +50,3 @@ class GoogleClient(Client):
             return response
         else:
             return response.choices[0].message.content
-
-    async def query_async(
-        self, model: str, input: "str | list", pydantic_model: "BaseModel" = None
-    ) -> "BaseModel | str":
-        # Implement asynchronous query logic here
-        # This would be similar to the synchronous version but using async calls
-        pass

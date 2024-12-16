@@ -1,4 +1,4 @@
-from Chain.model.clients.openai_client import OpenAIClient
+from Chain.model.clients.openai_client import OpenAIClientAsync
 from Chain.chain.asyncchain import AsyncChain
 from Chain.model.model import Model
 import asyncio
@@ -7,7 +7,7 @@ import pytest
 
 @pytest.fixture
 def async_openai_client():
-    return OpenAIClient()
+    return OpenAIClientAsync()
 
 
 @pytest.fixture

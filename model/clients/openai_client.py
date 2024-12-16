@@ -10,27 +10,38 @@ from pydantic import BaseModel
 
 
 class OpenAIClient(Client):
+    """
+    This is a base class; we have two subclasses: OpenAIClientSync and OpenAIClientAsync.
+    Don't import this.
+    """
+
     def __init__(self):
         self._client = self._initialize_client()
-        self._async_client = self._initialize_async_client()
 
+    def _initialize_client(self):
+        """
+        Logic for this is unique to each client (sync / async).
+        """
+        pass
+
+    def _get_api_key(self):
+        api_key = load_env("OPENAI_API_KEY")
+        return api_key
+
+    def query(self, model: str, input: "str | list", pydantic_model: BaseModel = None):
+        """
+        Logic for this is unique to each client (sync / async).
+        """
+        pass
+
+
+class OpenAIClientSync(OpenAIClient):
     def _initialize_client(self):
         """
         We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.
         """
         openai_client = OpenAI(api_key=self._get_api_key())
         return instructor.from_openai(openai_client)
-
-    def _initialize_async_client(self):
-        """
-        We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.
-        """
-        openai_async_client = AsyncOpenAI(api_key=self._get_api_key())
-        return instructor.from_openai(openai_async_client)
-
-    def _get_api_key(self):
-        api_key = load_env("OPENAI_API_KEY")
-        return api_key
 
     def query(
         self, model: str, input: "str | list", pydantic_model: BaseModel = None
@@ -46,6 +57,18 @@ class OpenAIClient(Client):
             return response
         else:
             return response.choices[0].message.content
+
+
+class OpenAIClientAsync(OpenAIClient):
+    def __init__(self):
+        self._client = self._initialize_client()
+
+    def _initialize_client(self):
+        """
+        We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.
+        """
+        openai_async_client = AsyncOpenAI(api_key=self._get_api_key())
+        return instructor.from_openai(openai_async_client)
 
     async def query_async(
         self, model: str, input: "str | list", pydantic_model: BaseModel = None
