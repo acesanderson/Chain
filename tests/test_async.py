@@ -1,6 +1,6 @@
 from Chain.model.clients.openai_client import OpenAIClientAsync
 from Chain.chain.asyncchain import AsyncChain
-from Chain.model.model import Model
+from Chain.model.model import ModelAsync
 import asyncio
 import pytest
 
@@ -12,7 +12,7 @@ def async_openai_client():
 
 @pytest.fixture
 def async_chain():
-    return AsyncChain(model=Model("o1-mini"))
+    return AsyncChain(model=ModelAsync("o1-mini"))
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def input_variables():
 def test_openai_query_async_for_sync_context(async_openai_client):
     single_prompt = "Name five frogs."
     client = async_openai_client
-    response = asyncio.run(client.query_async(model="o1-mini", input=single_prompt))
+    response = asyncio.run(client.query(model="o1-mini", input=single_prompt))
     print(response)
     assert response is not None
     assert isinstance(response, str)
@@ -65,8 +65,7 @@ def test_open_query_async_prompt_strings_external(async_openai_client, prompt_st
     async def openai_query_async_prompt_strings_external():
         client = async_openai_client
         coroutines = [
-            client.query_async(model="o1-mini", input=prompt)
-            for prompt in prompt_strings
+            client.query(model="o1-mini", input=prompt) for prompt in prompt_strings
         ]
         results = await asyncio.gather(*coroutines)
         print(results)
@@ -87,7 +86,7 @@ def test_init_asyncchain(async_chain):
     chain = async_chain
     assert chain is not None
     assert isinstance(chain, AsyncChain)
-    assert isinstance(chain.model, Model)
+    assert isinstance(chain.model, ModelAsync)
     assert chain.model.model == "o1-mini"
 
 

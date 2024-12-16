@@ -96,16 +96,6 @@ class Model:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
         return self._client.query(self.model, input, pydantic_model)
 
-    async def query_async(
-        self,
-        input: str | list,
-        verbose: bool = True,
-        pydantic_model: BaseModel | None = None,
-    ) -> BaseModel | str:
-        if verbose:
-            print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        return await self._client.query_async(self.model, input, pydantic_model)
-
     def pretty(self, user_input):
         pretty = user_input.replace("\n", " ").replace("\t", " ").strip()
         return pretty[:100]
@@ -136,3 +126,13 @@ class ModelAsync(Model):
         #     return "groq", "GroqClient"
         else:
             raise ValueError(f"Model {model} not found in models")
+
+    async def query(
+        self,
+        input: str | list,
+        verbose: bool = True,
+        pydantic_model: BaseModel | None = None,
+    ) -> BaseModel | str:
+        if verbose:
+            print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
+        return await self._client.query(self.model, input, pydantic_model)

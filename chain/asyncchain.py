@@ -45,7 +45,7 @@ class AsyncChain(Chain):
 
     async def _run_input_variables(self, input_variables_list: list[dict]) -> Response:
         coroutines = [
-            self.model.query_async(prompt, input_variables)
+            self.model.query(prompt, input_variables)
             for input_variables in input_variables_list
         ]
         # Need to convert these to Response objects
@@ -53,7 +53,7 @@ class AsyncChain(Chain):
 
     async def _run_prompt_strings(self, prompt_strings: list[str]) -> Response:
         coroutines = [
-            self.model.query_async(prompt_string) for prompt_string in prompt_strings
+            self.model.query(prompt_string) for prompt_string in prompt_strings
         ]
         # Need to convert these to Response objects
         return await asyncio.gather(*coroutines)

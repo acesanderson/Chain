@@ -70,13 +70,13 @@ class OpenAIClientAsync(OpenAIClient):
         openai_async_client = AsyncOpenAI(api_key=self._get_api_key())
         return instructor.from_openai(openai_async_client)
 
-    async def query_async(
+    async def query(
         self, model: str, input: "str | list", pydantic_model: BaseModel = None
     ) -> "str | BaseModel":
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
 
-        response = await self._async_client.chat.completions.create(
+        response = await self._client.chat.completions.create(
             model=model, response_model=pydantic_model, messages=input
         )
 
