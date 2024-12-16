@@ -25,10 +25,12 @@ class Response:
             status  # This is the status of the response (e.g. "success", "error")
         )
         self.prompt: str | None = (
-            prompt  # This is the last prompt that was sent to the model (content of the last user message)
+            prompt  # This is the last prompt that was sent to the model (content of the last user message). This is hard to implement for async calls.
         )
         self.model: str = model  # This is the model name (e.g. "gpt-4o")
-        self.duration: float = duration  # This is how long the request took.
+        self.duration: float | None = (
+            duration  # This is how long the request took; hard to implement for async calls.
+        )
         self.messages: list[Message] = (
             messages  # This is the message history; it's at least the last two messages (user and model)
         )

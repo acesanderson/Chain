@@ -1,6 +1,7 @@
 from Chain.chain.chain import Chain, Prompt
 from Chain.model.model import ModelAsync
 from Chain.response.response import Response
+from Chain.message.message import Message
 from Chain.parser.parser import Parser
 import asyncio
 from typing import overload
@@ -41,11 +42,16 @@ class AsyncChain(Chain):
                 return await self._run_input_variables(input_variables_list)
 
         results = asyncio.run(_run_async())
-        return results
+        responses = self.convert_results_to_responses(results)
+
+        return responses
 
     async def _run_input_variables(self, input_variables_list: list[dict]) -> Response:
+        # input=prompt_object.render(input_variables={"things": input_variable}),
+        if not self.prompt:
+            raise ValueError("No prompt assigned to AsyncChain object")
         coroutines = [
-            self.model.query(prompt, input_variables)
+            self.model.query(input=self.prompt.render(input_variables=input_variables))
             for input_variables in input_variables_list
         ]
         # Need to convert these to Response objects
@@ -57,3 +63,18 @@ class AsyncChain(Chain):
         ]
         # Need to convert these to Response objects
         return await asyncio.gather(*coroutines)
+
+    def convert_results_to_responses(self, results: list[str]) -> list[Response]:
+        # Convert results to Response objects
+        responses = []
+        for result in results:
+            response = Response(
+                content=result,
+                status="success",
+                prompt=None,  # This would be very hard to calculate; maybe later
+                model=self.model.model,
+                duration=None,  # This would be very hard to calculate; maybe later
+                messages=[Message(role="assistant", content=result)],
+            )
+            responses.append(response)
+        return responses
