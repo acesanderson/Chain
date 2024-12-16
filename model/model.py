@@ -62,7 +62,7 @@ class Model:
         if model in model_list["openai"]:
             return "openai", "OpenAIClientSync"
         elif model in model_list["anthropic"]:
-            return "anthropic", "AnthropicClient"
+            return "anthropic", "AnthropicClientSync"
         elif model in model_list["google"]:
             return "google", "GoogleClient"
         elif model in model_list["ollama"]:
@@ -84,7 +84,10 @@ class Model:
                 cls._clients[client_type[0]] = client_class()
             except ImportError as e:
                 raise ImportError(f"Failed to import {client_type} client: {str(e)}")
-        return cls._clients[client_type[0]]
+        client_object = cls._clients[client_type[0]]
+        if not client_object:
+            raise ValueError(f"Client {client_type} not found in clients")
+        return client_object
 
     def query(
         self,
@@ -116,8 +119,8 @@ class ModelAsync(Model):
         model_list = self.__class__.models
         if model in model_list["openai"]:
             return "openai", "OpenAIClientAsync"
-        # elif model in model_list["anthropic"]:
-        #     return "anthropic", "AnthropicClient"
+        elif model in model_list["anthropic"]:
+            return "anthropic", "AnthropicClientAsync"
         # elif model in model_list["google"]:
         #     return "google", "GoogleClient"
         # elif model in model_list["ollama"]:

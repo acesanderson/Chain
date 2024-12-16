@@ -60,9 +60,6 @@ class OpenAIClientSync(OpenAIClient):
 
 
 class OpenAIClientAsync(OpenAIClient):
-    def __init__(self):
-        self._client = self._initialize_client()
-
     def _initialize_client(self):
         """
         We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.

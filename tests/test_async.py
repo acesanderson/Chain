@@ -1,4 +1,5 @@
 from Chain.model.clients.openai_client import OpenAIClientAsync
+from Chain.model.clients.anthropic_client import AnthropicClientAsync
 from Chain.chain.asyncchain import AsyncChain
 from Chain.model.model import ModelAsync
 from Chain.response.response import Response
@@ -17,13 +18,20 @@ def prompt_object():
 
 
 @pytest.fixture
-def async_openai_client():
-    return OpenAIClientAsync()
+def model_string():
+    # return "gpt-3.5-turbo-0125"
+    return "claude-3-haiku-20240307"
 
 
 @pytest.fixture
-def async_chain(prompt_object):
-    return AsyncChain(prompt=prompt_object, model=ModelAsync("o1-mini"))
+def async_client():
+    # return OpenAIClientAsync()
+    return AnthropicClientAsync()
+
+
+@pytest.fixture
+def async_chain(prompt_object, model_string):
+    return AsyncChain(prompt=prompt_object, model=ModelAsync(model_string))
 
 
 @pytest.fixture
@@ -67,10 +75,10 @@ def input_variables_list(list_of_things):
 
 
 # First, let's test synchronous usage of the async client.
-def test_openai_query_async_for_sync_context(async_openai_client):
+def test_query_async_for_sync_context(async_client, model_string):
     single_prompt = "Name five frogs."
-    client = async_openai_client
-    response = asyncio.run(client.query(model="o1-mini", input=single_prompt))
+    client = async_client
+    response = asyncio.run(client.query(model=model_string, input=single_prompt))
     print(response)
     assert response is not None
     assert isinstance(response, str)
@@ -80,11 +88,13 @@ def test_openai_query_async_for_sync_context(async_openai_client):
 # Second, let's test asynchronous usage of the async client, with an external implementation.
 
 
-def test_open_query_async_prompt_strings_external(async_openai_client, prompt_strings):
-    async def openai_query_async_prompt_strings_external():
-        client = async_openai_client
+def test_query_async_prompt_strings_external(
+    async_client, prompt_strings, model_string
+):
+    async def query_async_prompt_strings_external():
+        client = async_client
         coroutines = [
-            client.query(model="o1-mini", input=prompt) for prompt in prompt_strings
+            client.query(model=model_string, input=prompt) for prompt in prompt_strings
         ]
         results = await asyncio.gather(*coroutines)
         print(results)
@@ -94,19 +104,19 @@ def test_open_query_async_prompt_strings_external(async_openai_client, prompt_st
         assert all(isinstance(result, str) for result in results)
         assert all(len(result) > 0 for result in results)
 
-    asyncio.run(openai_query_async_prompt_strings_external())
+    asyncio.run(query_async_prompt_strings_external())
 
 
 # Now that this works, we need to add a bulk function on top. This is handled by a new AsyncChain class.
 # Test init.
 
 
-def test_init_asyncchain(async_chain):
+def test_init_asyncchain(async_chain, model_string):
     chain = async_chain
     assert chain is not None
     assert isinstance(chain, AsyncChain)
     assert isinstance(chain.model, ModelAsync)
-    assert chain.model.model == "o1-mini"
+    assert chain.model.model == model_string
 
 
 # Working our way up from the bottom, let's test the _run_prompt_strings function.
@@ -136,14 +146,14 @@ def test_asyncchain_run_prompt_strings(async_chain, prompt_strings):
 
 
 # Our other function: _run_input_variables. First, let's start with the client-level query function
-def test_openai_query_async_input_variables(
-    async_openai_client, input_variables_list, prompt_object
+def test_query_async_input_variables(
+    async_client, input_variables_list, prompt_object, model_string
 ):
-    async def openai_query_async_input_variables():
-        client = async_openai_client
+    async def query_async_input_variables():
+        client = async_client
         coroutines = [
             client.query(
-                model="o1-mini",
+                model=model_string,
                 input=prompt_object.render(input_variables={"things": input_variable}),
             )
             for input_variable in input_variables_list
@@ -156,7 +166,7 @@ def test_openai_query_async_input_variables(
         assert all(isinstance(result, str) for result in results)
         assert all(len(result) > 0 for result in results)
 
-    asyncio.run(openai_query_async_input_variables())
+    asyncio.run(query_async_input_variables())
 
 
 # Now our run sub-function in AsyncChain

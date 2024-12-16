@@ -1,15 +1,25 @@
 from Chain import Chain, Model, Prompt, Message
 import pytest
 
+# Our fixtures
+# ======================================================================================
+
 
 @pytest.fixture
 def default_model():
-    return Model("haiku")
+    model = "gpt3"
+    # model = "haiku"
+    # model = "gemini"
+    return Model(model)
 
 
 @pytest.fixture
 def sample_prompt():
     return Prompt("What is the capital of France?")
+
+
+# Our tests
+# ======================================================================================
 
 
 def test_chain_init(default_model, sample_prompt):
