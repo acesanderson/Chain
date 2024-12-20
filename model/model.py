@@ -32,8 +32,18 @@ class Model:
         This is where you can put in any model aliases you want to support.
         """
         # Load our aliases from aliases.json
-        with open(dir_path / "aliases.json", "r") as f:
-            aliases = json.load(f)
+        try:
+            with open(dir_path / "aliases.json", "r") as f:
+                aliases = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(
+                f"WARNING: aliases.json not found. This may cause errors."
+            )
+        except json.JSONDecodeError:
+            raise ValueError(
+                f"WARNING: aliases.json is not a valid JSON file. This may cause errors."
+            )
+
         # Check data quality.
         for value in aliases.values():
             if value not in list(itertools.chain.from_iterable(cls.models.values())):

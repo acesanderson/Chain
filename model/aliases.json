@@ -7,5 +7,6 @@
     "ollama": "mistral:latest",
     "haiku": "claude-3-5-haiku-20241022",
     "gpt-mini": "gpt-4o-mini",
-    "llama": "llama3.1:latest"
+    "llama": "llama3.1:latest",
+    "qwen": "qwen2.5:32b"
 }
