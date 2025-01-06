@@ -20,9 +20,10 @@ OPENAI_API_KEY=your_openai_api_key
 ANTHROPIC_API_KEY=your_anthropic_api_key
 GOOGLE_API_KEY=your_google_api_key
 GROQ_API_KEY=your_groq_api_key
+DEEPSEEK_API_KEY=your_deepseek_api_key
 ```
 
-If you wish to use local models, you will need to install [Ollama](https://github.com/ollama/ollama). Recommended models (from personal experience): llama3.1:latest, mistral:latest.
+If you wish to use local models, you will need to install [Ollama](https://github.com/ollama/ollama). Recommended models (from personal experience): llama3.1:latest, qwen.
 
 ## Usage
 
@@ -33,7 +34,7 @@ from Chain import Prompt, Model, Chain, Parser, Message, MessageStore
 # List available models
 print(Model.models)
 
-# {'ollama': ['phi3:latest', 'phi:latest', 'llama3.2:latest', 'llama3.1:latest', 'llama3.1:70b-instruct-q2_K', 'dolphin-mixtral:latest', 'dolphin-mixtral:8x7b', 'mistral:latest'], 'openai': ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo-0125', 'gpt-4o-mini', 'o1-preview', 'o1-mini'], 'anthropic': ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620'], 'google': ['gemini-1.5-pro-latest', 'gemini-1.5-flash-latest', 'gemini-1.0-pro-latest'], 'groq': ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it'], 'testing': ['polonius']}
+# {'ollama': ['phi3:latest', 'phi:latest', 'llama3.2:latest', 'llama3.1:latest', 'llama3.1:70b-instruct-q2_K', 'dolphin-mixtral:latest', 'dolphin-mixtral:8x7b', 'mistral:latest'], 'openai': ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo-0125', 'gpt-4o-mini', 'o1-preview', 'o1-mini'], 'anthropic': ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620'], 'google': ['gemini-1.5-pro-latest', 'gemini-1.5-flash-latest', 'gemini-1.0-pro-latest'], 'groq': ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it']}
 
 # Simple GPT chain
 
@@ -89,9 +90,10 @@ print(response.content)
 ### Advanced
 - You can create a messagestore to either: save response objects in a Message format throughout a script; save a persistent chat conversation between sessions; log prompt flows.
 - You can set system prompts with the create_messages method in the MessageStore class.
+- Every client has an AsyncClient implementation for async calls.
 
 ### Upcoming features
-- Async support for gpt and claude
-- More advanced messagestore features
 - Chatbot class
+- HuggingFace/unsloth implementation for working with finetuned models
+- Agentic support for tools, resources, using MCP protocol
 
