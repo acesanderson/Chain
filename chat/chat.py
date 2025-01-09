@@ -1,11 +1,31 @@
 """
 Extensible chat class for CLI chat applications.
 Add more commands by extending the commands list + defining a "command_" method.
+
+TODO:
+- more commands
+    - allow getting a message from history
+    - allow branching from somewhere in history
+    - allow pruning of history
+    - allow saving history, saving a message
+    - allow capturing screenshots for vision-based queries
+- Leviathan extension
+    - create a Chat app in Leviathan that incorporates ask, tutorialize, cookbook, etc.
+- Mentor extension
+    - system message
+    - RAG: cosmo data from postgres, similarity search from chroma, direct access of courses from mongod
+    - Curation objects: create, view, edit
+    - blacklist course (for session)
+- Learning from the Mentor implementation for more Agentic use cases
+    - prompts
+    - resources
+    - tools
 """
 
 from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore, Message
 from rich.console import Console
+from rich.markdown import Markdown
 import re
 from pydantic import BaseModel
 from functools import partial
@@ -169,7 +189,7 @@ class Chat:
                         else:
                             response = self.query_model(user_input)
                     self.messagestore.add_new(role="assistant", content=str(response))
-                    self.console.print(str(response) + "\n", style="blue")
+                    self.console.print(Markdown(str(response) + "\n"), style="blue")
                     continue
         except KeyboardInterrupt:
             self.console.print("\nGoodbye!", style="green")
