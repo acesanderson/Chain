@@ -175,6 +175,10 @@ class Chat:
             self.console.print("\nGoodbye!", style="green")
 
 
-if __name__ == "__main__":
+def main():
     c = Chat(Model("gpt"))
     c.chat()
+
+
+if __name__ == "__main__":
+    main()
