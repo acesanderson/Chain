@@ -4,6 +4,7 @@ Add more commands by extending the commands list + defining a "command_" method.
 
 TODO:
 - more commands
+    - [x] dynamic registration of new command methods
     - allow getting a message from history
     - allow branching from somewhere in history
     - allow pruning of history
@@ -39,24 +40,11 @@ class Chat:
     def __init__(self, model: Model):
         self.model = model
         self.console = Console(width=100)
-        self.command_regex = re.compile("/([^ ]+)( |$)")
-        self.command_show_regex = re.compile("/show ([^ ]+)")
-        self.command_set_regex = re.compile("/set ([^ ]+) ([^ ]+)")
+        self.regex_command = re.compile("/([^ ]+)( |$)")
+        self.regex_command_show = re.compile("/show ([^ ]+)")
+        self.regex_command_set = re.compile("/set ([^ ]+) ([^ ]+)")
         self.messagestore = None  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
-        # Command registry. To extend in a subclass, add to this + add command_ method.
-        self.commands = {
-            "exit": self.command_exit,
-            "help": self.command_help,
-            "clear": self.command_clear,
-            "show": {
-                "model": self.command_show_model,
-                "history": self.command_show_history,
-            },
-            "set": {
-                "model": self.command_set_model,
-            },
-        }
 
     def parse_input(self, input: str):
         """
@@ -66,19 +54,20 @@ class Chat:
         2. Show commands (e.g. /show model)
         3. Set commands (e.g. /set model gpt)
         """
+        commands = self.get_commands()
+
         # Not a command; return None
         if not input.startswith("/"):
             return None
 
         # Subtype: show. Has a base command ("show") and a sub command (e.g. "model").
         if input.startswith("/show"):
-            show_match = re.search(self.command_show_regex, input)
+            show_match = re.search(self.regex_command_show, input)
             if show_match:
-                show_command = show_match.group(1)
-                if show_command in self.commands["show"].keys():  # type: ignore
-                    return self.commands["show"][show_command]  # type: ignore
+                show_command = "command_show_" + show_match.group(1)
+                if show_command in commands:
+                    return getattr(self, show_command)
                 else:
-                    self.console.print("Invalid show command.", style="red")
                     return None
             else:
                 raise ValueError("Regex error.")
@@ -86,26 +75,37 @@ class Chat:
         # Subtype: set. Has a base command ("set"), a sub command (e.g. "model"), and a parameter.
         # Set commands should always declare their parameter as "param" in the method signature, as we are assembling partial functions here.
         elif input.startswith("/set"):
-            set_match = re.search(self.command_set_regex, input)
+            set_match = re.search(self.regex_command_set, input)
             if set_match:
-                set_command = set_match.group(1)
+                set_command = "command_set_" + set_match.group(1)
                 set_parameter = set_match.group(2)
-                bare_func = self.commands["set"][set_command]  # type: ignore
-                return partial(bare_func, set_parameter)
+                if set_command in commands:
+                    bare_func = getattr(self, set_command)
+                    return partial(bare_func, set_parameter)
+                else:
+                    return None
             else:
                 raise ValueError("Regex error.")
 
         # Base commands
         else:
-            command_match = re.search(self.command_regex, input)
+            command_match = re.search(self.regex_command, input)
             if command_match:
-                command = command_match.group(1)
-                if command in self.commands.keys():
-                    return self.commands[command]  # type: ignore
+                command = "command_" + command_match.group(1)
+                if command in commands:
+                    return getattr(self, command)
                 else:
                     return None
             else:
                 raise ValueError("Regex error.")
+
+    def get_commands(self):
+        """
+        Dynamic inventory of "command_" methods.
+        If you extend this with more methods, make sure they follow the "command_" naming convention.
+        """
+        commands = [attr for attr in dir(self) if attr.startswith("command_")]
+        return commands
 
     # Command methods
     def command_exit(self):
@@ -118,13 +118,15 @@ class Chat:
         """
         Display the help message.
         """
+        commands = sorted(self.get_commands())
         help_message = "Commands:\n"
-        for command in self.commands.keys():
-            if isinstance(self.commands[command], dict):
-                for subcommand in self.commands[command].keys():
-                    help_message += f"/[purple]{command} {subcommand}[/purple]: [green]{self.commands[command][subcommand].__doc__.strip()}[/green]\n"
-            else:
-                help_message += f"/[purple]{command}[/purple]: [green]{self.commands[command].__doc__.strip()}[/green]\n"
+        for command in commands:
+            command_name = command.replace("command_", "").replace("_", " ")
+            command_func = getattr(self, command)
+            command_docs = command_func.__doc__.strip()
+            help_message += (
+                f"/[purple]{command_name}[/purple]: [green]{command_docs}[/green]\n"
+            )
         self.console.print(help_message)
 
     def command_clear(self):
