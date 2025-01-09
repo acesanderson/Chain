@@ -187,6 +187,9 @@ class MessageStore:
         """
         Pretty prints the history.
         """
+        if not self.messages:
+            self.console.print("No history (yet).", style="bold red")
+            return
         for index, message in enumerate(self.messages):
             content = message.content[:50].replace("\n", " ")
             self.console.print(
