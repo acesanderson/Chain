@@ -46,7 +46,7 @@ class Chat:
         self.messagestore = None  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
 
-    def parse_input(self, input: str):
+    def parse_input(self, input: str) -> function | partial | None:
         """
         Commands start with a slash. This method parses the input and returns the corresponding method.
         There are three levels of commands:
