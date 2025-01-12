@@ -19,7 +19,7 @@ or a mix of both, but the interaction with them is as a list of messages unless 
     - Log is automatically updated with the messages and therefore a flag for several methods.
 """
 
-from Chain.message.message import Message
+from Chain.message.message import Message, Messages
 from rich.console import Console
 from rich.rule import Rule
 from pydantic import BaseModel
@@ -48,7 +48,7 @@ class MessageStore:
             self.console = Console(width=100)
         else:
             self.console = console
-        self.messages = []  # The list of messages
+        self.messages: list[Message | None] = []  # The list of messages
         # Config history and log if requested
         if history_file:
             self.history_file = history_file
