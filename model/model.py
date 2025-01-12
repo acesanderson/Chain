@@ -2,6 +2,7 @@ from pathlib import Path
 import importlib
 import json
 import itertools
+from Chain.cache.cache import ChainCache, CachedRequest
 from pydantic import BaseModel
 
 dir_path = Path(__file__).resolve().parent
@@ -20,6 +21,8 @@ class Model:
 
     # Store lazy-loaded client instances at the class level
     _clients = {}
+    # If you want to add a cache, add it at class level as a singleton.
+    _chain_cache: ChainCache | None = None
 
     def __init__(self, model: str = "gpt-4o"):
         self.model = self._validate_model(model)
@@ -109,6 +112,17 @@ class Model:
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
+        if Model._chain_cache:
+            cached_request = Model._chain_cache.cache_lookup(input, self.model)
+            if cached_request:
+                print("Cache hit!")
+                return cached_request
+        results = self._client.query(self.model, input, pydantic_model)
+        if Model._chain_cache:
+            cached_request = CachedRequest(
+                user_input=input, model=self.model, llm_output=results
+            )
+            Model._chain_cache.insert_cached_request(cached_request)
         return self._client.query(self.model, input, pydantic_model)
 
     def pretty(self, user_input):
@@ -148,6 +162,16 @@ class ModelAsync(Model):
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
     ) -> BaseModel | str:
+        if Model._chain_cache:
+            cached_request = Model._chain_cache.cache_lookup(input, self.model)
+            if cached_request:
+                return cached_request
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        return await self._client.query(self.model, input, pydantic_model)
+        results = await self._client.query(self.model, input, pydantic_model)
+        if Model._chain_cache:
+            cached_request = CachedRequest(
+                user_input=input, model=self.model, llm_output=results
+            )
+            Model._chain_cache.insert_cached_request(cached_request)
+        return results
