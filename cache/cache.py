@@ -2,9 +2,6 @@ from Chain import Response
 from pydantic.dataclasses import dataclass
 import sqlite3
 
-"""
-Response(content='Sure, here are ten examples of mammals:\n\n1. Hum, status='success', prompt='name ten mammals', model='gpt-4o', duration=1.3020920753479004, messages=[Message(role='user', content='name ten mammals'),) 
-"""
 
 db_name = ".chain_cache.db"
 
@@ -23,12 +20,18 @@ class CachedRequest:
 
 
 class ChainCache:
+    """
+    Class to handle the caching of requests.
+    If the same rendered prompt string + model name have been seen before, we return the cached response.
+    """
 
     def __init__(db_name: str):
-        self.db_name: str = db_name
-        self.cache_dict: dict = dict()
+        self.db_name = db_name
+        self.conn, self.cursor = self.load_db()
+        self.cached_requests = self.retrieve_cached_requests(self.cursor)
+        self.cache_dict = generate_in_memory_dict(self.cached_requests)
 
-    def create_cached_request(response: Response) -> CachedRequest:
+    def create_cached_request(response: Response) -> CachedRequest:  # type: ignore
         user_input, llm_output, model = (
             str(response.prompt),
             str(response.content),
@@ -54,15 +57,39 @@ class ChainCache:
             ),
         )
 
-    def retrieve_cached_requests(
-        cursor: sqlite3.Cursor, user_input: str, model: str
-    ) -> set[CachedRequest]:
-        cursor.execute(
-            "SELECT * FROM cached_requests WHERE user_input = ? AND model = ?",
-            (user_input, model),
-        )
+    def retrieve_cached_requests(cursor: sqlite3.Cursor) -> set[CachedRequest]:
+        cursor.execute("SELECT * FROM cached_requests")
         data = cursor.fetchall()
         return {CachedRequest(*row) for row in data}
 
     def generate_in_memory_dict(cachedrequests: set[CachedRequest]) -> dict:
         return {(cr.user_input, cr.model): cr.llm_output for cr in cachedrequests}
+
+    def cache_lookup(user_input: str, model: str) -> Response | None:
+        """
+        Checks if there is a match for the CacheEntry, returns if yes, returns None if no.
+        """
+        key = (user_input, model)
+        try:
+            value = self.cache_dict[key]
+        except:
+            value = None
+        return value
+
+
+if __name__ == "__main__":
+    cache = ChainCache(db_name=".example.db")
+    examples = [
+        Response(
+            prompt="name five mammals",
+            content="(1) lizard (2) dog (3) bird (4) dinosaur (5) human",
+            model="gpt",
+        ),
+        Response(prompt="what is the capital of france?", content="Paris", model="gpt"),
+        Response(
+            prompt="is this thing on?",
+            content="yes, do you have a question?",
+            model="gpt",
+        ),
+        Response(prompt="what OS am I using?", content="macOS", model="gpt"),
+    ]
