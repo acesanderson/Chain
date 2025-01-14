@@ -63,15 +63,21 @@ class OllamaClient(Client):
                 f"Input not recognized as a valid input type: {type:input}: {input}"
             )
         # call our client
-        response = ollama.chat(
-            model=model,
-            messages=input,
-            options={"num_ctx": self._ollama_context_sizes[model]},
-        )
-        if pydantic_model:
-            print("Pydantic model not supported for Ollama models currently.")
-        else:
+        if not pydantic_model:
+            response = ollama.chat(
+                model=model,
+                messages=input,
+                options={"num_ctx": self._ollama_context_sizes[model]},
+            )
             return response["message"]["content"]
+        elif pydantic_model:
+            response = ollama.chat(
+                model=model,
+                messages=input,
+                format=pydantic_model.model_json_schema(),
+                options={"num_ctx": self._ollama_context_sizes[model]},
+            )
+            return pydantic_model(**json.loads(response["message"]["content"]))
 
     def update_ollama_models(self):
         """
