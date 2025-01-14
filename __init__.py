@@ -5,6 +5,7 @@ from Chain.response.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message, Messages, create_system_message
 from Chain.message.messagestore import MessageStore
+from Chain.cache.cache import ChainCache
 
 __all__ = [
     "Chain",
@@ -16,4 +17,5 @@ __all__ = [
     "MessageStore",
     "create_system_message",
     "Messages",
+    "ChainCache",
 ]
