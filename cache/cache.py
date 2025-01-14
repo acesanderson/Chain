@@ -1,5 +1,6 @@
 from pydantic.dataclasses import dataclass
 import sqlite3
+from functools import wraps
 
 
 # Define a dataclass to store the cached request
@@ -23,17 +24,17 @@ class ChainCache:
 
     def __init__(self, db_name: str):
         self.db_name = db_name
-        self.cursor = self.load_db()
+        self.conn, self.cursor = self.load_db()
         self.cached_requests = self.retrieve_cached_requests()
         self.cache_dict = self.generate_in_memory_dict(self.cached_requests)
 
-    def load_db(self) -> sqlite3.Cursor:
+    def load_db(self) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
         cursor.execute(
             "CREATE TABLE IF NOT EXISTS cached_requests (user_input TEXT, llm_output TEXT, model TEXT)"
         )
-        return cursor
+        return conn, cursor
 
     def insert_cached_request(self, cached_request: CachedRequest):
         self.cursor.execute(
@@ -44,6 +45,7 @@ class ChainCache:
                 cached_request.model,
             ),
         )
+        self.conn.commit()
         self.cache_dict[(cached_request.user_input, cached_request.model)] = (
             cached_request.llm_output
         )
@@ -66,6 +68,12 @@ class ChainCache:
         except:
             value = None
         return value
+
+    def clear_cache(self):
+        self.cursor.execute("DELETE FROM cached_requests")
+        self.conn.commit()
+        self.cache_dict = {}
+        print("Cache cleared.")
 
     def __bool__(self):
         """

@@ -11,7 +11,7 @@ def default_model():
 def test_model_init(default_model):
     assert default_model.model == "claude-3-5-haiku-20241022"
     assert isinstance(default_model._client, Client)
-    assert default_model._client_type == ("anthropic", "AnthropicClient")
+    assert default_model._client_type == ("anthropic", "AnthropicClientSync")
 
 
 def test_model_init_fail():
@@ -25,7 +25,7 @@ def load_model_list():
     assert "gpt-4o" in model_list["openai"]
     assert "claude-3-5-sonnet-20241022" in model_list["anthropic"]
     assert "llama3.1:latest" in model_list["ollama"]
-    assert "gemini-1.5-pro-latest" in model_list["google"]
+    assert "gemini-1.5-flash" in model_list["google"]
 
 
 @pytest.mark.parametrize(
@@ -33,7 +33,7 @@ def load_model_list():
     [
         ("gpt-4o", "openai", "OpenAIClient"),
         ("claude-3-5-sonnet-20241022", "anthropic", "AnthropicClient"),
-        ("gemini-1.5-pro-latest", "google", "GoogleClient"),
+        ("gemini-1.5-flash", "google", "GoogleClient"),
     ],
 )
 def test_model_get_client(model_name, provider, client):
