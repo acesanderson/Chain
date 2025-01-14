@@ -127,7 +127,7 @@ class Model:
 
     def pretty(self, user_input):
         pretty = user_input.replace("\n", " ").replace("\t", " ").strip()
-        return pretty[:100]
+        return pretty[:60] + "..." if len(pretty) > 60 else pretty
 
     def __repr__(self):
         attributes = ", ".join(

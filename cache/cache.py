@@ -1,6 +1,6 @@
+from pydantic import field_validator
 from pydantic.dataclasses import dataclass
 import sqlite3
-from functools import wraps
 
 
 # Define a dataclass to store the cached request
@@ -9,11 +9,22 @@ class CachedRequest:
     """
     Simple dataclass to store the cached request.
     slots and frozen are used to make the class immutable / hashable.
+    If user_input is a list of messages, we flatten it to a string.
     """
 
-    user_input: str
+    user_input: str | list
     llm_output: str
     model: str
+
+    @field_validator("user_input")
+    def convert_input_to_str(cls, v):
+        """
+        Flatten the user_input to a string if it is a list of messages.
+        Also stripping to regularize the input.
+        """
+        if isinstance(v, list):
+            v = str(v[-1].content)
+        return v.strip()
 
 
 class ChainCache:
@@ -58,10 +69,14 @@ class ChainCache:
     def generate_in_memory_dict(self, cachedrequests: set[CachedRequest]) -> dict:
         return {(cr.user_input, cr.model): cr.llm_output for cr in cachedrequests}
 
-    def cache_lookup(self, user_input: str, model: str) -> str | None:
+    def cache_lookup(self, user_input: str | list, model: str) -> str | None:
         """
         Checks if there is a match for the CacheEntry, returns if yes, returns None if no.
         """
+        # Regularize this, like we do with CachedRequest class
+        if isinstance(user_input, list):
+            user_input = user_input[-1].content
+        user_input = str(user_input).strip()
         key = (user_input, model)
         try:
             value = self.cache_dict[key]
@@ -88,19 +103,3 @@ class ChainCache:
         Note: see the __bool__ method above for extra context.
         """
         return len(self.cache_dict)
-
-
-if __name__ == "__main__":
-    cache = ChainCache(db_name=".example.db")
-    lookup_examples = [
-        {"user_input": "name five mammals", "model": "gpt"},
-        {"user_input": "what is the capital of germany?", "model": "gpt"},
-        {"user_input": "what is the capital of france?", "model": "gpt"},
-        {"user_input": "what is your context cutoff?", "model": "gpt"},
-        {"user_input": "is this thing on?", "model": "gpt"},
-        {"user_input": "what OS am I using?", "model": "gpt"},
-        {"user_input": "what OS am I using?", "model": "claude"},
-        {"user_input": "what OS am I using?", "model": "gemini"},
-    ]
-    for lookup_example in lookup_examples:
-        print(lookup_example, cache.cache_lookup(**lookup_example))

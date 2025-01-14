@@ -187,3 +187,19 @@ class Chain:
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
         )
         return f"{self.__class__.__name__}({attributes})"
+
+
+def main():
+    p = Prompt("name ten mammals")
+    c = Chain(prompt=p, model=Model("gpt"))
+    r = c.run()
+    print(r)
+
+
+if __name__ == "__main__":
+    import cProfile
+    import pstats
+
+    cProfile.run("main()", "output.stats")
+    p = pstats.Stats("output.stats")
+    p.sort_stats("cumulative").print_stats(30)
