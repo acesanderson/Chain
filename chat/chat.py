@@ -30,6 +30,7 @@ from rich.markdown import Markdown
 import re
 from pydantic import BaseModel
 from functools import partial
+from typing import Callable
 
 
 class Chat:
@@ -46,7 +47,7 @@ class Chat:
         self.messagestore = None  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
 
-    def parse_input(self, input: str) -> function | partial | None:
+    def parse_input(self, input: str) -> Callable | partial | None:
         """
         Commands start with a slash. This method parses the input and returns the corresponding method.
         There are three levels of commands:
@@ -148,6 +149,12 @@ class Chat:
         Display the current model.
         """
         self.console.print(f"Current model: {self.model.model}", style="green")
+
+    def command_show_models(self):
+        """
+        Display available models.
+        """
+        self.console.print(Model.models, style="green")
 
     def command_set_model(self, param: str):
         """
