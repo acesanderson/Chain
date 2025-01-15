@@ -1,10 +1,21 @@
-from openai import OpenAI
+from openai import OpenAI, Stream
 import os
 import re
 from ast import literal_eval
+from Chain.message.message import Message
 
 api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
+
+
+def query_openai_streaming(messages: list[Message]) -> Stream:
+    messages_as_dicts: list[dict] = [m.model_dump() for m in messages]
+    stream = client.chat.completions.create(  # type:ignore
+        messages=messages_as_dicts,  # type:ignore
+        model="gpt-4o",
+        stream=True,
+    )
+    return stream
 
 
 def process_stream(stream) -> tuple[str, dict, str]:
@@ -20,10 +31,23 @@ def process_stream(stream) -> tuple[str, dict, str]:
     if buffer.endswith("None"):
         buffer = buffer[:-4]
     # Grab two bits of data: <tool></tool> and <args></args>
-    tool = re.search(r"<tool>(.*?)</tool>", buffer, re.DOTALL).group(1)
-    args = re.search(r"<args>(.*?)</args>", buffer, re.DOTALL).group(1)
-    args = literal_eval(args)
-    return tool, args, buffer
+    try:
+        tool = re.search(r"<tool>(.*?)</tool>", buffer, re.DOTALL).group(  # type:ignore
+            1
+        )
+        args = re.search(r"<args>(.*?)</args>", buffer, re.DOTALL).group(  # type:ignore
+            1
+        )
+        args = literal_eval(args)
+        return tool, args, buffer
+    except AttributeError:
+        return "", {}, buffer
+
+
+def return_observation(observation: str) -> Message:
+    observation_string = f"<observation>{observation}</observation>"
+    user_message = Message(role="user", content=observation_string)
+    return user_message
 
 
 def convert_temperature(celsius: float) -> float:
@@ -52,24 +76,24 @@ A typical interaction might look like:
 tools = [convert_temperature]
 
 if __name__ == "__main__":
-    stream = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt_string,
-            },
-            {
-                "role": "user",
-                "content": "97 degrees celsius",
-            },
-        ],
-        model="gpt-4o",
-        stream=True,
+    messages = [Message(role="system", content=system_prompt_string)]
+    messages.append(
+        Message(role="user", content="Convert 25 degrees celsius to fahrenheit.")
     )
+    stream = query_openai_streaming(messages)
 
     tool, args, buffer = process_stream(stream)
+    messages.append(Message(role="assistant", content=buffer))
     print(args)
+    observation = ""
     for t in tools:
         if t.__name__ == tool:
-            observation = t(**args)
+            observation = str(t(**args))
             print(observation)
+    if observation:
+        user_message = return_observation(observation)
+        messages.append(user_message)
+        stream = query_openai_streaming(messages)
+        tool, args, buffer = process_stream(stream)
+        messages.append(Message(role="assistant", content=buffer))
+    print(messages)
