@@ -11,5 +11,4 @@ tests/__pycache__/
 /data/
 ask_wrapper.sh
 /databases/
-macciavel.py
-
+*.log
