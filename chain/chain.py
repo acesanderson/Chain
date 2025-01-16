@@ -40,22 +40,24 @@ class Chain:
             self.input_schema = set()
 
     @overload
-    def run(self) -> Response:
+    def run(self, verbose=True) -> Response:
         """Run a completion, if no args provided, use the prompt and model already defined in the chain object."""
         ...
 
     @overload
-    def run(self, input_variables: dict) -> Response:
+    def run(self, input_variables: dict, verbose=True) -> Response:
         """Run a completion with input variables."""
         ...
 
     @overload
-    def run(self, *, messages: list[Message]) -> Response:
+    def run(self, *, messages: list[Message], verbose=True) -> Response:
         """Run a completion with messages."""
         ...
 
     @overload
-    def run(self, input_variables: dict, messages: list[Message]) -> Response:
+    def run(
+        self, input_variables: dict, messages: list[Message], verbose=True
+    ) -> Response:
         """Run a completion with input variables and messages."""
         ...
 
