@@ -2,21 +2,13 @@ import re
 from ast import literal_eval
 from Chain.message.message import Message
 from Chain.model.model import Model
+from Chain.message.messagestore import MessageStore
 from Chain.react.Tool import Tool
 from jinja2 import Template
 from pathlib import Path
 from typing import Callable
 
-# Load system prompt from jinja file
-dir_path = Path(__file__).parent
-system_prompt_path = dir_path / "system_prompt.jinja"
-with open(system_prompt_path, "r") as file:
-    system_prompt_string = Template(file.read().strip())
 
-preferred_model = "gpt"
-
-
-# ReACT syntax functions
 class ReACT:
     """
     A ReACT is a variant of Chain that defines a simple input-output ReACT workflow.
@@ -24,21 +16,43 @@ class ReACT:
     - input: str (this goes into system prompt, and tells the LLM what the input would be)
     - output: str (same as above, but for output)
     - tools: list[Callable] (a list of your functions; they should take parameters and have descriptive + short docstrings)
-    - model: a Model object (currently only Model('gpt') support streaming)
+    - model: a Model object (currently only Model('gpt') support streaming, that is default)
     """
 
-    def __init__(self, input: str, output: str, tools: list[Callable], model: Model):
+    def __init__(
+        self,
+        input: str,
+        output: str,
+        tools: list[Callable],
+        model: Model = Model("gpt"),
+        log_file: str = "",
+    ):
         self.input = input
         self.output = output
         self.tools = tools
         self.model = model
+        # Add our default to logfile
+        if log_file == "":
+            dir_path = Path(__file__).parent / ".react.log"
+            self.log_file = str(dir_path)
+        else:
+            self.log_file = log_file
         # Generate system prompt
         self.tool_objects = [Tool(tool) for tool in tools]
         self.system_prompt = self.render_system_prompt(input, output, self.tool_objects)
-        # Initialize Message objects
-        self.messages = [Message(role="system", content=self.system_prompt)]
+        # Initialize MessageStore
+        self.message_store = MessageStore(log_file=self.log_file)
+
+    def load_system_prompt_template(self) -> Template:
+        # Load system prompt from jinja file
+        dir_path = Path(__file__).parent
+        system_prompt_path = dir_path / "system_prompt.jinja"
+        with open(system_prompt_path, "r") as file:
+            system_prompt_string = Template(file.read().strip())
+        return system_prompt_string
 
     def render_system_prompt(self, input: str, output: str, tool_objects: list[Tool]):
+        system_prompt_string = self.load_system_prompt_template()
         system_prompt = system_prompt_string.render(
             input=input, output=output, tool_objects=tool_objects
         )
@@ -79,19 +93,22 @@ class ReACT:
         return user_message
 
     def query(self, prompt: str) -> str | None:
-        self.messages.append(Message(role="user", content=prompt))
+        # Load our prompts.
+        self.message_store.clear()
+        self.message_store.add_new(role="system", content=self.system_prompt)
+        self.message_store.add_new(role="user", content=prompt)
         # Our main loop
         while True:
             # Query OpenAI with the messages so far
-            stream = self.model.stream(self.messages, verbose=False)
+            stream = self.model.stream(self.message_store.messages, verbose=False)
             tool, args, buffer = self.process_stream(stream)
             # Determine if we have final answer
             if tool == "finish":
                 final_answer = args["final_answer"]
                 print(final_answer)
-                self.messages.append(Message(role="assistant", content=final_answer))
+                self.message_store.add_new(role="assistant", content=final_answer)
                 break
-            self.messages.append(Message(role="assistant", content=buffer))
+            self.message_store.add_new(role="assistant", content=buffer)
             # Generate observation on command
             observation = ""
             for tool_object in self.tool_objects:
@@ -99,54 +116,6 @@ class ReACT:
                     observation = str(tool_object(**args))
             if observation:
                 user_message = self.return_observation(observation)
-                self.messages.append(user_message)
+                self.message_store.add_new(user_message.role, str(user_message.content))
             else:
                 print("No observation found")
-
-
-# Our tools
-def convert_temperature(celsius: float) -> float:
-    """Convert celsius to fahrenheit"""
-    return (celsius * 9 / 5) + 32
-
-
-def calculate_wind_chill(temp_fahrenheit: float, wind_speed_mph: float) -> float:
-    """
-    Calculate wind chill using the NWS formula
-    Valid for temperatures <= 50°F and wind speeds >= 3 mph
-    """
-    if temp_fahrenheit > 50 or wind_speed_mph < 3:
-        return temp_fahrenheit
-
-    wind_chill = (
-        35.74
-        + (0.6215 * temp_fahrenheit)
-        - (35.75 * wind_speed_mph**0.16)
-        + (0.4275 * temp_fahrenheit * wind_speed_mph**0.16)
-    )
-    return round(wind_chill, 1)
-
-
-def get_clothing_recommendation(felt_temp: float) -> str:
-    """Get clothing recommendations based on the felt temperature"""
-    if felt_temp < 0:
-        return "Heavy winter coat, layers, gloves, winter hat, and insulated boots required"
-    elif felt_temp < 32:
-        return "Winter coat, hat, gloves, and warm layers recommended"
-    elif felt_temp < 45:
-        return "Light winter coat or heavy jacket recommended"
-    elif felt_temp < 60:
-        return "Light jacket or sweater recommended"
-    else:
-        return "Light clothing suitable"
-
-
-if __name__ == "__main__":
-    # Our specific scenario
-    input = "Facts about the current weather."
-    output = "Clothing recommendations."
-    prompt = "What should I wear for -5°C weather with 10 mph winds?"
-    tools = [convert_temperature, calculate_wind_chill, get_clothing_recommendation]
-    model = Model(preferred_model)
-    react = ReACT(input, output, tools, model)
-    react.query(prompt)
