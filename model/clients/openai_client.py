@@ -4,7 +4,7 @@ Our first client subclass.
 
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI, AsyncOpenAI, Stream
 import instructor
 from pydantic import BaseModel
 
@@ -57,6 +57,17 @@ class OpenAIClientSync(OpenAIClient):
             return response
         else:
             return response.choices[0].message.content
+
+    def stream(
+        self, model: str, input: "str | list", pydantic_model: BaseModel = None
+    ) -> "str | BaseModel":
+        if isinstance(input, str):
+            input = [{"role": "user", "content": input}]
+
+        stream = self._client.chat.completions.create(
+            model=model, response_model=pydantic_model, messages=input, stream=True
+        )
+        return stream
 
 
 class OpenAIClientAsync(OpenAIClient):

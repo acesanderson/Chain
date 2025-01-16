@@ -135,6 +135,28 @@ class Model:
         )
         return f"{self.__class__.__name__}({attributes})"
 
+    def stream(
+        self,
+        input: str | list,
+        verbose: bool = True,
+        pydantic_model: BaseModel | None = None,
+    ):
+        if verbose:
+            print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
+        if Model._chain_cache:
+            cached_request = Model._chain_cache.cache_lookup(input, self.model)
+            if cached_request:
+                print("Cache hit!")
+                return cached_request
+        results = self._client.query(self.model, input, pydantic_model)
+        if Model._chain_cache:
+            cached_request = CachedRequest(
+                user_input=input, model=self.model, llm_output=results
+            )
+            Model._chain_cache.insert_cached_request(cached_request)
+        stream = self._client.stream(self.model, input, pydantic_model)
+        return stream
+
 
 class ModelAsync(Model):
 

@@ -1,60 +1,21 @@
-from openai import OpenAI, Stream
-import os
 import re
 from ast import literal_eval
 from Chain.message.message import Message
-from inspect import signature
-from typing import Callable
+from Chain.model.model import Model
+from Chain.react.Tool import Tool
 from jinja2 import Template
 from pathlib import Path
 
-# Api keys
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key)
 # Load system prompt from jinja file
 dir_path = Path(__file__).parent
 system_prompt_path = dir_path / "system_prompt.jinja"
 with open(system_prompt_path, "r") as file:
     system_prompt_string = Template(file.read().strip())
 
-
-# Tool class
-class Tool:
-    def __init__(self, function: Callable):
-        self.function = function
-        try:
-            self.description = function.__doc__.strip()
-        except AttributeError:
-            print("Function needs a docstring")
-        try:
-            self.args = self.validate_parameters()
-        except AttributeError:
-            print("Function needs type annotations. Does this have any parameters?")
-        self.name = function.__name__
-
-    def validate_parameters(self):
-        sig = signature(self.function)
-        params = sig.parameters
-        param_types = {
-            name: param.annotation.__name__ for name, param in params.items()
-        }
-        return str(param_types)
-
-    def __call__(self, **kwargs):
-        return self.function(**kwargs)
+preferred_model = "gpt"
 
 
 # ReACT syntax functions
-
-
-def query_openai_streaming(messages: list[Message]) -> Stream:
-    messages_as_dicts: list[dict] = [m.model_dump() for m in messages]
-    stream = client.chat.completions.create(  # type:ignore
-        messages=messages_as_dicts,  # type:ignore
-        model="gpt-4o",
-        stream=True,
-    )
-    return stream
 
 
 def process_stream(stream) -> tuple[str, dict, str]:
@@ -142,13 +103,15 @@ if __name__ == "__main__":
     tools = [convert_temperature, calculate_wind_chill, get_clothing_recommendation]
     tool_objects = [Tool(tool) for tool in tools]
     system_prompt = content = render_system_prompt(input, output, tools)
+    # Our chain elements
+    model = Model(preferred_model)
     # Initialize Message objects
     messages = [Message(role="system", content=system_prompt)]
     messages.append(Message(role="user", content=prompt))
     # Our main loop
     while True:
         # Query OpenAI with the messages so far
-        stream = query_openai_streaming(messages)
+        stream = model.stream(messages, verbose=False)
         tool, args, buffer = process_stream(stream)
         # Determine if we have final answer
         if tool == "finish":
