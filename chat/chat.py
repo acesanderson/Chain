@@ -41,11 +41,16 @@ class Chat:
     def __init__(self, model: Model):
         self.model = model
         self.console = Console(width=100)
-        self.regex_command = re.compile("/([^ ]+)( |$)")
-        self.regex_command_show = re.compile("/show ([^ ]+)")
-        self.regex_command_set = re.compile("/set ([^ ]+) ([^ ]+)")
+        self.regex_command_no_params = re.compile("/([^ ]+)( |$)")
+        self.regex_command_one_param = re.compile("/([^ ]+) ([^ ]+)")
+        self.regex_command_two_params = re.compile("/([^ ]+) ([^ ]+) ([^ ]+)")
         self.messagestore = None  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
+        # Command syntax -- can be extended
+        ## Commands that have one parameter:
+        self.transitive_commands = ["show"]
+        ## Commands that have two parameters:
+        self.ditransitive_commands = ["set"]
 
     def parse_input(self, input: str) -> Callable | partial | None:
         """
@@ -61,36 +66,40 @@ class Chat:
         if not input.startswith("/"):
             return None
 
-        # Subtype: show. Has a base command ("show") and a sub command (e.g. "model").
-        if input.startswith("/show"):
-            show_match = re.search(self.regex_command_show, input)
-            if show_match:
-                show_command = "command_show_" + show_match.group(1)
-                if show_command in commands:
-                    return getattr(self, show_command)
+        # Subtype: transitive commands. Has a base command (like "show") and a sub command (e.g. "model").
+        if any(
+            [input.startswith("/" + command) for command in self.transitive_commands]
+        ):
+            match = re.search(self.regex_command_one_param, input)
+            if match:
+                command = "command_" + match.group(1) + "_" + match.group(2)
+                if command in commands:
+                    return getattr(self, command)
                 else:
                     return None
             else:
                 raise ValueError("Regex error.")
 
-        # Subtype: set. Has a base command ("set"), a sub command (e.g. "model"), and a parameter.
-        # Set commands should always declare their parameter as "param" in the method signature, as we are assembling partial functions here.
-        elif input.startswith("/set"):
-            set_match = re.search(self.regex_command_set, input)
-            if set_match:
-                set_command = "command_set_" + set_match.group(1)
-                set_parameter = set_match.group(2)
-                if set_command in commands:
-                    bare_func = getattr(self, set_command)
-                    return partial(bare_func, set_parameter)
+        # Subtype: ditransitive commands (with two parameters). Has a base command ("set"), a sub command (e.g. "model"), and a parameter.
+        # These commands should always declare their parameter as "param" in the method signature, as we are assembling partial functions here.
+        elif any(
+            [input.startswith("/" + command) for command in self.ditransitive_commands]
+        ):
+            match = re.search(self.regex_command_two_params, input)
+            if match:
+                command = "command_" + match.group(1) + "_" + match.group(2)
+                parameter = match.group(3)
+                if command in commands:
+                    bare_func = getattr(self, command)
+                    return partial(bare_func, parameter)
                 else:
                     return None
             else:
                 raise ValueError("Regex error.")
 
-        # Base commands
+        # Base commands -- intransitive
         else:
-            command_match = re.search(self.regex_command, input)
+            command_match = re.search(self.regex_command_no_params, input)
             if command_match:
                 command = "command_" + command_match.group(1)
                 if command in commands:
