@@ -48,9 +48,9 @@ class Chat:
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         # Command syntax -- can be extended
         ## Commands that have one parameter:
-        self.transitive_commands = ["show"]
+        self.one_param_commands = ["show"]
         ## Commands that have two parameters:
-        self.ditransitive_commands = ["set"]
+        self.two_param_commands = ["set"]
 
     def parse_input(self, input: str) -> Callable | partial | None:
         """
@@ -68,7 +68,7 @@ class Chat:
 
         # Subtype: transitive commands. Has a base command (like "show") and a sub command (e.g. "model").
         if any(
-            [input.startswith("/" + command) for command in self.transitive_commands]
+            [input.startswith("/" + command) for command in self.one_param_commands]
         ):
             match = re.search(self.regex_command_one_param, input)
             if match:
@@ -83,7 +83,7 @@ class Chat:
         # Subtype: ditransitive commands (with two parameters). Has a base command ("set"), a sub command (e.g. "model"), and a parameter.
         # These commands should always declare their parameter as "param" in the method signature, as we are assembling partial functions here.
         elif any(
-            [input.startswith("/" + command) for command in self.ditransitive_commands]
+            [input.startswith("/" + command) for command in self.two_param_commands]
         ):
             match = re.search(self.regex_command_two_params, input)
             if match:
