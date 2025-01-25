@@ -43,7 +43,7 @@ class Chat:
         self.console = Console(width=100)
         self.regex_command_no_params = re.compile("/([^ ]+)( |$)")
         self.regex_command_one_param = re.compile("/([^ ]+) ([^ ]+)")
-        self.regex_command_two_params = re.compile("/([^ ]+) ([^ ]+) ([^ ]+)")
+        self.regex_command_two_params = re.compile("/([^ ]+) ([^ ]+) (.+)")
         self.messagestore = None  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         # Command syntax -- can be extended
