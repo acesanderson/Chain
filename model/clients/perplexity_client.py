@@ -21,6 +21,12 @@ class PerplexityResponse(BaseModel):
     def __str__(self) -> str:
         return self.content
 
+    def __add__(self, other: str) -> str:
+        return self.content + other
+
+    def __radd__(self, other: str) -> str:
+        return other + self.content
+
 
 class PerplexityClient(Client):
     def __init__(self):
