@@ -84,6 +84,8 @@ class Model:
             return "groq", "GroqClient"
         elif model in model_list["deepseek"]:
             return "deepseek", "DeepSeekClient"
+        elif model in model_list["perplexity"]:
+            return "perplexity", "PerplexityClient"
         else:
             raise ValueError(f"Model {model} not found in models")
 
