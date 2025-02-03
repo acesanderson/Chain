@@ -27,7 +27,7 @@ from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore, Message
 from rich.console import Console
 from rich.markdown import Markdown
-import re
+from instructor.exceptions import InstructorRetryException
 from pydantic import BaseModel
 from functools import partial
 from typing import Callable
@@ -96,6 +96,7 @@ class Chat:
         """
         Exit the chat.
         """
+        self.console.print("Goodbye!", style="green")
         exit()
 
     def command_help(self):
@@ -166,28 +167,60 @@ class Chat:
         self.messagestore = MessageStore(console=self.console)
         try:
             while True:
-                user_input = input(">> ")
-                if user_input.startswith("/"):
-                    command = self.parse_input(user_input)
-                    if callable(command):
-                        command()
+                try:
+                    user_input = input(">> ")
+                    # Capture empty input
+                    if not user_input:
                         continue
-                    else:
-                        self.console.print("Invalid command.", style="red")
-                        continue
-                else:
-                    self.messagestore.add_new(role="user", content=user_input)
-                    with self.console.status(
-                        "[green]Thinking[/green]...", spinner="dots"
-                    ):
-                        if self.messagestore.messages:
-                            response = self.query_model(self.messagestore.messages)
+                    # Process commands
+                    if user_input.startswith("/"):
+                        command = self.parse_input(user_input)
+                        if callable(command):
+                            try:
+                                command()
+                                continue
+                            except KeyboardInterrupt:
+                                # User can cancel commands with Ctrl+C
+                                self.console.print("\nCommand canceled.", style="green")
+                                continue
                         else:
-                            response = self.query_model(user_input)
-                    self.messagestore.add_new(role="assistant", content=str(response))
-                    self.console.print(Markdown(str(response) + "\n"), style="blue")
+                            self.console.print("Invalid command.", style="red")
+                            continue
+                    else:
+                        # Process query
+                        self.messagestore.add_new(role="user", content=user_input)
+                        try:
+                            with self.console.status(
+                                "[green]Thinking[/green]...", spinner="dots"
+                            ):
+                                if self.messagestore.messages:
+                                    response = self.query_model(
+                                        self.messagestore.messages
+                                    )
+                                else:
+                                    response = self.query_model(user_input)
+                            self.messagestore.add_new(
+                                role="assistant", content=str(response)
+                            )
+                            self.console.print(
+                                Markdown(str(response) + "\n"), style="blue"
+                            )
+                            continue
+                        except KeyboardInterrupt:
+                            # User can cancel query with Ctrl+C
+                            self.console.print("\nQuery canceled.", style="green")
+                            continue
+                        except InstructorRetryException:
+                            # This exception is raised if there is some network failure from instructor.
+                            self.console.print(
+                                "Network error. Please try again.", style="red"
+                            )
+                except ValueError as e:
+                    # If command not found, or commands throw an error, catch it and continue.
+                    self.console.print(str(e), style="red")
                     continue
         except KeyboardInterrupt:
+            # User can exit the chat with Ctrl+C
             self.console.print("\nGoodbye!", style="green")
 
 
