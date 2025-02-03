@@ -1,5 +1,5 @@
 """
-For Google Gemini models.
+For DeepSeek's online models.
 """
 
 from Chain.model.clients.client import Client
