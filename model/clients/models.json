@@ -1,7 +1,7 @@
 {
   "ollama": [
-    "llama3.2-vision:latest",
     "deepseek-coder-v2:latest",
+    "llama3.2-vision:latest",
     "all-minilm:latest",
     "phi3:latest",
     "phi:latest",
@@ -15,7 +15,9 @@
     "gpt-3.5-turbo-0125",
     "gpt-4o-mini",
     "o1-preview",
-    "o1-mini"
+    "o1-mini",
+    "o3-mini",
+    "o3-mini-high"
   ],
   "anthropic": [
     "claude-3-opus-20240229",
