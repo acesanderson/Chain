@@ -27,10 +27,12 @@ from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore, Message
 from rich.console import Console
 from rich.markdown import Markdown
-import re
+from instructor.exceptions import InstructorRetryException
 from pydantic import BaseModel
 from functools import partial
 from typing import Callable
+import sys
+import inspect
 
 
 class Chat:
@@ -41,75 +43,47 @@ class Chat:
     def __init__(self, model: Model):
         self.model = model
         self.console = Console(width=100)
-        self.regex_command_no_params = re.compile("/([^ ]+)( |$)")
-        self.regex_command_one_param = re.compile("/([^ ]+) ([^ ]+)")
-        self.regex_command_two_params = re.compile("/([^ ]+) ([^ ]+) (.+)")
         self.messagestore = None  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
-        # Command syntax -- can be extended
-        ## Commands that have one parameter:
-        self.one_param_commands = ["show"]
-        ## Commands that have two parameters:
-        self.two_param_commands = ["set"]
+        self.commands = self.get_commands()
 
     def parse_input(self, input: str) -> Callable | partial | None:
         """
         Commands start with a slash. This method parses the input and returns the corresponding method.
-        There are three levels of commands:
-        1. Base commands (e.g. /exit)
-        2. Show commands (e.g. /show model)
-        3. Set commands (e.g. /set model gpt)
+        If command takes a param, this returns a partial function.
+        If command is not found, it returns None (and the chat loop will handle it).
         """
         commands = self.get_commands()
 
-        # Not a command; return None
+        # Not a command; return None.
         if not input.startswith("/"):
             return None
 
-        # Subtype: transitive commands. Has a base command (like "show") and a sub command (e.g. "model").
-        if any(
-            [input.startswith("/" + command) for command in self.one_param_commands]
-        ):
-            match = re.search(self.regex_command_one_param, input)
-            if match:
-                command = "command_" + match.group(1) + "_" + match.group(2)
-                if command in commands:
+        # Parse for the type of command; this also involves catching parameters.
+        for command in commands:
+            command_string = command.replace("command_", "").replace("_", " ")
+            if input.startswith("/" + command_string):
+                # Check if the command has parameters
+                sig = inspect.signature(getattr(self, command))
+                if sig.parameters:
+                    parametrized = True
+                else:
+                    parametrized = False
+                # Check if input has parameters
+                param = input[len(command_string) + 2 :]
+                # Conditional return
+                if param and parametrized:
+                    return partial(getattr(self, command), param)
+                elif param and not parametrized:
+                    raise ValueError("Command does not take parameters.")
+                elif not param and parametrized:
+                    raise ValueError("Command requires parameters.")
+                else:
                     return getattr(self, command)
-                else:
-                    return None
-            else:
-                raise ValueError("Regex error.")
+        # Command not found
+        raise ValueError("Command not found.")
 
-        # Subtype: ditransitive commands (with two parameters). Has a base command ("set"), a sub command (e.g. "model"), and a parameter.
-        # These commands should always declare their parameter as "param" in the method signature, as we are assembling partial functions here.
-        elif any(
-            [input.startswith("/" + command) for command in self.two_param_commands]
-        ):
-            match = re.search(self.regex_command_two_params, input)
-            if match:
-                command = "command_" + match.group(1) + "_" + match.group(2)
-                parameter = match.group(3)
-                if command in commands:
-                    bare_func = getattr(self, command)
-                    return partial(bare_func, parameter)
-                else:
-                    return None
-            else:
-                raise ValueError("Regex error.")
-
-        # Base commands -- intransitive
-        else:
-            command_match = re.search(self.regex_command_no_params, input)
-            if command_match:
-                command = "command_" + command_match.group(1)
-                if command in commands:
-                    return getattr(self, command)
-                else:
-                    return None
-            else:
-                raise ValueError("Regex error.")
-
-    def get_commands(self):
+    def get_commands(self) -> list[str]:
         """
         Dynamic inventory of "command_" methods.
         If you extend this with more methods, make sure they follow the "command_" naming convention.
@@ -122,6 +96,7 @@ class Chat:
         """
         Exit the chat.
         """
+        self.console.print("Goodbye!", style="green")
         exit()
 
     def command_help(self):
@@ -133,7 +108,11 @@ class Chat:
         for command in commands:
             command_name = command.replace("command_", "").replace("_", " ")
             command_func = getattr(self, command)
-            command_docs = command_func.__doc__.strip()
+            try:
+                command_docs = command_func.__doc__.strip()
+            except AttributeError:
+                print(f"Command {command_name} is missing a docstring.")
+                sys.exit()
             help_message += (
                 f"/[purple]{command_name}[/purple]: [green]{command_docs}[/green]\n"
             )
@@ -188,28 +167,60 @@ class Chat:
         self.messagestore = MessageStore(console=self.console)
         try:
             while True:
-                user_input = input(">> ")
-                if user_input.startswith("/"):
-                    command = self.parse_input(user_input)
-                    if callable(command):
-                        command()
+                try:
+                    user_input = input(">> ")
+                    # Capture empty input
+                    if not user_input:
                         continue
-                    else:
-                        self.console.print("Invalid command.", style="red")
-                        continue
-                else:
-                    self.messagestore.add_new(role="user", content=user_input)
-                    with self.console.status(
-                        "[green]Thinking[/green]...", spinner="dots"
-                    ):
-                        if self.messagestore.messages:
-                            response = self.query_model(self.messagestore.messages)
+                    # Process commands
+                    if user_input.startswith("/"):
+                        command = self.parse_input(user_input)
+                        if callable(command):
+                            try:
+                                command()
+                                continue
+                            except KeyboardInterrupt:
+                                # User can cancel commands with Ctrl+C
+                                self.console.print("\nCommand canceled.", style="green")
+                                continue
                         else:
-                            response = self.query_model(user_input)
-                    self.messagestore.add_new(role="assistant", content=str(response))
-                    self.console.print(Markdown(str(response) + "\n"), style="blue")
+                            self.console.print("Invalid command.", style="red")
+                            continue
+                    else:
+                        # Process query
+                        self.messagestore.add_new(role="user", content=user_input)
+                        try:
+                            with self.console.status(
+                                "[green]Thinking[/green]...", spinner="dots"
+                            ):
+                                if self.messagestore.messages:
+                                    response = self.query_model(
+                                        self.messagestore.messages
+                                    )
+                                else:
+                                    response = self.query_model(user_input)
+                            self.messagestore.add_new(
+                                role="assistant", content=str(response)
+                            )
+                            self.console.print(
+                                Markdown(str(response) + "\n"), style="blue"
+                            )
+                            continue
+                        except KeyboardInterrupt:
+                            # User can cancel query with Ctrl+C
+                            self.console.print("\nQuery canceled.", style="green")
+                            continue
+                        except InstructorRetryException:
+                            # This exception is raised if there is some network failure from instructor.
+                            self.console.print(
+                                "Network error. Please try again.", style="red"
+                            )
+                except ValueError as e:
+                    # If command not found, or commands throw an error, catch it and continue.
+                    self.console.print(str(e), style="red")
                     continue
         except KeyboardInterrupt:
+            # User can exit the chat with Ctrl+C
             self.console.print("\nGoodbye!", style="green")
 
 
