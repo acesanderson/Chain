@@ -45,6 +45,7 @@ class Chat:
         self.console = Console(width=100)
         self.messagestore = None  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
+        self.system_message: Message | None = None
         self.commands = self.get_commands()
 
     def parse_input(self, input: str) -> Callable | partial | None:
@@ -163,8 +164,11 @@ class Chat:
 
     # Main chat loop
     def chat(self):
+        self.console.clear()
         self.console.print(self.welcome_message)
         self.messagestore = MessageStore(console=self.console)
+        if self.system_message:
+            self.messagestore.add(self.system_message)
         try:
             while True:
                 try:
