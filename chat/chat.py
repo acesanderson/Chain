@@ -133,17 +133,17 @@ class Chat:
         if self.messagestore:
             self.messagestore.view_history()
 
-    def command_show_model(self):
-        """
-        Display the current model.
-        """
-        self.console.print(f"Current model: {self.model.model}", style="green")
-
     def command_show_models(self):
         """
         Display available models.
         """
         self.console.print(Model.models, style="green")
+
+    def command_show_model(self):
+        """
+        Display the current model.
+        """
+        self.console.print(f"Current model: {self.model.model}", style="green")
 
     def command_set_model(self, param: str):
         """
@@ -172,7 +172,7 @@ class Chat:
         try:
             while True:
                 try:
-                    user_input = input(">> ")
+                    user_input = self.console.input("[bold gold3]>> [/bold gold3]")
                     # Capture empty input
                     if not user_input:
                         continue
