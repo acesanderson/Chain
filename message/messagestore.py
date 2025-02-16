@@ -83,7 +83,7 @@ class MessageStore:
                 # Write the formatted text to the file (won't be printed to terminal)
                 file_console.print(f"[bold magenta]{item}[/bold magenta]\n")
         if isinstance(item, Message):
-            with open(self.log_file, "w", encoding="utf-8") as file:
+            with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(file=file, force_terminal=True)
                 file_console.print(Rule(title="Message", style="bold green"))
                 file_console.print(f"[bold cyan]{item.role}:[/bold cyan]")

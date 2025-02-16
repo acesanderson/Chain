@@ -23,12 +23,10 @@ TODO:
     - tools
 """
 
-from Chain.model.model import Model
-from Chain.message.messagestore import MessageStore, Message
+from Chain import Chain, Model, MessageStore, Message
 from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException
-from pydantic import BaseModel
 from functools import partial
 from typing import Callable
 import sys
@@ -47,6 +45,7 @@ class Chat:
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         self.system_message: Message | None = None
         self.commands = self.get_commands()
+        self.log_file: str = ""  # Off by default, but can be initialized.
 
     def parse_input(self, input: str) -> Callable | partial | None:
         """
@@ -156,17 +155,25 @@ class Chat:
             self.console.print("Invalid model.", style="red")
 
     # Main query method
-    def query_model(self, input: str | list[Message]) -> str | BaseModel:
+    def query_model(self, input: list[Message]) -> str:
         """
         Takes either a string or a list of Message objects.
         """
-        return self.model.query(input, verbose=False)
+        if self.messagestore:
+            self.messagestore.add_new(role="user", content=str(input[-1].content))
+        response = str(self.model.query(input, verbose=False))
+        if self.messagestore:
+            self.messagestore.add_new(role="assistant", content=str(response))
+        return response
 
     # Main chat loop
     def chat(self):
         self.console.clear()
         self.console.print(self.welcome_message)
-        self.messagestore = MessageStore(console=self.console)
+        Chain._message_store = MessageStore(
+            console=self.console, log_file=self.log_file
+        )
+        self.messagestore = Chain._message_store
         if self.system_message:
             self.messagestore.add(self.system_message)
         try:
@@ -192,7 +199,6 @@ class Chat:
                             continue
                     else:
                         # Process query
-                        self.messagestore.add_new(role="user", content=user_input)
                         try:
                             with self.console.status(
                                 "[green]Thinking[/green]...", spinner="dots"
@@ -202,10 +208,9 @@ class Chat:
                                         self.messagestore.messages
                                     )
                                 else:
-                                    response = self.query_model(user_input)
-                            self.messagestore.add_new(
-                                role="assistant", content=str(response)
-                            )
+                                    response = self.query_model(
+                                        [Message(role="user", content=user_input)]
+                                    )
                             self.console.print(
                                 Markdown(str(response) + "\n"), style="blue"
                             )
