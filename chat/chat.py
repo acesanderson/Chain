@@ -155,7 +155,7 @@ class Chat:
             self.console.print("Invalid model.", style="red")
 
     # Main query method
-    def query_model(self, input: list[Message]) -> str:
+    def query_model(self, input: list[Message]) -> str | None:
         """
         Takes either a string or a list of Message objects.
         """
@@ -204,6 +204,9 @@ class Chat:
                                 "[green]Thinking[/green]...", spinner="dots"
                             ):
                                 if self.messagestore.messages:
+                                    self.messagestore.add_new(
+                                        role="user", content=user_input
+                                    )
                                     response = self.query_model(
                                         self.messagestore.messages
                                     )
