@@ -79,6 +79,15 @@ class OllamaClient(Client):
             )
             return pydantic_model(**json.loads(response["message"]["content"]))
 
+    def stream(
+        self, model: str, input: "str | list", pydantic_model: BaseModel = None
+    ) -> "str | BaseModel":
+        if isinstance(input, str):
+            input = [{"role": "user", "content": input}]
+
+        stream = self._client.chat(model=model, messages=input, stream=True)
+        return stream
+
     def update_ollama_models(self):
         """
         Updates the list of Ollama models.

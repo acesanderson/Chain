@@ -1,28 +1,13 @@
 {
   "ollama": [
     "deepseek-coder-v2:latest",
-    "deepseek-r1:32b",
-    "deepseek-r1:70b",
-    "deepseek-r1:latest",
-    "phi4:latest",
     "llama3.2-vision:latest",
-    "llama3.3:latest",
-    "unsloth_model:latest",
-    "phi3.5:latest",
-    "qwq:latest",
+    "all-minilm:latest",
+    "phi3:latest",
     "phi:latest",
-    "qwen2.5:32b",
-    "qwen2.5:14b",
-    "qwen2.5:latest",
-    "command-r:latest",
-    "mistral-large:latest",
-    "mixtral:8x7b",
-    "mixtral:8x22b",
-    "llama3.1:70b-instruct-q2_K",
     "llama3.2:latest",
-    "mistral:latest",
-    "llama3.1:70b",
-    "llama3.1:latest"
+    "llama3.1:latest",
+    "mistral:latest"
   ],
   "openai": [
     "gpt-4o",
@@ -39,7 +24,8 @@
     "claude-3-sonnet-20240229",
     "claude-3-haiku-20240307",
     "claude-3-5-sonnet-20241022",
-    "claude-3-5-haiku-20241022"
+    "claude-3-5-haiku-20241022",
+    "claude-3-7-sonnet-20250219"
   ],
   "google": [
     "gemini-2.0-flash-exp",
