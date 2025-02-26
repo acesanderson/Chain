@@ -19,7 +19,7 @@ or a mix of both, but the interaction with them is as a list of messages unless 
     - Log is automatically updated with the messages and therefore a flag for several methods.
 """
 
-from Chain.message.message import Message, Messages
+from Chain.message.message import Message
 from rich.console import Console
 from rich.rule import Rule
 from pydantic import BaseModel
@@ -76,14 +76,14 @@ class MessageStore:
         """
         if isinstance(item, str):
             # We're using a Rich console to write the log to the file with colors
-            with open(self.log_file, "a") as file:
+            with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(
                     file=file, force_terminal=True
                 )  # force_terminal = treat file as terminal
                 # Write the formatted text to the file (won't be printed to terminal)
                 file_console.print(f"[bold magenta]{item}[/bold magenta]\n")
         if isinstance(item, Message):
-            with open(self.log_file, "w") as file:
+            with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(file=file, force_terminal=True)
                 file_console.print(Rule(title="Message", style="bold green"))
                 file_console.print(f"[bold cyan]{item.role}:[/bold cyan]")
