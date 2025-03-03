@@ -2,6 +2,7 @@
 Client subclass for Anthropic models.
 This doesn't require an API key since these are locally hosted models.
 This has special logic for updating the models.json file, since the available Ollama models will depend on what we have pulled.
+We define preferred defaults for context sizes in a separate json file.
 """
 
 from Chain.model.clients.client import Client
@@ -78,6 +79,15 @@ class OllamaClient(Client):
                 options={"num_ctx": self._ollama_context_sizes[model]},
             )
             return pydantic_model(**json.loads(response["message"]["content"]))
+
+    def stream(
+        self, model: str, input: "str | list", pydantic_model: BaseModel = None
+    ) -> "str | BaseModel":
+        if isinstance(input, str):
+            input = [{"role": "user", "content": input}]
+
+        stream = self._client.chat(model=model, messages=input, stream=True)
+        return stream
 
     def update_ollama_models(self):
         """
