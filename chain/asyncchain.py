@@ -56,14 +56,14 @@ class AsyncChain(Chain):
             for input_variables in input_variables_list
         ]
         # Need to convert these to Response objects
-        return await asyncio.gather(*coroutines)
+        return await asyncio.gather(*coroutines, return_exceptions=True)
 
     async def _run_prompt_strings(self, prompt_strings: list[str]) -> Response:
         coroutines = [
             self.model.query(prompt_string) for prompt_string in prompt_strings
         ]
         # Need to convert these to Response objects
-        return await asyncio.gather(*coroutines)
+        return await asyncio.gather(*coroutines, return_exceptions=True)
 
     def convert_results_to_responses(self, results: list[str]) -> list[Response]:
         # Convert results to Response objects
