@@ -35,6 +35,7 @@ class AsyncChain(Chain):
         input_variables_list: list[dict] | None = None,
         prompt_strings: list[str] | None = None,
     ) -> list[Response]:
+
         async def _run_async():
             if prompt_strings:
                 return await self._run_prompt_strings(prompt_strings)

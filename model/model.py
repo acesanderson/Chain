@@ -79,7 +79,7 @@ class Model:
         elif model in model_list["google"]:
             return "google", "GoogleClient"
         elif model in model_list["ollama"]:
-            return "ollama", "OllamaClient"
+            return "ollama", "OllamaClientSync"
         elif model in model_list["groq"]:
             return "groq", "GroqClient"
         elif model in model_list["deepseek"]:
@@ -171,10 +171,10 @@ class ModelAsync(Model):
             return "openai", "OpenAIClientAsync"
         elif model in model_list["anthropic"]:
             return "anthropic", "AnthropicClientAsync"
+        elif model in model_list["ollama"]:
+            return "ollama", "OllamaClientAsync"
         # elif model in model_list["google"]:
         #     return "google", "GoogleClient"
-        # elif model in model_list["ollama"]:
-        #     return "ollama", "OllamaClient"
         # elif model in model_list["groq"]:
         #     return "groq", "GroqClient"
         else:

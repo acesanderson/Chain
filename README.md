@@ -87,6 +87,19 @@ print(response.content)
 # Frog(name='Fred', color='red', habitat='rainforest')
 ```
 
+### Async
+
+```python
+from Chain import AsyncChain, ModelAsync
+
+prompt_strings = ["name 10 mammals", "name ten birds"]
+
+model = ModelAsync("llama3.1:latest")
+chain = AsyncChain(model=model)
+results = chain.run(prompt_strings=prompt_strings)
+```
+
+
 ### Advanced
 - You can create a messagestore to either: save response objects in a Message format throughout a script; save a persistent chat conversation between sessions; log prompt flows.
 - You can set system prompts with the create_messages method in the MessageStore class.

@@ -1,6 +1,7 @@
 from Chain.chain.chain import Chain
+from Chain.chain.asyncchain import AsyncChain
 from Chain.prompt.prompt import Prompt
-from Chain.model.model import Model
+from Chain.model.model import Model, ModelAsync
 from Chain.response.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message, Messages, create_system_message
@@ -12,8 +13,10 @@ from Chain.react.ReACT import ReACT
 
 __all__ = [
     "Chain",
+    "AsyncChain",
     "Prompt",
     "Model",
+    "ModelAsync",
     "Parser",
     "Response",
     "Message",
