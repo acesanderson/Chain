@@ -4,7 +4,7 @@ from Chain.response.response import Response
 from Chain.message.message import Message
 from Chain.parser.parser import Parser
 import asyncio
-from typing import overload
+from typing import overload, Optional
 
 
 class AsyncChain(Chain):
@@ -34,33 +34,65 @@ class AsyncChain(Chain):
         self,
         input_variables_list: list[dict] | None = None,
         prompt_strings: list[str] | None = None,
+        semaphore: Optional[asyncio.Semaphore] = None,
     ) -> list[Response]:
 
         async def _run_async():
             if prompt_strings:
-                return await self._run_prompt_strings(prompt_strings)
+                return await self._run_prompt_strings(prompt_strings, semaphore)
             if input_variables_list:
-                return await self._run_input_variables(input_variables_list)
+                return await self._run_input_variables(input_variables_list, semaphore)
 
         results = asyncio.run(_run_async())
         responses = self.convert_results_to_responses(results)
 
         return responses
 
-    async def _run_input_variables(self, input_variables_list: list[dict]) -> Response:
-        # input=prompt_object.render(input_variables={"things": input_variable}),
+    async def _run_input_variables(
+        self,
+        input_variables_list: list[dict],
+        semaphore: Optional[asyncio.Semaphore] = None,
+    ) -> Response:
         if not self.prompt:
             raise ValueError("No prompt assigned to AsyncChain object")
+
+        async def process_with_semaphore(
+            input_variables: dict, semaphore: Optional[asyncio.Semaphore]
+        ):
+            if semaphore:
+                # Use a semaphore to limit the number of concurrent requests
+                async with semaphore:
+                    return await self.model.query(
+                        input=self.prompt.render(input_variables=input_variables)
+                    )
+            else:
+                return await self.model.query(
+                    input=self.prompt.render(input_variables=input_variables)
+                )
+
         coroutines = [
-            self.model.query(input=self.prompt.render(input_variables=input_variables))
+            process_with_semaphore(input_variables, semaphore)
             for input_variables in input_variables_list
         ]
         # Need to convert these to Response objects
         return await asyncio.gather(*coroutines, return_exceptions=True)
 
-    async def _run_prompt_strings(self, prompt_strings: list[str]) -> Response:
+    async def _run_prompt_strings(
+        self, prompt_strings: list[str], semaphore: Optional[asyncio.Semaphore] = None
+    ) -> Response:
+        async def process_with_semaphore(
+            prompt_string: str, semaphore: Optional[asyncio.Semaphore]
+        ):
+            if semaphore:
+                # Use a semaphore to limit the number of concurrent requests
+                async with semaphore:
+                    return await self.model.query(prompt_string)
+            else:
+                return await self.model.query(prompt_string)
+
         coroutines = [
-            self.model.query(prompt_string) for prompt_string in prompt_strings
+            process_with_semaphore(prompt_string, semaphore)
+            for prompt_string in prompt_strings
         ]
         # Need to convert these to Response objects
         return await asyncio.gather(*coroutines, return_exceptions=True)
