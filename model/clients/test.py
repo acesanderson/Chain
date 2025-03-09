@@ -8,6 +8,7 @@ Model._chain_cache = ChainCache()
 # model = Model("gpt-3.5-turbo-0125")
 # model = Model("claude")
 model = Model("llama3.1:latest")
+# model = Model("llama3-70b-8192")
 
 
 class Frog(BaseModel):
@@ -23,24 +24,6 @@ class Frog(BaseModel):
         return self.__repr__()
 
 
-# openai = OpenAIClientSync()
-# print(openai.query(input="name ten mammals", model="o3-mini"))
-# obj = openai.query(input="Create a frog", pydantic_model=Frog, model="o3-mini")
-# obj, raw_text = openai.query(
-#     input="Create a frog", model="gpt-3.5-turbo-0125", pydantic_model=Frog, raw=True
-# )
-# print("not raw -------------")
-# obj = model.query(input="create a frog", pydantic_model=frog)  # , model="o3-mini")
-# print(obj)
-#
-#
-# print("Raw -------------")
-# obj, raw_text = model.query(
-#     input="Create a frog", pydantic_model=Frog, raw=True
-# )  # , model="o3-mini")
-# print(obj)
-# print(raw_text)
-
 print("Not Raw -------------")
 obj = model.query(input="create a frog", pydantic_model=Frog)  # , model="o3-mini")
 
@@ -48,27 +31,3 @@ print("Raw -------------")
 obj, raw_text = model.query(input="Create a frog", pydantic_model=Frog, raw=True)
 print(obj)
 print(raw_text)
-
-
-# client = instructor.from_openai(
-#     OpenAI(
-#         base_url="http://localhost:11434/v1",
-#         api_key="ollama",  # required, but unused
-#     ),
-#     mode=instructor.Mode.JSON,
-# )
-#
-# resp, raw_resp = client.chat.completions.create_with_completion(
-#     model="llama3.1:latest",
-#     messages=[
-#         {
-#             "role": "user",
-#             "content": "Create a frog",
-#         }
-#     ],
-#     response_model=Frog,
-#     extra_body={"options": {"num_ctx": 4096}},
-# )
-#
-# print(resp)
-# print(raw_resp)

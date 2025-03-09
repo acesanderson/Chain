@@ -7,9 +7,6 @@ TODO:
 
 from pydantic import field_validator, BaseModel
 from pydantic.dataclasses import dataclass
-import cloudpickle
-import hashlib
-import json
 import sqlite3
 
 
@@ -37,76 +34,6 @@ class CachedRequest:
         return v.strip()
 
 
-class ObjectCache:
-    """
-    Class to handle the caching of objects.
-    This is only used if you are caching pydantic models (as Parser, Instructor, etc.).
-    """
-
-    def __init__(self, object_store: str):
-        self.object_store = object_store
-        self.object_dict: dict[str, BaseModel] = self.load_object_cache()
-
-    def load_object_cache(self) -> dict:
-        """
-        Load the object cache from the object store.
-        If it doesn't exist, create an empty dictionary.
-        """
-        try:
-            with open(self.object_store, "rb") as f:
-                return cloudpickle.load(f)
-        except FileNotFoundError:
-            return {}
-        except EOFError:
-            print(
-                f"EOF Error loading object cache. The file {self.object_store} may be corrupted."
-            )
-            self.clear_object_cache()
-            return {}
-
-    def save_object_cache(self):
-        """
-        Save the object cache to the object store.
-        """
-        with open(self.object_store, "wb") as f:
-            cloudpickle.dump(self.object_dict, f)
-
-    def clear_object_cache(self):
-        """
-        Clear the object cache.
-        """
-        self.object_dict = {}
-        self.save_object_cache()
-        print("Object cache cleared.")
-
-    def get_object_hash(self, obj: BaseModel) -> str:
-        """
-        Generate a hash for the object.
-        This is used to check if the object already exists in the cache.
-        """
-        obj_dict = obj.model_dump()
-        obj_str = json.dumps(obj_dict, sort_keys=True).encode("utf-8")
-        return hashlib.sha256(obj_str).hexdigest()
-
-    def add_object(self, obj: BaseModel) -> str:
-        """
-        Assign a UUID to the object and add it to the object cache.
-        """
-        if not isinstance(obj, BaseModel):
-            raise ValueError("Object must be a pydantic model.")
-        id = self.get_object_hash(obj)
-        self.object_dict[id] = obj
-        self.save_object_cache()
-        return id
-
-    def get_object(self, obj_id: str) -> BaseModel | None:
-        """
-        Get the object from the object cache.
-        If it doesn't exist, return None.
-        """
-        return self.object_dict[obj_id]
-
-
 class ChainCache:
     """
     Class to handle the caching of requests.
@@ -116,10 +43,8 @@ class ChainCache:
     def __init__(
         self,
         db_name: str = ".cache.db",
-        object_cache_name: str = ".object_cache.cloudpickle",
     ):
         self.db_name = db_name
-        self.object_cache = ObjectCache(object_cache_name)
         self.conn, self.cursor = self.load_db()
         self.cached_requests = self.retrieve_cached_requests()
         self.cache_dict = self.generate_in_memory_dict(self.cached_requests)
@@ -133,16 +58,11 @@ class ChainCache:
         return conn, cursor
 
     def insert_cached_request(self, cached_request: CachedRequest):
-        if isinstance(cached_request.llm_output, BaseModel):
-            id = self.object_cache.add_object(cached_request.llm_output)
-            llm_output = "UUID:" + str(id)
-        else:
-            llm_output = cached_request.llm_output
         self.cursor.execute(
             "INSERT INTO cached_requests (user_input, llm_output, model) VALUES (?, ?, ?)",
             (
                 cached_request.user_input,
-                llm_output,
+                cached_request.llm_output,
                 cached_request.model,
             ),
         )
@@ -154,21 +74,6 @@ class ChainCache:
     def retrieve_cached_requests(self) -> set[CachedRequest]:
         self.cursor.execute("SELECT * FROM cached_requests")
         data = self.cursor.fetchall()
-        # Unserialize any pydantic objects
-        modified_data = []
-        for row in data:
-            if row[1].startswith("UUID:"):
-                id = row[1][5:]
-                obj = self.object_cache.get_object(id)
-                if obj:
-                    new_row = (row[0], obj, row[2])
-                    modified_data.append(new_row)
-                else:
-                    print(
-                        f"Object with ID {id} not found in object cache. Suggest rebuilding the cache."
-                    )
-            else:
-                modified_data.append(row)
         # Create CachedRequest objects
         return {CachedRequest(*row) for row in data}
 
