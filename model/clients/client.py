@@ -33,16 +33,16 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def query(self, model: str, input: "str | list", pydantic_model: "BaseModel" = None) -> "BaseModel | str":  # type: ignore
+    def query(self, model: str, input: "str | list", pydantic_model: "BaseModel" = None, raw=False) -> "BaseModel | str":  # type: ignore
         """
         All client subclasses must have a query function that can take:
         - a model name
         - input in the form of EITHER a string or a Messages-style list of dictionaries
         - an optional Pydantic model to validate the response
+        - an optional boolean to return the raw response (needed for caching objects)
         And returns
         - either a string (i.e. text generation) or a Pydantic model (function calling)
-
-        Note: we ignore because we don't want to import BaseModel from pydantic here.
+        - optionally a tuple of the Pydantic model and the raw response.
         """
         pass
 

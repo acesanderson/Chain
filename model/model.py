@@ -111,7 +111,8 @@ class Model:
         input: str | list,
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
-    ) -> BaseModel | str:
+        raw=False,
+    ) -> BaseModel | str | tuple[BaseModel, str]:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
         if Model._chain_cache:
@@ -119,13 +120,13 @@ class Model:
             if cached_request:
                 print("Cache hit!")
                 return cached_request
-        results = self._client.query(self.model, input, pydantic_model)
+        results = self._client.query(self.model, input, pydantic_model, raw)
         if Model._chain_cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=results
             )
             Model._chain_cache.insert_cached_request(cached_request)
-        return self._client.query(self.model, input, pydantic_model)
+        return self._client.query(self.model, input, pydantic_model, raw)
 
     def pretty(self, user_input):
         pretty = user_input.replace("\n", " ").replace("\t", " ").strip()

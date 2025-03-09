@@ -1,12 +1,8 @@
 """
-To do: allow llm_output to be a BaseModel. This is non-trivial to implement since deserializing objects back from json loses the pydantic class information.
-The solution would involve:
-- separating concerns: each class (Curation, Course, etc.) should have an inheritance pattern.
- - Raw_Curation(BaseModel) -- the actual dataclass with fields and types; Curation(Raw_Curation) -- the actual class with methods and properties.
- - on serialization, save not just values but the class name and the schema, something like this:
-    - {"class_name": "Curation", "schema": {"title": "string", "description": "string"}, "values": {"title": "foo", "description": "bar"}}
- - on deserialization, check the class name and schema, and create the object accordingly.
- - then, when using Parser and Instructor, use the Raw class and then bless it with the methods and properties of the actual class afterwards.
+TODO:
+- add "raw = True" option to query in Chain.model.client
+- use raw response for the actual caching below
+- still use ObjectCache however to serialize the pydantic object (perhaps hashing the raw response as the key for retrieval)
 """
 
 from pydantic import field_validator, BaseModel
