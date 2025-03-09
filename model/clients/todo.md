@@ -2,8 +2,8 @@
 - [x] openai sync
 - [x] anthropic sync
 - [x] ollama sync
+- [x] groq sync
 - [ ] google sync
-- [ ] groq sync
 - [ ] openai async
 - [ ] anthropic async
 - [ ] ollama async

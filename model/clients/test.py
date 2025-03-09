@@ -8,7 +8,8 @@ Model._chain_cache = ChainCache()
 # model = Model("gpt-3.5-turbo-0125")
 # model = Model("claude")
 # model = Model("llama3.1:latest")
-model = Model("llama3-70b-8192")
+# model = Model("llama3-70b-8192")
+model = Model("gemini-2.0-flash-001")
 
 
 class Frog(BaseModel):
