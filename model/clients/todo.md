@@ -1,4 +1,5 @@
-- [ ] openai
+- [x] openai
+- [ ] chaincache
 - [ ] anthropic
 - [ ] ollama
 - [ ] google
