@@ -81,7 +81,7 @@ class Model:
         elif model in model_list["ollama"]:
             return "ollama", "OllamaClientSync"
         elif model in model_list["groq"]:
-            return "groq", "GroqClient"
+            return "groq", "GroqClientSync"
         elif model in model_list["deepseek"]:
             return "deepseek", "DeepSeekClient"
         elif model in model_list["perplexity"]:
