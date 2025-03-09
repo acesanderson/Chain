@@ -3,7 +3,8 @@ from pydantic import BaseModel
 from Chain import Model, ChainCache
 
 Model._chain_cache = ChainCache()
-model = Model("gpt-3.5-turbo-0125")
+# model = Model("gpt-3.5-turbo-0125")
+model = Model("claude")
 
 
 class Frog(BaseModel):
@@ -25,5 +26,14 @@ class Frog(BaseModel):
 # obj, raw_text = openai.query(
 #     input="Create a frog", model="gpt-3.5-turbo-0125", pydantic_model=Frog, raw=True
 # )
+print("Not Raw -------------")
 obj = model.query(input="Create a frog", pydantic_model=Frog)  # , model="o3-mini")
 print(obj)
+
+
+print("Raw -------------")
+obj, raw_text = model.query(
+    input="Create a frog", pydantic_model=Frog, raw=True
+)  # , model="o3-mini")
+print(obj)
+print(raw_text)

@@ -9,6 +9,7 @@ from anthropic import Anthropic, AsyncAnthropic
 import instructor
 from pydantic import BaseModel
 import os
+import json
 
 
 class AnthropicClient(Client):
@@ -46,14 +47,19 @@ class AnthropicClientSync(AnthropicClient):
         return instructor.from_anthropic(anthropic_client)
 
     def query(
-        self, model: str, input: "str | list", pydantic_model: BaseModel = None
-    ) -> "str | BaseModel":
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel | None = None,
+        raw=False,
+    ) -> str | BaseModel | tuple[BaseModel, str]:
         """
         Handles all synchronous requests from Anthropic's models.
         Possibilities:
         - pydantic object not provided, input is string -> return string
         - pydantic object provided, input is string -> return pydantic object
-        Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
+        - if raw=True, return a tuple of (pydantic object, raw text)
+         Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
         """
         # Anthropic requires a system variable
         system = ""
@@ -79,22 +85,30 @@ class AnthropicClientSync(AnthropicClient):
             max_tokens = 8192
         else:
             max_tokens = 4096
-        # call our client
-        response = self._client.chat.completions.create(
-            # model = self.model,
-            model=model,
-            max_tokens=max_tokens,
-            max_retries=0,
-            system=system,  # This is the system message we grabbed earlier
-            messages=input,
-            # Splatting our pydantic models to dict
-            response_model=pydantic_model,
-        )
-        # only two possibilities here
-        if pydantic_model:
-            return response
+
+        # Pydantic models always return the tuple at client level (Model does further parsing)
+        if raw and pydantic_model:
+            obj, raw_response = self._client.chat.completions.create_with_completion(
+                model=model,
+                response_model=pydantic_model,
+                messages=input,
+                max_tokens=max_tokens,
+                max_retries=0,
+                system=system,  # This is the system message we grabbed earlier
+            )
+            raw_text = json.dumps(raw_response.content[0].input)
+            return obj, raw_text
+        # Return just the string.
         else:
-            return response.content[0].text
+            response = self._client.chat.completions.create(
+                model=model,
+                response_model=None,
+                messages=input,
+                max_tokens=max_tokens,
+                max_retries=0,
+                system=system,  # This is the system message we grabbed earlier
+            )
+            return response.choices[0].message.content
 
 
 class AnthropicClientAsync(AnthropicClient):

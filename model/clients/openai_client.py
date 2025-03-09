@@ -28,7 +28,13 @@ class OpenAIClient(Client):
         api_key = load_env("OPENAI_API_KEY")
         return api_key
 
-    def query(self, model: str, input: "str | list", pydantic_model: BaseModel = None):
+    def query(
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel | None = None,
+        raw=False,
+    ):
         """
         Logic for this is unique to each client (sync / async).
         """

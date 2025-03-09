@@ -1,6 +1,12 @@
-- [x] openai
-- [ ] chaincache
-- [ ] anthropic
-- [ ] ollama
-- [ ] google
-- [ ] groq
+- [x] chaincache
+- [x] openai sync
+- [x] anthropic sync
+- [ ] ollama sync
+- [ ] google sync
+- [ ] groq sync
+- [ ] openai async
+- [ ] anthropic async
+- [ ] ollama async
+- [ ] google async
+- [ ] groq async
+

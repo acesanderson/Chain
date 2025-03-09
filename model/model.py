@@ -135,7 +135,7 @@ class Model:
                 self.model, input, pydantic_model, raw=True
             )
         else:
-            llm_output = self._client.query(self.model, input, raw=True)
+            llm_output = self._client.query(self.model, input, raw=False)
         if Model._chain_cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output
