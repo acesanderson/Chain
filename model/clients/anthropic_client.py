@@ -108,7 +108,7 @@ class AnthropicClientSync(AnthropicClient):
                 max_retries=0,
                 system=system,  # This is the system message we grabbed earlier
             )
-            return response.choices[0].message.content
+            return response.content[0].text
 
 
 class AnthropicClientAsync(AnthropicClient):
