@@ -67,7 +67,7 @@ class Chain:
         messages: list[Message] | None = [],
         verbose: bool = True,
         stream: bool = False,
-    ):
+    ) -> Response:
         """
         Input should be a dict with named variables that match the prompt.
         """
@@ -207,25 +207,3 @@ class Chain:
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
         )
         return f"{self.__class__.__name__}({attributes})"
-
-
-def main():
-    p = Prompt("name ten mammals")
-    c = Chain(prompt=p, model=Model("gpt"))
-    r = c.run()
-    print(f"Response Content (String): {r.content}")  # Print the string part
-    print(
-        f"Response Content (Bytes, UTF-8): {r.content.encode('utf-8')}"
-    )  # Print the UTF-8 bytes
-    print(f"Entire Response Object: {r}")  # Print the entire object
-    print(r)
-
-
-if __name__ == "__main__":
-    # import cProfile
-    # import pstats
-    #
-    # cProfile.run("main()", "output.stats")
-    # p = pstats.Stats("output.stats")
-    # p.sort_stats("cumulative").print_stats(30)
-    main()
