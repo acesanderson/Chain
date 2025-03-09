@@ -9,6 +9,8 @@ from Chain.model.clients.client import Client
 import ollama
 from ollama import AsyncClient
 from pydantic import BaseModel
+from openai import OpenAI
+import instructor
 
 # Logic for updating the models.json and for setting the context sizes for Ollama models.
 from pathlib import Path
@@ -74,42 +76,53 @@ class OllamaClientSync(OllamaClient):
         """
         This is just ollama.
         """
-        return ollama
+        client = instructor.from_openai(
+            OpenAI(
+                base_url="http://localhost:11434/v1",
+                api_key="ollama",  # required, but unused
+            ),
+            mode=instructor.Mode.JSON,
+        )
+        return client
 
     def query(
-        self, model: str, input: "str | list", pydantic_model: BaseModel = None
-    ) -> "str | BaseModel":
-        """
-        Handles all synchronous requests from Ollama models.
-        DOES NOT SUPPORT PYDANTIC MODELS, SINCE I CANNOT FIGURE HOW TO SET CTX FOR INSTRUCTOR.
-        num_ctx = context window size, which is set in Chain.ollama_context_sizes.
-        """
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel | None = None,
+        raw=False,
+    ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
-        elif isinstance(input, list) and all(isinstance(m, Message) for m in input):
-            input = [m.model_dump() for m in input]
-        elif type(input) == list:
-            input = input
-        else:
-            raise ValueError(
-                f"Input not recognized as a valid input type: {type:input}: {input}"
-            )
-        # call our client
-        if not pydantic_model:
-            response = ollama.chat(
+
+        # If you are passing pydantic models and also want the text response, you need to set raw=True.
+        if raw and pydantic_model:
+            obj, raw_response = self._client.chat.completions.create_with_completion(
                 model=model,
+                response_model=pydantic_model,
                 messages=input,
-                options={"num_ctx": self._ollama_context_sizes[model]},
+                extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
             )
-            return response["message"]["content"]
+            raw_text = raw_response.choices[0].message.content
+            return obj, raw_text
+        # Default behavior is to return only the pydantic model.
         elif pydantic_model:
-            response = ollama.chat(
+            obj = self._client.chat.completions.create(
                 model=model,
+                response_model=pydantic_model,
                 messages=input,
-                format=pydantic_model.model_json_schema(),
-                options={"num_ctx": self._ollama_context_sizes[model]},
+                extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
             )
-            return pydantic_model(**json.loads(response["message"]["content"]))
+            return obj
+        # If you are not passing pydantic models, you will get the text response.
+        else:
+            response = self._client.chat.completions.create(
+                model=model,
+                response_model=None,
+                messages=input,
+                extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
+            )
+            return response.choices[0].message.content
 
     def stream(
         self, model: str, input: "str | list", pydantic_model: BaseModel = None
