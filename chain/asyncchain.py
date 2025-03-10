@@ -62,11 +62,11 @@ class AsyncChain(Chain):
             if semaphore:
                 # Use a semaphore to limit the number of concurrent requests
                 async with semaphore:
-                    return await self.model.query(
+                    return await self.model.query_async(
                         input=self.prompt.render(input_variables=input_variables)
                     )
             else:
-                return await self.model.query(
+                return await self.model.query_async(
                     input=self.prompt.render(input_variables=input_variables)
                 )
 
@@ -86,9 +86,9 @@ class AsyncChain(Chain):
             if semaphore:
                 # Use a semaphore to limit the number of concurrent requests
                 async with semaphore:
-                    return await self.model.query(prompt_string)
+                    return await self.model.query_async(prompt_string)
             else:
-                return await self.model.query(prompt_string)
+                return await self.model.query_async(prompt_string)
 
         coroutines = [
             process_with_semaphore(prompt_string, semaphore)

@@ -3,7 +3,8 @@
 - [x] anthropic sync
 - [x] ollama sync
 - [x] groq sync
-- [ ] google sync
+- [x] google sync
+- [x] perplexity sync
 - [ ] openai async
 - [ ] anthropic async
 - [ ] ollama async
