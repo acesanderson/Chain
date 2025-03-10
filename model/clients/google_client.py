@@ -28,31 +28,6 @@ class GoogleClient(Client):
         api_key = load_env("GOOGLE_API_KEY")
         return api_key
 
-    #
-    # def query(
-    #     self, model: str, input: "str | list", pydantic_model: BaseModel = None
-    # ) -> "str | BaseModel":
-    #     """
-    #     Handles all synchronous requests from Google's models.
-    #     Possibilities:
-    #     - pydantic object not provided, input is string -> return string
-    #     - pydantic object provided, input is string -> return pydantic object
-    #     Google doesn't take message objects, apparently. (or it's buried in their documentation)
-    #     """
-    #     if isinstance(input, str):
-    #         input = [{"role": "user", "content": input}]
-    #     # call our client
-    #     response = self._client.chat.completions.create(
-    #         model=model,
-    #         response_model=pydantic_model,
-    #         messages=input,
-    #     )
-    #     if pydantic_model:
-    #         return response
-    #     else:
-    #         return response.choices[0].message.content
-    #
-
     def query(
         self,
         model: str,

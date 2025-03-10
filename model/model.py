@@ -9,7 +9,7 @@ dir_path = Path(__file__).resolve().parent
 
 
 class Model:
-    # Some class variables: models, context sizes, clients
+    # Some class variables: models, clients, chain_cache
     # Load models from the JSON file. Why classmethod and property?
     # Because models is a class-level variable (Model.models, not model.models).
     # We want it to dynamically load the models from the models file everytime you access the attribute, because Ollama models can change.
@@ -85,7 +85,7 @@ class Model:
         elif model in model_list["deepseek"]:
             return "deepseek", "DeepSeekClient"
         elif model in model_list["perplexity"]:
-            return "perplexity", "PerplexityClient"
+            return "perplexity", "PerplexityClientSync"
         else:
             raise ValueError(f"Model {model} not found in models")
 
@@ -130,12 +130,12 @@ class Model:
                     except Exception as e:
                         print(f"Failed to parse cached request: {e}")
                 return cached_request
-        if pydantic_model or raw:
+        if pydantic_model == None:
+            llm_output = self._client.query(self.model, input, raw=False)
+        else:
             obj, llm_output = self._client.query(
                 self.model, input, pydantic_model, raw=True
             )
-        else:
-            llm_output = self._client.query(self.model, input, raw=False)
         if Model._chain_cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output

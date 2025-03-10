@@ -9,7 +9,8 @@ Model._chain_cache = ChainCache()
 # model = Model("claude")
 # model = Model("llama3.1:latest")
 # model = Model("llama3-70b-8192")
-model = Model("gemini-2.0-flash-001")
+# model = Model("gemini-2.0-flash-001")
+model = Model("sonar")
 
 
 class Frog(BaseModel):
@@ -26,10 +27,12 @@ class Frog(BaseModel):
 
 
 print("Not Raw -------------")
-obj = model.query(input="create a frog", pydantic_model=Frog)
+# obj = model.query(input="create a frog", pydantic_model=Frog)
+obj = model.query(
+    input="Provide some recommendations for small cap ETFs or index funds."
+)
 print(obj)
-
-print("Raw -------------")
-obj, raw_text = model.query(input="Create a frog", pydantic_model=Frog, raw=True)
-print(obj)
-print(raw_text)
+# print("Raw -------------")
+# obj, raw_text = model.query(input="Create a frog", pydantic_model=Frog, raw=True)
+# print(obj)
+# print(raw_text)

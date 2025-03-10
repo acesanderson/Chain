@@ -13,22 +13,39 @@ import instructor
 from pydantic import BaseModel
 
 
-# Our custom response class
-class PerplexityResponse(BaseModel):
-    content: str
-    citations: list[str]
-
-    def __str__(self) -> str:
-        return self.content
-
-    def __add__(self, other: str) -> str:
-        return self.content + other
-
-    def __radd__(self, other: str) -> str:
-        return other + self.content
-
-
 class PerplexityClient(Client):
+    """
+    This is a base class; we have two subclasses: OpenAIClientSync and OpenAIClientAsync.
+    Don't import this.
+    """
+
+    def __init__(self):
+        self._client = self._initialize_client()
+
+    def _initialize_client(self):
+        """
+        Logic for this is unique to each client (sync / async).
+        """
+        pass
+
+    def _get_api_key(self):
+        api_key = load_env("PERPLEXITY_API_KEY")
+        return api_key
+
+    def query(
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel | None = None,
+        raw=False,
+    ):
+        """
+        Logic for this is unique to each client (sync / async).
+        """
+        pass
+
+
+class PerplexityClientSync(PerplexityClient):
     def __init__(self):
         self._client = self._initialize_client()
 
@@ -41,30 +58,29 @@ class PerplexityClient(Client):
         )
         return instructor.from_openai(perplexity_client)
 
-    def _get_api_key(self):
-        api_key = load_env("PERPLEXITY_API_KEY")
-        return api_key
-
     def query(
-        self, model: str, input: "str | list", pydantic_model: BaseModel = None
-    ) -> "str | BaseModel":
-        """
-        Handles all synchronous requests from Perplexity's models.
-        Possibilities:
-        - pydantic object not provided, input is string -> return string
-        - pydantic object provided, input is string -> return pydantic object
-        Google doesn't take message objects, apparently. (or it's buried in their documentation)
-        """
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel | None = None,
+        raw=False,
+    ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
+        """
+        Don't bother with function calling with Perplexity -- it already structures its responses (i.e. citations).
+        """
         # call our client
         response = self._client.chat.completions.create(
             model=model,
-            response_model=pydantic_model,
+            response_model=None,
             messages=input,
         )
-        # This is the custom handling for Perplexity -- since we want message + citations, we return our pydantic object.
-        return PerplexityResponse(
-            content=response.choices[0].message.content,
-            citations=response.citations,
+        # This is the custom handling for Perplexity -- just put citations in xml tag.
+        perplexity_response = (
+            response.choices[0].message.content
+            + "\n<citations>\n"
+            + "\n".join(response.citations)
+            + "\n</citations>\n"
         )
+        return perplexity_response
