@@ -35,7 +35,7 @@ class Frog(BaseModel):
 # print(response)
 
 prompts = ["name ten birds", "name ten mammals", "name ten reptiles"]
-model = ModelAsync("claude")
+model = ModelAsync("gpt")
 chain = AsyncChain(model=model)
 responses = chain.run(prompt_strings=prompts)
 print(responses)

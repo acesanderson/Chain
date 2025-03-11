@@ -80,6 +80,7 @@ class AsyncChain(Chain):
     async def _run_prompt_strings(
         self, prompt_strings: list[str], semaphore: Optional[asyncio.Semaphore] = None
     ) -> Response:
+
         async def process_with_semaphore(
             prompt_string: str, semaphore: Optional[asyncio.Semaphore]
         ):
