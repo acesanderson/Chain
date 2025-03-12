@@ -1,1 +1,69 @@
-{"ollama": ["qwq:latest", "llama3.2-vision:latest", "gemma2:27b", "gemma2:latest", "phi4:latest", "mistral-small:latest", "mistral-nemo:latest", "llama3.1:70b", "mistral:latest", "llama3.2:latest", "mixtral:8x7b", "llama3.1:latest", "llama3.1:70b-instruct-q2_K", "deepseek-coder-v2:latest", "deepseek-r1:32b", "deepseek-r1:70b", "deepseek-r1:latest", "llama3.3:latest", "phi3.5:latest", "phi:latest", "qwen2.5:32b", "qwen2.5:14b", "qwen2.5:latest", "command-r:latest", "mistral-large:latest"], "openai": ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo-0125", "gpt-4o-mini", "o1-preview", "o1-mini", "o3-mini", "o3-mini-high"], "anthropic": ["claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307", "claude-3-5-sonnet-20241022", "claude-3-5-haiku-20241022", "claude-3-7-sonnet-20250219"], "google": ["gemini-2.0-flash-001", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.5-flash-8b"], "groq": ["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma2-9b-it", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"], "deepseek": ["deepseek-chat"], "perplexity": ["sonar-reasoning", "sonar-pro", "sonar"]}
+{
+  "ollama": [
+    "qwq:latest",
+    "llama3.2-vision:latest",
+    "gemma2:27b",
+    "gemma2:latest",
+    "phi4:latest",
+    "mistral-small:latest",
+    "mistral-nemo:latest",
+    "llama3.1:70b",
+    "mistral:latest",
+    "llama3.2:latest",
+    "mixtral:8x7b",
+    "llama3.1:latest",
+    "llama3.1:70b-instruct-q2_K",
+    "deepseek-coder-v2:latest",
+    "deepseek-r1:32b",
+    "deepseek-r1:70b",
+    "deepseek-r1:latest",
+    "llama3.3:latest",
+    "phi3.5:latest",
+    "phi:latest",
+    "qwen2.5:32b",
+    "qwen2.5:14b",
+    "qwen2.5:latest",
+    "command-r:latest",
+    "mistral-large:latest"
+  ],
+  "openai": [
+    "gpt-4o",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo-0125",
+    "gpt-4o-mini",
+    "o1-preview",
+    "o1-mini",
+    "o3-mini",
+    "o3-mini-high"
+  ],
+  "anthropic": [
+    "claude-3-opus-20240229",
+    "claude-3-sonnet-20240229",
+    "claude-3-haiku-20240307",
+    "claude-3-5-sonnet-20241022",
+    "claude-3-5-haiku-20241022",
+    "claude-3-7-sonnet-20250219"
+  ],
+  "google": [
+    "gemini-2.0-flash-001",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b"
+  ],
+  "groq": [
+    "llama3-8b-8192",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant"
+  ],
+  "deepseek": [
+    "deepseek-chat"
+  ],
+  "perplexity": [
+    "sonar-reasoning",
+    "sonar-pro",
+    "sonar"
+  ]
+}

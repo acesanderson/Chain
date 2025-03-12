@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from Chain import Model, ChainCache, Prompt, ModelAsync, AsyncChain, Parser, Chain
 from Chain.model.clients.ollama_client import OllamaClientSync
 
-# Model._chain_cache = ChainCache()
+Model._chain_cache = ChainCache()
 # model = Model("gpt-3.5-turbo-0125")
 # model = Model("claude")
 # model = Model("llama3.1:latest")
@@ -24,26 +24,27 @@ class Frog(BaseModel):
         return self.__repr__()
 
 
-names = ["Freddy", "Frodo", "Fiona", "Frankie", "Fergus", "Felicity"]
-input_variables_list = [{"name": name} for name in names]
-
-model = ModelAsync("gpt-3.5-turbo-0125")
-prompt = Prompt("Create a frog with this name: {{name}}")
-parser = Parser(Frog)
-chain = AsyncChain(prompt=prompt, model=model, parser=parser)
-response = chain.run(input_variables_list=input_variables_list)
-print(response)
-
-# prompts = [
-#     "create a new Frog",
-#     "create two new Frogs",
-#     "design a Frog that will make a good friend",
-# ]
-# model = ModelAsync("gpt")
+# names = ["Freddy", "Frodo", "Fiona", "Frankie", "Fergus", "Felicity"]
+# input_variables_list = [{"name": name} for name in names]
+#
+# model = ModelAsync("gemini")
+# prompt = Prompt("Create a frog with this name: {{name}}")
 # parser = Parser(Frog)
-# chain = AsyncChain(model=model, parser=parser)
-# responses = chain.run(prompt_strings=prompts)
+# chain = AsyncChain(prompt=prompt, model=model, parser=parser)
+# responses = chain.run(input_variables_list=input_variables_list)
 # print(responses)
+
+prompts = [
+    "create a new Frog",
+    "create two new Frogs",
+    "design a Frog that will make a good friend",
+]
+# model = ModelAsync("gemini")
+model = ModelAsync("gemini-1.5-flash")
+parser = Parser(Frog)
+chain = AsyncChain(model=model, parser=parser)
+responses = chain.run(prompt_strings=prompts)
+print(responses)
 
 
 # print("Not Raw -------------")

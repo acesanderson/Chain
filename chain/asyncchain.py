@@ -124,6 +124,7 @@ class AsyncChain(Chain):
 
     def convert_results_to_responses(self, results: list[str]) -> list[Response]:
         # Convert results to Response objects
+        breakpoint()
         responses = []
         for result in results:
             response = Response(

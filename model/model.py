@@ -77,7 +77,7 @@ class Model:
         elif model in model_list["anthropic"]:
             return "anthropic", "AnthropicClientSync"
         elif model in model_list["google"]:
-            return "google", "GoogleClient"
+            return "google", "GoogleClientSync"
         elif model in model_list["ollama"]:
             return "ollama", "OllamaClientSync"
         elif model in model_list["groq"]:
@@ -195,8 +195,8 @@ class ModelAsync(Model):
             return "anthropic", "AnthropicClientAsync"
         elif model in model_list["ollama"]:
             return "ollama", "OllamaClientAsync"
-        # elif model in model_list["google"]:
-        #     return "google", "GoogleClient"
+        elif model in model_list["google"]:
+            return "google", "GoogleClientAsync"
         # elif model in model_list["groq"]:
         #     return "groq", "GroqClient"
         else:
