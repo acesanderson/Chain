@@ -40,10 +40,10 @@ prompts = [
     "design a Frog that will make a good friend",
 ]
 # model = ModelAsync("gemini")
-model = ModelAsync("gemini-1.5-flash")
+model = ModelAsync("gpt")
 parser = Parser(Frog)
 chain = AsyncChain(model=model, parser=parser)
-responses = chain.run(prompt_strings=prompts)
+responses = chain.run(prompt_strings=prompts, cache=True)
 print(responses)
 
 

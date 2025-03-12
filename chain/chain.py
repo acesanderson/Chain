@@ -67,6 +67,7 @@ class Chain:
         messages: list[Message] | None = [],
         verbose: bool = True,
         stream: bool = False,
+        cache: bool = True,
     ) -> Response:
         """
         Input should be a dict with named variables that match the prompt.
@@ -84,10 +85,12 @@ class Chain:
         # Route input; if string, if message
         if messages:
             result = self.run_messages(
-                prompt=prompt, messages=messages, verbose=verbose
+                prompt=prompt, messages=messages, verbose=verbose, cache=cache
             )
         elif prompt:
-            result = self.run_completion(prompt=prompt, verbose=verbose, stream=stream)
+            result = self.run_completion(
+                prompt=prompt, verbose=verbose, stream=stream, cache=cache
+            )
         else:
             raise ValueError("No prompt or messages passed to Chain.run.")
         return result
@@ -114,6 +117,7 @@ class Chain:
         messages: list[Message],
         prompt: str | None = None,
         verbose=True,
+        cache=True,
     ):
         """
         Special version of Chain.run that takes a messages object.
@@ -131,10 +135,13 @@ class Chain:
         time_start = time.time()
         if self.parser:
             result = self.model.query(
-                messages, verbose=verbose, pydantic_model=self.parser.pydantic_model
+                messages,
+                verbose=verbose,
+                pydantic_model=self.parser.pydantic_model,
+                cache=cache,
             )
         else:
-            result = self.model.query(messages, verbose=verbose)
+            result = self.model.query(messages, verbose=verbose, cache=cache)
         time_end = time.time()
         duration = time_end - time_start
         # Convert result to a string
@@ -154,7 +161,7 @@ class Chain:
         )
         return response
 
-    def run_completion(self, prompt: str, verbose=True, stream=False):
+    def run_completion(self, prompt: str, verbose=True, stream=False, cache=True):
         """
         Standard version of Chain.run which returns a string (i.e. a completion).
         Input should be a dict with named variables that match the prompt.
@@ -166,10 +173,13 @@ class Chain:
             Chain._message_store.add(user_message)
         if self.parser:
             result = self.model.query(
-                prompt, verbose=verbose, pydantic_model=self.parser.pydantic_model
+                prompt,
+                verbose=verbose,
+                pydantic_model=self.parser.pydantic_model,
+                cache=cache,
             )
         else:
-            result = self.model.query(prompt, verbose=verbose)
+            result = self.model.query(prompt, verbose=verbose, cache=cache)
         time_end = time.time()
         duration = time_end - time_start
         # Create a new messages object, to be passed to Response object.
