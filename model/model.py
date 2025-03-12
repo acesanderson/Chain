@@ -112,10 +112,11 @@ class Model:
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
         raw=False,
+        cache=True,
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
                 print("Cache hit!")
@@ -136,7 +137,7 @@ class Model:
             obj, llm_output = self._client.query(
                 self.model, input, pydantic_model, raw=True
             )
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output
             )
@@ -225,10 +226,11 @@ class ModelAsync(Model):
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
         raw=False,
+        cache=True,
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
                 print("Cache hit!")
@@ -249,7 +251,7 @@ class ModelAsync(Model):
             obj, llm_output = await self._client.query(
                 self.model, input, pydantic_model, raw=True
             )
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output
             )
