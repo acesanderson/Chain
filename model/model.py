@@ -182,6 +182,7 @@ class Model:
 
 
 class ModelAsync(Model):
+    _async_clients = {}  # Separate from Model._clients
 
     def _get_client_type(self, model: str) -> tuple:
         """
@@ -200,6 +201,23 @@ class ModelAsync(Model):
         #     return "groq", "GroqClient"
         else:
             raise ValueError(f"Model {model} not found in models")
+
+    @classmethod
+    def _get_client(cls, client_type: tuple):
+        # print(f"client type: {client_type}")
+        if client_type[0] not in cls._async_clients:
+            try:
+                module = importlib.import_module(
+                    f"Chain.model.clients.{client_type[0].lower()}_client"
+                )
+                client_class = getattr(module, f"{client_type[1]}")
+                cls._async_clients[client_type[0]] = client_class()
+            except ImportError as e:
+                raise ImportError(f"Failed to import {client_type} client: {str(e)}")
+        client_object = cls._async_clients[client_type[0]]
+        if not client_object:
+            raise ValueError(f"Client {client_type} not found in clients")
+        return client_object
 
     async def query_async(
         self,
