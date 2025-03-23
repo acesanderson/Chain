@@ -1,6 +1,6 @@
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
-from openai import OpenAI, AsyncOpenAI, Stream
+from openai import OpenAI, AsyncOpenAI
 import instructor
 from pydantic import BaseModel
 
@@ -36,7 +36,6 @@ class OpenAIClientSync(OpenAIClient):
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
-
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
         if raw and pydantic_model:
             obj, raw_response = self._client.chat.completions.create_with_completion(
@@ -86,7 +85,6 @@ class OpenAIClientAsync(OpenAIClient):
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
-
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
         if raw and pydantic_model:
             obj, raw_response = (

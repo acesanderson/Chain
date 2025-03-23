@@ -77,7 +77,7 @@ class Model:
         elif model in model_list["anthropic"]:
             return "anthropic", "AnthropicClientSync"
         elif model in model_list["google"]:
-            return "google", "GoogleClient"
+            return "google", "GoogleClientSync"
         elif model in model_list["ollama"]:
             return "ollama", "OllamaClientSync"
         elif model in model_list["groq"]:
@@ -112,10 +112,11 @@ class Model:
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
         raw=False,
+        cache=True,
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
                 print("Cache hit!")
@@ -136,7 +137,7 @@ class Model:
             obj, llm_output = self._client.query(
                 self.model, input, pydantic_model, raw=True
             )
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output
             )
@@ -182,6 +183,7 @@ class Model:
 
 
 class ModelAsync(Model):
+    _async_clients = {}  # Separate from Model._clients
 
     def _get_client_type(self, model: str) -> tuple:
         """
@@ -194,12 +196,29 @@ class ModelAsync(Model):
             return "anthropic", "AnthropicClientAsync"
         elif model in model_list["ollama"]:
             return "ollama", "OllamaClientAsync"
-        # elif model in model_list["google"]:
-        #     return "google", "GoogleClient"
+        elif model in model_list["google"]:
+            return "google", "GoogleClientAsync"
         # elif model in model_list["groq"]:
         #     return "groq", "GroqClient"
         else:
             raise ValueError(f"Model {model} not found in models")
+
+    @classmethod
+    def _get_client(cls, client_type: tuple):
+        # print(f"client type: {client_type}")
+        if client_type[0] not in cls._async_clients:
+            try:
+                module = importlib.import_module(
+                    f"Chain.model.clients.{client_type[0].lower()}_client"
+                )
+                client_class = getattr(module, f"{client_type[1]}")
+                cls._async_clients[client_type[0]] = client_class()
+            except ImportError as e:
+                raise ImportError(f"Failed to import {client_type} client: {str(e)}")
+        client_object = cls._async_clients[client_type[0]]
+        if not client_object:
+            raise ValueError(f"Client {client_type} not found in clients")
+        return client_object
 
     async def query_async(
         self,
@@ -207,10 +226,11 @@ class ModelAsync(Model):
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
         raw=False,
+        cache=True,
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
                 print("Cache hit!")
@@ -231,7 +251,7 @@ class ModelAsync(Model):
             obj, llm_output = await self._client.query(
                 self.model, input, pydantic_model, raw=True
             )
-        if Model._chain_cache:
+        if Model._chain_cache and cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output
             )

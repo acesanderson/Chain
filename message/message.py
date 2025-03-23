@@ -13,7 +13,7 @@ class Message(BaseModel):
     """
 
     role: str
-    content: str | BaseModel
+    content: str | BaseModel | list[BaseModel]
 
     def __str__(self):
         """

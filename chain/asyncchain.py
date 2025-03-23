@@ -5,6 +5,7 @@ from Chain.message.message import Message
 from Chain.parser.parser import Parser
 import asyncio
 from typing import overload, Optional
+from pydantic import BaseModel
 
 
 class AsyncChain(Chain):
@@ -15,6 +16,12 @@ class AsyncChain(Chain):
         prompt: Prompt | None = None,
         parser: Parser | None = None,
     ):
+        if not isinstance(model, ModelAsync):
+            raise TypeError("Model must be of type ModelAsync")
+        if prompt and not isinstance(prompt, Prompt):
+            raise TypeError("Prompt must be of type Prompt")
+        if parser and not isinstance(parser, Parser):
+            raise TypeError("Parser must be of type Parser")
         """Override to use ModelAsync"""
         self.prompt = prompt
         self.model = model
@@ -35,96 +42,98 @@ class AsyncChain(Chain):
         input_variables_list: list[dict] | None = None,
         prompt_strings: list[str] | None = None,
         semaphore: Optional[asyncio.Semaphore] = None,
+        cache=True,
     ) -> list[Response]:
 
         async def _run_async():
             if prompt_strings:
-                results = await self._run_prompt_strings(prompt_strings, semaphore)
-                return self.convert_results_to_responses(results)
+                return await self._run_prompt_strings(prompt_strings, semaphore, cache)
             if input_variables_list:
-                results = await self._run_input_variables(
-                    input_variables_list, semaphore
+                return await self._run_input_variables(
+                    input_variables_list, semaphore, cache
                 )
-                return self.convert_results_to_responses(results)
-            return []
 
-        responses = asyncio.run(_run_async())
+        results = asyncio.run(_run_async())
+        responses = self.convert_results_to_responses(results)
+
         return responses
 
     async def _run_input_variables(
         self,
         input_variables_list: list[dict],
         semaphore: Optional[asyncio.Semaphore] = None,
-    ) -> list:
+        cache=True,
+    ) -> Response:
         if not self.prompt:
             raise ValueError("No prompt assigned to AsyncChain object")
+        if self.parser:
+            pydantic_model = self.parser.pydantic_model
+        else:
+            pydantic_model = None
 
         async def process_with_semaphore(
-            input_variables: dict, semaphore: Optional[asyncio.Semaphore]
+            input_variables: dict,
+            pydantic_model: BaseModel | None,
+            semaphore: Optional[asyncio.Semaphore],
+            cache=cache,
         ):
             if semaphore:
                 # Use a semaphore to limit the number of concurrent requests
                 async with semaphore:
                     return await self.model.query_async(
-                        input=self.prompt.render(input_variables=input_variables)
+                        input=self.prompt.render(input_variables=input_variables),
+                        pydantic_model=pydantic_model,
+                        cache=cache,
                     )
             else:
                 return await self.model.query_async(
-                    input=self.prompt.render(input_variables=input_variables)
+                    input=self.prompt.render(input_variables=input_variables),
+                    pydantic_model=pydantic_model,
+                    cache=cache,
                 )
 
         coroutines = [
-            process_with_semaphore(input_variables, semaphore)
+            process_with_semaphore(
+                input_variables, pydantic_model, semaphore, cache=cache
+            )
             for input_variables in input_variables_list
         ]
         # Need to convert these to Response objects
         return await asyncio.gather(*coroutines, return_exceptions=True)
 
     async def _run_prompt_strings(
-        self, prompt_strings: list[str], semaphore: Optional[asyncio.Semaphore] = None
-    ) -> list:
+        self,
+        prompt_strings: list[str],
+        semaphore: Optional[asyncio.Semaphore] = None,
+        cache=True,
+    ) -> Response:
+        if self.parser:
+            pydantic_model = self.parser.pydantic_model
+        else:
+            pydantic_model = None
 
         async def process_with_semaphore(
-            prompt_string: str, semaphore: Optional[asyncio.Semaphore]
+            prompt_string: str,
+            pydantic_model: BaseModel | None,
+            semaphore: Optional[asyncio.Semaphore],
+            cache=True,
         ):
             if semaphore:
                 # Use a semaphore to limit the number of concurrent requests
                 async with semaphore:
-                    return await self.model.query_async(input=prompt_string)
+                    return await self.model.query_async(
+                        input=prompt_string, pydantic_model=pydantic_model, cache=cache
+                    )
             else:
-                return await self.model.query_async(input=prompt_string)
+                return await self.model.query_async(
+                    input=prompt_string, pydantic_model=pydantic_model, cache=cache
+                )
 
         coroutines = [
-            process_with_semaphore(prompt_string, semaphore)
+            process_with_semaphore(prompt_string, pydantic_model, semaphore, cache)
             for prompt_string in prompt_strings
         ]
-        # Need to convert these to Response objects
-        return await asyncio.gather(*coroutines, return_exceptions=False)
-
-    def convert_results_to_responses(self, results: list) -> list[Response]:
-        # Convert results to Response objects
-        responses = []
-        for result in results:
-            if isinstance(result, Exception):  # Important! Handle exceptions
-                response = Response(
-                    content=str(result),  # Or some other error message
-                    status="error",
-                    prompt=None,
-                    model=self.model.model,
-                    duration=None,
-                    messages=[Message(role="assistant", content=str(result))],
-                )
-            else:
-                response = Response(
-                    content=result,
-                    status="success",
-                    prompt=None,  # This would be very hard to calculate; maybe later
-                    model=self.model.model,
-                    duration=None,  # This would be very hard to calculate; maybe later
-                    messages=[Message(role="assistant", content=result)],
-                )
-            responses.append(response)
-        return responses
+        return await asyncio.gather(*coroutines, return_exceptions=True)
 
     def convert_results_to_responses(self, results: list[str]) -> list[Response]:
         # Convert results to Response objects

@@ -5,9 +5,8 @@
 - [x] groq sync
 - [x] google sync
 - [x] perplexity sync
-- [ ] openai async
-- [ ] anthropic async
-- [ ] ollama async
-- [ ] google async
-- [ ] groq async
+- [x] openai async
+- [x] anthropic async
+- [x] ollama async
+- [x] google async
 
