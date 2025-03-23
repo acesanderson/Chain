@@ -39,20 +39,23 @@ class AsyncChain(Chain):
 
         async def _run_async():
             if prompt_strings:
-                return await self._run_prompt_strings(prompt_strings, semaphore)
+                results = await self._run_prompt_strings(prompt_strings, semaphore)
+                return self.convert_results_to_responses(results)
             if input_variables_list:
-                return await self._run_input_variables(input_variables_list, semaphore)
+                results = await self._run_input_variables(
+                    input_variables_list, semaphore
+                )
+                return self.convert_results_to_responses(results)
+            return []
 
-        results = asyncio.run(_run_async())
-        responses = self.convert_results_to_responses(results)
-
+        responses = asyncio.run(_run_async())
         return responses
 
     async def _run_input_variables(
         self,
         input_variables_list: list[dict],
         semaphore: Optional[asyncio.Semaphore] = None,
-    ) -> Response:
+    ) -> list:
         if not self.prompt:
             raise ValueError("No prompt assigned to AsyncChain object")
 
@@ -79,7 +82,7 @@ class AsyncChain(Chain):
 
     async def _run_prompt_strings(
         self, prompt_strings: list[str], semaphore: Optional[asyncio.Semaphore] = None
-    ) -> Response:
+    ) -> list:
 
         async def process_with_semaphore(
             prompt_string: str, semaphore: Optional[asyncio.Semaphore]
@@ -87,16 +90,41 @@ class AsyncChain(Chain):
             if semaphore:
                 # Use a semaphore to limit the number of concurrent requests
                 async with semaphore:
-                    return await self.model.query_async(prompt_string)
+                    return await self.model.query_async(input=prompt_string)
             else:
-                return await self.model.query_async(prompt_string)
+                return await self.model.query_async(input=prompt_string)
 
         coroutines = [
             process_with_semaphore(prompt_string, semaphore)
             for prompt_string in prompt_strings
         ]
         # Need to convert these to Response objects
-        return await asyncio.gather(*coroutines, return_exceptions=True)
+        return await asyncio.gather(*coroutines, return_exceptions=False)
+
+    def convert_results_to_responses(self, results: list) -> list[Response]:
+        # Convert results to Response objects
+        responses = []
+        for result in results:
+            if isinstance(result, Exception):  # Important! Handle exceptions
+                response = Response(
+                    content=str(result),  # Or some other error message
+                    status="error",
+                    prompt=None,
+                    model=self.model.model,
+                    duration=None,
+                    messages=[Message(role="assistant", content=str(result))],
+                )
+            else:
+                response = Response(
+                    content=result,
+                    status="success",
+                    prompt=None,  # This would be very hard to calculate; maybe later
+                    model=self.model.model,
+                    duration=None,  # This would be very hard to calculate; maybe later
+                    messages=[Message(role="assistant", content=result)],
+                )
+            responses.append(response)
+        return responses
 
     def convert_results_to_responses(self, results: list[str]) -> list[Response]:
         # Convert results to Response objects

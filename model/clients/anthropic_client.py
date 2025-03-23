@@ -84,7 +84,7 @@ class AnthropicClientSync(AnthropicClient):
         if model == "claude-3-5-sonnet-20240620":
             max_tokens = 8192
         else:
-            max_tokens = 4096
+            max_tokens = 8192
 
         # Pydantic models always return the tuple at client level (Model does further parsing)
         if raw and pydantic_model:

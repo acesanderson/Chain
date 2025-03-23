@@ -32,7 +32,7 @@ class OllamaClient(Client):
         _ollama_context_data = json.load(f)
 
     # Use defaultdict to set default context size to 4096 if not specified
-    _ollama_context_sizes = defaultdict(lambda: 4096)
+    _ollama_context_sizes = defaultdict(lambda: 32768)
     _ollama_context_sizes.update(_ollama_context_data)
 
     def __init__(self):
