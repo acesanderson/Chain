@@ -227,6 +227,7 @@ class ModelAsync(Model):
         pydantic_model: BaseModel | None = None,
         raw=False,
         cache=True,
+        print_response=False,
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
@@ -244,6 +245,8 @@ class ModelAsync(Model):
                             return obj
                     except Exception as e:
                         print(f"Failed to parse cached request: {e}")
+                    if print_response:
+                        print(f"Response: {cached_request}")
                 return cached_request
         if pydantic_model == None:
             llm_output = await self._client.query(self.model, input, raw=False)
@@ -257,8 +260,14 @@ class ModelAsync(Model):
             )
             Model._chain_cache.insert_cached_request(cached_request)
         if pydantic_model and not raw:
+            if print_response:
+                print(f"Response: {llm_output}")
             return obj  # type: ignore
         elif pydantic_model and raw:
+            if print_response:
+                print(f"Response: {llm_output}")
             return obj, llm_output  # type: ignore
         else:
+            if print_response:
+                print(f"Response: {llm_output}")
             return llm_output
