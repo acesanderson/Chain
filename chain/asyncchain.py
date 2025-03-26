@@ -43,14 +43,18 @@ class AsyncChain(Chain):
         prompt_strings: list[str] | None = None,
         semaphore: Optional[asyncio.Semaphore] = None,
         cache=True,
+        verbose=True,
+        print_response=False,
     ) -> list[Response]:
 
         async def _run_async():
             if prompt_strings:
-                return await self._run_prompt_strings(prompt_strings, semaphore, cache)
+                return await self._run_prompt_strings(
+                    prompt_strings, semaphore, cache, verbose, print_response
+                )
             if input_variables_list:
                 return await self._run_input_variables(
-                    input_variables_list, semaphore, cache
+                    input_variables_list, semaphore, cache, verbose, print_response
                 )
 
         results = asyncio.run(_run_async())
@@ -63,6 +67,8 @@ class AsyncChain(Chain):
         input_variables_list: list[dict],
         semaphore: Optional[asyncio.Semaphore] = None,
         cache=True,
+        verbose=True,
+        print_response=False,
     ) -> Response:
         if not self.prompt:
             raise ValueError("No prompt assigned to AsyncChain object")
@@ -76,6 +82,8 @@ class AsyncChain(Chain):
             pydantic_model: BaseModel | None,
             semaphore: Optional[asyncio.Semaphore],
             cache=cache,
+            verbose=True,
+            print_response=False,
         ):
             if semaphore:
                 # Use a semaphore to limit the number of concurrent requests
@@ -84,17 +92,26 @@ class AsyncChain(Chain):
                         input=self.prompt.render(input_variables=input_variables),
                         pydantic_model=pydantic_model,
                         cache=cache,
+                        verbose=verbose,
+                        print_response=print_response,
                     )
             else:
                 return await self.model.query_async(
                     input=self.prompt.render(input_variables=input_variables),
                     pydantic_model=pydantic_model,
                     cache=cache,
+                    verbose=verbose,
+                    print_response=print_response,
                 )
 
         coroutines = [
             process_with_semaphore(
-                input_variables, pydantic_model, semaphore, cache=cache
+                input_variables,
+                pydantic_model,
+                semaphore,
+                cache=cache,
+                verbose=verbose,
+                print_response=print_response,
             )
             for input_variables in input_variables_list
         ]
@@ -106,6 +123,8 @@ class AsyncChain(Chain):
         prompt_strings: list[str],
         semaphore: Optional[asyncio.Semaphore] = None,
         cache=True,
+        verbose=True,
+        print_response=False,
     ) -> Response:
         if self.parser:
             pydantic_model = self.parser.pydantic_model
@@ -117,20 +136,32 @@ class AsyncChain(Chain):
             pydantic_model: BaseModel | None,
             semaphore: Optional[asyncio.Semaphore],
             cache=True,
+            verbose=True,
+            print_response=False,
         ):
             if semaphore:
                 # Use a semaphore to limit the number of concurrent requests
                 async with semaphore:
                     return await self.model.query_async(
-                        input=prompt_string, pydantic_model=pydantic_model, cache=cache
+                        input=prompt_string,
+                        pydantic_model=pydantic_model,
+                        cache=cache,
+                        verbose=verbose,
+                        print_response=print_response,
                     )
             else:
                 return await self.model.query_async(
-                    input=prompt_string, pydantic_model=pydantic_model, cache=cache
+                    input=prompt_string,
+                    pydantic_model=pydantic_model,
+                    cache=cache,
+                    verbose=verbose,
+                    print_response=print_response,
                 )
 
         coroutines = [
-            process_with_semaphore(prompt_string, pydantic_model, semaphore, cache)
+            process_with_semaphore(
+                prompt_string, pydantic_model, semaphore, cache, verbose, print_response
+            )
             for prompt_string in prompt_strings
         ]
         return await asyncio.gather(*coroutines, return_exceptions=True)

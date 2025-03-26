@@ -31,6 +31,7 @@ from functools import partial
 from typing import Callable
 import sys
 import inspect
+from pathlib import Path
 
 
 class Chat:
@@ -45,7 +46,7 @@ class Chat:
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         self.system_message: Message | None = None
         self.commands = self.get_commands()
-        self.log_file: str = ""  # Off by default, but can be initialized.
+        self.log_file: str | Path = ""  # Off by default, but can be initialized.
 
     def parse_input(self, input: str) -> Callable | partial | None:
         """
