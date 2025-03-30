@@ -87,14 +87,17 @@ class MessageStore:
                 file_console = Console(file=file, force_terminal=True)
                 file_console.print(Rule(title="Message", style="bold green"))
                 file_console.print(f"[bold cyan]{item.role}:[/bold cyan]")
-                if item.role == "user":
-                    file_console.print(f"[yellow]{item.content}[/yellow]\n")
-                elif item.role == "assistant":
-                    file_console.print(f"[blue]{item.content}[/blue]\n")
-                elif item.role == "system":
-                    file_console.print(f"[green]{item.content}[/green]\n")
-                else:
-                    file_console.print(f"[white]{item.content}[/white]\n")
+                try:
+                    if item.role == "user":
+                        file_console.print(f"[yellow]{item.content}[/yellow]\n")
+                    elif item.role == "assistant":
+                        file_console.print(f"[blue]{item.content}[/blue]\n")
+                    elif item.role == "system":
+                        file_console.print(f"[green]{item.content}[/green]\n")
+                    else:
+                        file_console.print(f"[white]{item.content}[/white]\n")
+                except Exception as e:
+                    print(f"MessageStore error: {e}")
 
     def load(self):
         """
