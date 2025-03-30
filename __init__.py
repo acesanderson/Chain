@@ -10,6 +10,7 @@ from Chain.cache.cache import ChainCache
 from Chain.chat.chat import Chat
 from Chain.react.ReACT import ReACT
 from Chain.api.server.ChainRequest import ChainRequest
+from Chain.api.client.ChainClient import ChainClient
 
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "Chat",
     "ReACT",
     "ChainRequest",
+    "ChainClient",
 ]

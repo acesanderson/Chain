@@ -13,7 +13,7 @@ messages2 = [
     Message(role="user", content="name ten mammals"),
 ]
 example_request2 = ChainRequest(
-    prompt=None, messages=messages2, model="gemini", input_variables=None
+    prompt=None, messages=messages2, model="qwen2.5:14b", input_variables=None
 )
 
 messages3 = [
@@ -25,7 +25,7 @@ messages3 = [
 example_request3 = ChainRequest(
     prompt="name ten {{things}}",
     messages=messages3,
-    model="claude",
+    model="qwen2.5:14b",
     input_variables={"things": "birds"},
 )
 
