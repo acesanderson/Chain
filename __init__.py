@@ -9,6 +9,7 @@ from Chain.message.messagestore import MessageStore
 from Chain.cache.cache import ChainCache
 from Chain.chat.chat import Chat
 from Chain.react.ReACT import ReACT
+from Chain.api.server.ChainRequest import ChainRequest
 
 
 __all__ = [
@@ -26,4 +27,5 @@ __all__ = [
     "ChainCache",
     "Chat",
     "ReACT",
+    "ChainRequest",
 ]

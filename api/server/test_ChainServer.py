@@ -1,4 +1,4 @@
-from ChainServer import ChainRequest, process_ChainRequest
+from Chain.api.server.ChainRequest import ChainRequest, process_ChainRequest
 from Chain import Message
 
 

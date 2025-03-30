@@ -8,32 +8,13 @@ from Chain.message.message import Message
 from pydantic import BaseModel
 
 
-class Response:
-    def __init__(
-        self,
-        content: str | BaseModel = "",
-        status="N/A",
-        prompt: str | None = "",
-        model="",
-        duration=0.0,
-        messages: list = [],
-    ):
-        self.content: str | BaseModel = (
-            content  # This is the content of the last message (the text completion)
-        )
-        self.status: str = (
-            status  # This is the status of the response (e.g. "success", "error")
-        )
-        self.prompt: str | None = (
-            prompt  # This is the last prompt that was sent to the model (content of the last user message). This is hard to implement for async calls.
-        )
-        self.model: str = model  # This is the model name (e.g. "gpt-4o")
-        self.duration: float | None = (
-            duration  # This is how long the request took; hard to implement for async calls.
-        )
-        self.messages: list[Message] = (
-            messages  # This is the message history; it's at least the last two messages (user and model)
-        )
+class Response(BaseModel):
+    content: str | BaseModel
+    status: str
+    prompt: str | None
+    model: str
+    duration: float | None
+    messages: list[Message]
 
     def __repr__(self):
         attributes = ", ".join(
