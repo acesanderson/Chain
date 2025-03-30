@@ -14,7 +14,7 @@ def get_url() -> str:
     if hostname in hostnames["local"]:
         url = "http://localhost:8000/query"
     else:
-        url = "https://10.0.0.82:8000/query"
+        url = "http://10.0.0.82:8000/query"
     return url
 
 
