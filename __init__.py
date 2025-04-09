@@ -8,7 +8,6 @@ from Chain.message.message import Message, Messages, create_system_message
 from Chain.message.messagestore import MessageStore
 from Chain.cache.cache import ChainCache
 from Chain.chat.chat import Chat
-from Chain.react.ReACT import ReACT
 from Chain.api.server.ChainRequest import ChainRequest
 from Chain.api.client.ChainClient import ChainClient
 
@@ -27,7 +26,6 @@ __all__ = [
     "Messages",
     "ChainCache",
     "Chat",
-    "ReACT",
     "ChainRequest",
     "ChainClient",
 ]

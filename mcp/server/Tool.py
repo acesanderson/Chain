@@ -1,23 +1,34 @@
-"""
-Resources are parameterless functions that return a static resource (typically a string but could be anything that an LLM would interpret).
-
-Example usage:
-
-```python
-tool_registry = ToolRegistry()
-
-@tool_registry.register
-def my_tool(param1: str, param2: int):
-    "" This is a tool that returns an answer. ""
-    return param1 + str(param2)
-```
-name = my_tool (the function name)
-description = "This is a tool that returns a string." (the docstring)
-"""
-
 from typing import Callable
 from inspect import signature
 import json
+from pydantic import BaseModel
+
+
+# Our pydantic classes, mapped to official MCP schema.
+class ToolRequest(BaseModel):
+    jsonrpc: str
+    id: int
+    method: str
+    params: dict
+
+
+class ToolResponse(BaseModel):
+    class Result(BaseModel):
+        content: list[dict]
+
+    jsonrpc: str
+    id: int
+    result: Result
+
+
+class ToolDefinition(BaseModel):
+    class InputSchema(BaseModel):
+        type: str
+        properties: dict
+
+    name: str
+    description: str
+    inputSchema: InputSchema
 
 
 # Our registry; .register to be used as a decorator.
@@ -32,7 +43,24 @@ class ToolRegistry:
 
 
 # Tool class
-class MCPTool:
+class Tool:
+    """
+    Resources are parameterless functions that return a static resource (typically a string but could be anything that an LLM would interpret).
+
+    Example usage:
+
+    ```python
+    tool_registry = ToolRegistry()
+
+    @tool_registry.register
+    def my_tool(param1: str, param2: int):
+        "" This is a tool that returns an answer. ""
+        return param1 + str(param2)
+    ```
+    name = my_tool (the function name)
+    description = "This is a tool that returns a string." (the docstring)
+    """
+
     def __init__(self, function: Callable):
         self.function = function
         try:

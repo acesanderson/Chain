@@ -2,39 +2,54 @@ from typing import Callable
 from inspect import signature
 import json
 import re
+from pydantic import BaseModel
 
 uri_regex = r"^[a-zA-Z][a-zA-Z\d+\-.]*://[^\s/$.?#].[^\s]*"
 
 
-# Our registry; .register to be used as a decorator.
-class ResourceRegistry:
-    def __init__(self):
-        self.resources = {}
+# Our pydantic classes (keyed to MCP spec)
+class ResourceDefinition(BaseModel):
+    uri: str
+    name: str
+    description: str
+    mimeType: str
+    size: int
 
-    def get_string_size_in_bytes(self, content):
-        """
-        Convert object to bytes using UTF-8 encoding (or another encoding of your choice), return len().
-        """
-        try:
-            str(content)
-        except ValueError:
-            raise ValueError("Cannot convert object to string.")
-        byte_representation = str(content).encode("utf-8")
-        return len(byte_representation)
 
-    def register(
-        self, func: Callable, uri: str, mime_type: str = "text/plain", size: int = 1024
-    ):
-        """
-        Register a function as a resource.
-        """
-        resource = Resource(func, uri, mime_type, size)
-        self.resources[resource.name] = resource
-        return func
+class ResourceTemplateDefinition(BaseModel):
+    uriTemplate: str
+    name: str
+    description: str
+    mimeType: str
+
+
+class ResourceRequest(BaseModel):
+    jsonrpc: str
+    id: int
+    method: str
+    params: dict
+
+
+class ResourceResponse(BaseModel):
+    jsonrpc: str
+    id: int
+    result: dict
+
+
+def get_string_size_in_bytes(content):
+    """
+    Convert object to bytes using UTF-8 encoding (or another encoding of your choice), return len().
+    """
+    try:
+        str(content)
+    except ValueError:
+        raise ValueError("Cannot convert object to string.")
+    byte_representation = str(content).encode("utf-8")
+    return len(byte_representation)
 
 
 # Tool class
-class MCPResource:
+class Resource:
     """
     Resources are parameterless functions that return a static resource (typically a string but could be anything that an LLM would interpret).
 
@@ -68,14 +83,6 @@ class MCPResource:
             self.description = function.__doc__.strip()  # type: ignore
         except AttributeError:
             print("Function needs a docstring")
-        # self.args
-        try:
-            # If function has parameters, raise an error
-            self.args = self.validate_parameters()
-            if self.args:
-                raise ValueError("Resource function should not have parameters.")
-        except ValueError:
-            print("Resource function should not have parameters.")
         self.name = function.__name__
 
     def validate_uri(self, uri: str):

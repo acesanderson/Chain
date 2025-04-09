@@ -1,30 +1,59 @@
 from typing import Callable
 from inspect import signature
 import json
+from pydantic import BaseModel
 
 
-# Our registry; .register to be used as a decorator.
-class PromptRegistry:
-    def __init__(self):
-        self.prompts = {}
+# Our pydantic classes (keyed to MCP spec)
+class PromptDefinition(BaseModel):
+    class Argument(BaseModel):
+        name: str
+        description: str
+        required: bool
 
-    def register(self, func):
-        prompt = MCPPrompt(func)
-        self.prompts[prompt.name] = prompt
-        return func
+    name: str
+    description: str
+    arguments: list[Argument]
+
+
+class PromptRequest(BaseModel):
+    class Params(BaseModel):
+        name: str
+        arguments: dict
+
+    jsonrpc: str
+    id: int
+    method: str
+    params: Params
+
+
+class PromptResponse(BaseModel):
+    class Result(BaseModel):
+        class Message(BaseModel):
+            class Content(BaseModel):
+                type: str
+                text: str
+
+            role: str
+            content: Content
+
+        description: str
+        messages: list[Message]
+
+    jsonrpc: str
+    id: int
+    result: Result
 
 
 # Tool class
-class MCPPrompt:
+class Prompt:
     """
     Resources are parameterless functions that return a static resource (typically a string but could be anything that an LLM would interpret).
 
     Example usage:
 
     ```python
-    tool_registry = ToolRegistry()
-
-    @tool_registry.register
+    @mcp.tool
     def my_tool(param1: str, param2: int):
         "" This is a tool that returns an answer. ""
         return param1 + str(param2)
