@@ -4,16 +4,16 @@ Resources are parameterless functions that return a static resource (typically a
 Example usage:
 
 ```python
-tool_registry = ToolRegistry()
+resource_registry = ResourceRegistry()
 
-@tool_registry.register
-def my_tool(param1: str, param2: int):
-    "" This is a tool that returns an answer. ""
-    return param1 + str(param2)
+@resource_registry.register
+def my_resource():
+    "" This is a resource that returns a string. ""
+    return "This is my resource."
 ```
 
-name = my_tool (the function name)
-description = "This is a tool that returns a string." (the docstring)
+name = my_resource (the function name)
+description = "This is a resource that returns a string." (the docstring)
 """
 
 from typing import Callable
@@ -21,18 +21,18 @@ from inspect import signature
 
 
 # Our registry; .register to be used as a decorator.
-class ToolRegistry:
+class ResourceRegistry:
     def __init__(self):
-        self.tools = {}
+        self.resources = {}
 
     def register(self, func):
-        tool = Tool(func)
-        self.tools[tool.name] = tool
+        resource = Resource(func)
+        self.resources[resource.name] = resource
         return func
 
 
 # Tool class
-class Tool:
+class Resource:
     def __init__(self, function: Callable):
         self.function = function
         try:
@@ -40,9 +40,12 @@ class Tool:
         except AttributeError:
             print("Function needs a docstring")
         try:
+            # If function has parameters, raise an error
             self.args = self.validate_parameters()
-        except AttributeError:
-            print("Function needs type annotations. Does this have any parameters?")
+            if self.args:
+                raise ValueError("Resource function should not have parameters.")
+        except ValueError:
+            print("Resource function should not have parameters.")
         self.name = function.__name__
 
     def validate_parameters(self):
