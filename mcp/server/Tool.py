@@ -1,7 +1,7 @@
 from typing import Callable
 from inspect import signature
 import json
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 
 # Our pydantic classes, mapped to official MCP schema.
@@ -29,17 +29,6 @@ class ToolDefinition(BaseModel):
     name: str
     description: str
     inputSchema: InputSchema
-
-
-# Our registry; .register to be used as a decorator.
-class ToolRegistry:
-    def __init__(self):
-        self.tools = {}
-
-    def register(self, func):
-        tool = Tool(func)
-        self.tools[tool.name] = tool
-        return func
 
 
 # Tool class
@@ -70,7 +59,7 @@ class Tool:
         self.input_schema = self.get_input_schema()
         self.name = function.__name__
 
-    def get_input_schema(self):
+    def get_input_schema(self) -> dict:
         sig = signature(self.function)
         params = sig.parameters
         input_schema = {
@@ -83,7 +72,8 @@ class Tool:
     def __call__(self, **kwargs):
         return self.function(**kwargs)
 
-    def to_dict(self):
+    @property
+    def definition(self) -> ToolDefinition:
         """Return a dictionary representation of this tool for MCP compatibility.
         Per MCP spec, the tool should be represented as:
         {
@@ -95,18 +85,24 @@ class Tool:
           }
         }
         """
-        return {
-            "name": self.name,
-            "description": self.description,
-            "inputSchema": {
-                "type": "object",
-                "properties": self.input_schema,
-            },
-        }
+        tool_definition = ToolDefinition(
+            name=self.name,
+            description=self.description,
+            inputSchema=ToolDefinition.InputSchema(
+                type="object", properties=self.input_schema
+            ),
+        )
+        return tool_definition.model_dump_json(indent=2)  # type: ignore
 
-    def to_json(self):
-        """Return a JSON representation of this tool for MCP compatibility."""
-        return json.dumps(self.to_dict(), indent=2)
+    def request(self, tool_request_json: str) -> str:
+        """
+        This is where all the tool queries are processed.
+        Will throw a ValidationError if the json is not valid.
+        """
+        # Validate the json against the ToolRequest schema
+        tool_request = ToolRequest.model_validate_json(tool_request_json)
+
+        pass
 
     def __repr__(self):
         """Return a string representation of this tool."""
