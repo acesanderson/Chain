@@ -1,6 +1,6 @@
-from Tool import Tool, ToolRequest, ToolResponse, ToolDefinition
-from Resource import Resource, ResourceRequest, ResourceResponse, ResourceDefinition
-from Prompt import Prompt, PromptRequest, PromptResponse, PromptDefinition
+from Tool import Tool, ToolRequest
+from Resource import Resource, ResourceRequest
+from Prompt import Prompt, PromptRequest
 from typing import Callable
 
 registry: list = []
