@@ -1,34 +1,7 @@
 from typing import Callable
 from inspect import signature
 import json
-from pydantic import BaseModel, ValidationError
-
-
-# Our pydantic classes, mapped to official MCP schema.
-class ToolRequest(BaseModel):
-    jsonrpc: str
-    id: int
-    method: str
-    params: dict
-
-
-class ToolResponse(BaseModel):
-    class Result(BaseModel):
-        content: list[dict]
-
-    jsonrpc: str
-    id: int
-    result: Result
-
-
-class ToolDefinition(BaseModel):
-    class InputSchema(BaseModel):
-        type: str
-        properties: dict
-
-    name: str
-    description: str
-    inputSchema: InputSchema
+from Chain.mcp.messages.message_classes import ToolDefinition, ToolRequest, ToolResponse
 
 
 # Tool class

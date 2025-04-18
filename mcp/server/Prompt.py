@@ -1,48 +1,11 @@
 from typing import Callable
 from inspect import signature
+from Chain.mcp.messages.message_classes import (
+    PromptDefinition,
+    PromptRequest,
+    PromptResponse,
+)
 import json
-from pydantic import BaseModel
-
-
-# Our pydantic classes (keyed to MCP spec)
-class PromptDefinition(BaseModel):
-    class Argument(BaseModel):
-        name: str
-        description: str
-        required: bool
-
-    name: str
-    description: str
-    arguments: list[Argument]
-
-
-class PromptRequest(BaseModel):
-    class Params(BaseModel):
-        name: str
-        arguments: dict
-
-    jsonrpc: str
-    id: int
-    method: str
-    params: Params
-
-
-class PromptResponse(BaseModel):
-    class Result(BaseModel):
-        class Message(BaseModel):
-            class Content(BaseModel):
-                type: str
-                text: str
-
-            role: str
-            content: Content
-
-        description: str
-        messages: list[Message]
-
-    jsonrpc: str
-    id: int
-    result: Result
 
 
 # Tool class

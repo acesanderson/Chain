@@ -1,6 +1,31 @@
 """
 As I develop the server, this is literally just a script that sends a request to each endpoint.
+`main` runs the dummy resource and tools requests.
+TBD: clients should be objects that are coupled with specific MCP servers, handling json / transport etc.
+Host can have a ClientEnvironment, which combines all resources from individual clients, as handles rendering / parsing of responses, crafts requests that are sent to client
 """
+
+from Chain.mcp.messages.message_classes import (
+    PromptDefinition,
+    PromptRequest,
+    PromptResponse,
+    ResourceDefinition,
+    ResourceRequest,
+    ResourceResponse,
+    ToolDefinition,
+    ToolRequest,
+    ToolResponse,
+)
+from pydantic import BaseModel
+from typing import Optional
+
+
+def send_json(endpoint: str, message: BaseModel) -> Optional[BaseModel]:
+    """
+    Send a message to a particular endpoint; transport implementation TBD.
+    Returns either a request object or None (if it's a notification).
+    """
+    pass
 
 
 ## Core Lifecycle Methods
@@ -31,11 +56,14 @@ def list_tools():
     pass
 
 
-def tools_call():
+def tools_call() -> ToolResponse:
     """
     2. **tools/call** - Used to invoke a specific tool on the server, where the server performs the requested operation and returns results.
     """
-    pass
+    endpoint = "tools/list"
+    tool_request = ToolRequest()  # What goes in here? (note jsonrpc object)
+    tool_response = send_json(endpoint, tool_request)
+    return tool_response
 
 
 ## Resource-Related Endpoints
@@ -46,11 +74,14 @@ def list_resources():
     pass
 
 
-def subscribe_resources():
+def subscribe_resources() -> ResourceResponse:
     """
     2. **resources/get** - Used to retrieve a specific resource from the server.
     """
-    pass
+    endpoint = "resources/get"
+    resource_request = ResourceRequest()  # What goes in here?
+    resource_response = send_json(endpoint, resource_request)
+    return resource_response
 
 
 def unsubscribe_resources():
@@ -117,3 +148,8 @@ def close():
     3. **close** - Used to terminate the connection cleanly.
     """
     pass
+
+
+if __name__ == "__main__":
+    tools_call()
+    subscribe_resources()
