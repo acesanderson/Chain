@@ -1,7 +1,8 @@
 {
-    "mistral:latest": 8192,
-    "llama3.1:latest": 32768,
-    "lama3.1:70b-instruct-q2_K": 32768,
-    "dolphin-mixtral:latest": 16384,
-    "dolphin-mixtral:8x7b": 32768
+  "mistral:latest": 8192,
+  "llama3.1:latest": 32768,
+  "lama3.1:70b-instruct-q2_K": 32768,
+  "dolphin-mixtral:latest": 16384,
+  "dolphin-mixtral:8x7b": 32768,
+  "qwen2.5:14b": 8192
 }

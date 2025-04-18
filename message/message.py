@@ -39,7 +39,7 @@ class Messages(BaseModel):
 # Some helpful functions
 
 
-def create_system_message(system_prompt: str, input_variables=None) -> Message:
+def create_system_message(system_prompt: str, input_variables=None) -> list[Message]:
     """
     Takes a system prompt object (Prompt()) or a string, an optional input object, and returns a Message object.
     """
@@ -53,5 +53,5 @@ def create_system_message(system_prompt: str, input_variables=None) -> Message:
             )
         ]
     else:
-        system_message = Message(role="system", content=system_prompt.prompt_string)
+        system_message = [Message(role="system", content=system_prompt.prompt_string)]
     return system_message

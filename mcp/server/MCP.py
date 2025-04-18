@@ -1,11 +1,17 @@
-from Tool import Tool
-from Resource import Resource
-from Prompt import Prompt
+from Tool import Tool, ToolRequest
+from Resource import Resource, ResourceRequest
+from Prompt import Prompt, PromptRequest
 from typing import Callable
 
 registry: list = []
+schema_models = [
+    ToolRequest,
+    ResourceRequest,
+    PromptRequest,
+]
 
 
+# Our decorators
 def tool(func: Callable) -> Callable:
     """
     Decorator to register a tool.
