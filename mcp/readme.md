@@ -1,3 +1,5 @@
+NOTE: THIS IS ABANDONED IN FAVOR OF MCP LITE WHICH IS MORE IN MY ZONE OF PROXIMAL DEVELOPMENT
+
 ### Directories
 - host: handles ClientEnvironment and whatever the integration with Chat class looks like.
 - messages: these are our Pydantic classes mapped to MCP schema
