@@ -1,6 +1,22 @@
-from MCPTool import MCPTool, ToolRequest
-from MCPResource import MCPResource, ResourceRequest
-from MCPPrompt import MCPPrompt, PromptRequest
+"""
+MCPLite - The top-level class that users of your framework interact with. Similar to FastAPI's app = FastAPI(), users would do mcp = MCPLite(). This class would:
+
+- Provide decorators for registering handler functions
+- Hold the Server instance
+- Provide the .run() method
+- Manage configuration options
+
+Server - The internal class that handles routing requests to the appropriate handlers. It would:
+
+- Work with the registered methods
+- Use the ServerTransport to receive requests
+- Wouldn't be directly exposed to users of your framework
+"""
+
+from MCPTool import MCPTool
+from MCPResource import MCPResource
+from MCPPrompt import MCPPrompt
+from MCPRegistry import Registry
 from typing import Callable
 from pathlib import Path
 from Chain import Prompt
@@ -10,11 +26,6 @@ system_prompt_path = dir_path / "mcp_system_prompt.jinja2"
 
 
 registry: dict = {"tools": [], "resources": [], "prompts": []}
-schema_models = [
-    ToolRequest,
-    ResourceRequest,
-    PromptRequest,
-]
 
 
 # Initialization functions
@@ -48,7 +59,7 @@ def list_tools():
     """
     tool_list = []
     for item in registry:
-        if isinstance(item, Tool):
+        if isinstance(item, MCPTool):
             tool_list.append(
                 {
                     "name": item.name,
@@ -67,7 +78,7 @@ def list_resources():
     """
     resource_list = []
     for item in registry:
-        if isinstance(item, Resource):
+        if isinstance(item, MCPResource):
             resource_list.append(
                 {
                     "uri": item.uri,
@@ -180,3 +191,21 @@ def prompt(func: Callable) -> Callable:
     """
     registry["prompts"].append(MCPPrompt(func))
     return func
+
+
+"""
+class Server:
+    def __init__(self, transport: Transport = DirectServerTransport):
+        ""
+        Import this if DirectServerTransport; otherwise you will need to app.run() to start the server.
+        (for HTTP, stdio, SSE, etc.)
+        ""
+
+
+Usage:
+app = MCPLite() 
+
+@app.tool
+@app.resource
+etc.
+"""

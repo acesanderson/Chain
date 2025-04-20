@@ -27,45 +27,6 @@ import mcplite
 import json
 
 
-class Registry(BaseModel):
-    """
-    A registry that holds resources, tools, and prompts.
-    """
-
-    resources: list[ResourceDefinition | ResourceTemplateDefinition] = []
-    tools: list[ToolDefinition] = []
-    prompts: list[PromptDefinition] = []
-
-    # We want to be able to add two registries together.
-    def __add__(self, other: "Registry"):
-        """
-        Add two registries together.
-        """
-        try:
-            self.resources.extend(other.resources)
-            self.tools.extend(other.tools)
-            self.prompts.extend(other.prompts)
-            return self
-        except AttributeError:
-            raise TypeError(
-                f"Cannot add {type(self)} and {type(other)}. Both must be of type Registry."
-            )
-
-    def __radd__(self, other: "Registry"):
-        """
-        Add two registries together.
-        """
-        try:
-            self.resources.extend(other.resources)
-            self.tools.extend(other.tools)
-            self.prompts.extend(other.prompts)
-            return self
-        except AttributeError:
-            raise TypeError(
-                f"Cannot add {type(self)} and {type(other)}. Both must be of type Registry."
-            )
-
-
 class Host:
     def __init__(self, llm_request: str):
         self.llm_request = llm_request

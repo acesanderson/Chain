@@ -3,6 +3,7 @@ Our message objects, keyed to MCP schema.
 """
 
 from pydantic import BaseModel
+from typing import Optional
 
 
 class MCPMessage(BaseModel):
@@ -108,3 +109,29 @@ class ToolDefinition(MCPMessage):
     name: str
     description: str
     inputSchema: InputSchema
+
+
+MCPMessages = [
+    PromptDefinition,
+    PromptRequest,
+    PromptResponse,
+    ResourceDefinition,
+    ResourceTemplateDefinition,
+    ResourceRequest,
+    ResourceResponse,
+    ToolRequest,
+    ToolResponse,
+    ToolDefinition,
+]
+
+
+def parse_message(json_str: str) -> Optional[MCPMessage]:
+    """
+    Takes an arbitary JSON string; if it matches the schema of the MCPMessage classes, return the object.
+    """
+    for message in MCPMessages:
+        try:
+            return message.model_validate_json(json_str)
+        except Exception:
+            continue
+    return None
