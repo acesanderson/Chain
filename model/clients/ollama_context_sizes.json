@@ -4,5 +4,6 @@
   "lama3.1:70b-instruct-q2_K": 32768,
   "dolphin-mixtral:latest": 16384,
   "dolphin-mixtral:8x7b": 32768,
-  "qwen2.5:14b": 8192
+  "qwen2.5:14b": 8192,
+  "cogito:14b": 32768
 }
