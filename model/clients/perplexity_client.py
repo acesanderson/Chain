@@ -11,6 +11,7 @@ from Chain.model.clients.load_env import load_env
 from openai import OpenAI
 import instructor
 from pydantic import BaseModel
+import tiktoken
 
 
 class PerplexityClient(Client):
@@ -43,6 +44,15 @@ class PerplexityClient(Client):
         Logic for this is unique to each client (sync / async).
         """
         pass
+
+    def tokenize(self, model: str, text: str) -> int:
+        """
+        Return the token count for a string, per model's tokenization function.
+        cl100k_base is good enough for Perplexity, per Perplexity documentation.
+        """
+        encoding = tiktoken.get_encoding("cl100k_base")
+        token_count = len(encoding.encode(text))
+        return token_count
 
 
 class PerplexityClientSync(PerplexityClient):
