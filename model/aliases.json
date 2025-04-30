@@ -10,5 +10,5 @@
   "gpt-mini": "gpt-4o-mini",
   "llama": "llama3.1:latest",
   "deepseek": "deepseek-chat",
-  "qwen": "qwen2.5:14b"
+  "qwen": "qwen3:14b"
 }

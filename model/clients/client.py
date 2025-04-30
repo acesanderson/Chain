@@ -47,6 +47,13 @@ class Client(ABC):
         """
         pass
 
+    @abstractmethod
+    def tokenize(self, model: str, text: str) -> int:
+        """
+        Get the token count for a text, per a given model's tokenization function.
+        """
+        pass
+
     def __repr__(self):
         """
         Standard repr.

@@ -3,6 +3,7 @@ from Chain.model.clients.load_env import load_env
 from openai import OpenAI, AsyncOpenAI
 import instructor
 from pydantic import BaseModel
+import tiktoken
 
 
 class OpenAIClient(Client):
@@ -17,6 +18,17 @@ class OpenAIClient(Client):
     def _get_api_key(self) -> str:
         api_key = load_env("OPENAI_API_KEY")
         return api_key
+
+    def tokenize(self, model: str, text: str) -> int:
+        """
+        Return the token count for a string, per model's tokenization function.
+        """
+        try:
+            encoding = tiktoken.encoding_for_model(model)
+        except KeyError:
+            encoding = tiktoken.get_encoding("cl100k_base")
+        token_count = len(encoding.encode(text))
+        return token_count
 
 
 class OpenAIClientSync(OpenAIClient):

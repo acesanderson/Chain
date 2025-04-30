@@ -149,6 +149,13 @@ class Model:
         else:
             return llm_output
 
+    def tokenize(self, text: str) -> int:
+        """
+        Get the token length for the given model.
+        Implementation at the client level.
+        """
+        return self._client.tokenize(model=self.model, text=text)
+
     def pretty(self, user_input):
         pretty = user_input.replace("\n", " ").replace("\t", " ").strip()
         return pretty[:60] + "..." if len(pretty) > 60 else pretty
