@@ -22,6 +22,18 @@ class GoogleClient(Client):
         api_key = load_env("GOOGLE_API_KEY")
         return api_key
 
+    def tokenize(self, model: str, text: str) -> int:
+        """
+        Get the token count per official tokenizer (through API).
+        """
+        # Example using google-generativeai SDK for estimation
+        import google.generativeai as genai
+
+        client = genai.GenerativeModel(model_name=model)
+        response = client.count_tokens(text)
+        token_count = response.total_tokens
+        return token_count
+
 
 class GoogleClientSync(GoogleClient):
     def _initialize_client(self):
