@@ -69,6 +69,18 @@ class OllamaClient(Client):
         with open(dir_path / "models.json", "w") as f:
             json.dump(model_list, f)
 
+    def tokenize(self, model: str, text: str) -> int:
+        """
+        Count tokens using Ollama's generate API via the official library.
+        This actually runs a text generation, but only only for one token to minimize compute, since we only want the count of input tokens.
+        """
+        response = ollama.generate(
+            model=model,
+            prompt=text,
+            options={"num_predict": 1},  # Set to minimal generation
+        )
+        return int(response.get("prompt_eval_count", 0))
+
 
 class OllamaClientSync(OllamaClient):
     def _initialize_client(self):
