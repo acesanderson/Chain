@@ -4,6 +4,7 @@ import json
 import itertools
 from Chain.cache.cache import ChainCache, CachedRequest
 from pydantic import BaseModel
+from typing import Optional
 
 dir_path = Path(__file__).resolve().parent
 
@@ -113,6 +114,7 @@ class Model:
         pydantic_model: BaseModel | None = None,
         raw=False,
         cache=True,
+        temperature: Optional[float] = None,  # None means just use the defaults
     ) -> BaseModel | str:
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
@@ -132,7 +134,9 @@ class Model:
                         print(f"Failed to parse cached request: {e}")
                 return cached_request
         if pydantic_model == None:
-            llm_output = self._client.query(self.model, input, raw=False)
+            llm_output = self._client.query(
+                self.model, input, raw=False, temperature=temperature
+            )
         else:
             obj, llm_output = self._client.query(
                 self.model, input, pydantic_model, raw=True

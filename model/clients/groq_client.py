@@ -8,6 +8,7 @@ import instructor
 from pydantic import BaseModel
 from groq import Groq
 import tiktoken
+from typing import Optional
 
 
 class GroqClient(Client):
@@ -35,6 +36,7 @@ class GroqClient(Client):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ):
         """
         Logic for this is unique to each client (sync / async).
@@ -65,6 +67,7 @@ class GroqClientSync(GroqClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
@@ -90,7 +93,11 @@ class GroqClientSync(GroqClient):
             return response.choices[0].message.content
 
     def stream(
-        self, model: str, input: "str | list", pydantic_model: BaseModel = None
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel = None,
+        temperature: Optional[float] = None,
     ) -> "str | BaseModel":
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]

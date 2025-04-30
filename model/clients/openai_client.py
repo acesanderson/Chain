@@ -4,6 +4,7 @@ from openai import OpenAI, AsyncOpenAI
 import instructor
 from pydantic import BaseModel
 import tiktoken
+from typing import Optional
 
 
 class OpenAIClient(Client):
@@ -45,26 +46,33 @@ class OpenAIClientSync(OpenAIClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
         if raw and pydantic_model:
             obj, raw_response = self._client.chat.completions.create_with_completion(
-                model=model, response_model=pydantic_model, messages=input
+                model=model,
+                response_model=pydantic_model,
+                messages=input,
             )
             raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
             return obj, raw_text
         # Default behavior is to return only the pydantic model.
         elif pydantic_model:
             obj = self._client.chat.completions.create(
-                model=model, response_model=pydantic_model, messages=input
+                model=model,
+                response_model=pydantic_model,
+                messages=input,
             )
             return obj
         # If you are not passing pydantic models, you will get the text response.
         else:
             response = self._client.chat.completions.create(
-                model=model, response_model=None, messages=input
+                model=model,
+                response_model=None,
+                messages=input,
             )
             return response.choices[0].message.content
 
@@ -75,7 +83,10 @@ class OpenAIClientSync(OpenAIClient):
             input = [{"role": "user", "content": input}]
 
         stream = self._client.chat.completions.create(
-            model=model, response_model=pydantic_model, messages=input, stream=True
+            model=model,
+            response_model=pydantic_model,
+            messages=input,
+            stream=True,
         )
         return stream
 
@@ -94,6 +105,7 @@ class OpenAIClientAsync(OpenAIClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]

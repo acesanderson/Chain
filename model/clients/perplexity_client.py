@@ -12,6 +12,7 @@ from openai import OpenAI
 import instructor
 from pydantic import BaseModel
 import tiktoken
+from typing import Optional
 
 
 class PerplexityClient(Client):
@@ -32,18 +33,6 @@ class PerplexityClient(Client):
     def _get_api_key(self):
         api_key = load_env("PERPLEXITY_API_KEY")
         return api_key
-
-    def query(
-        self,
-        model: str,
-        input: "str | list",
-        pydantic_model: BaseModel | None = None,
-        raw=False,
-    ):
-        """
-        Logic for this is unique to each client (sync / async).
-        """
-        pass
 
     def tokenize(self, model: str, text: str) -> int:
         """
@@ -74,6 +63,7 @@ class PerplexityClientSync(PerplexityClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]

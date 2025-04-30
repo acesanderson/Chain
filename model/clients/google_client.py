@@ -7,6 +7,7 @@ from Chain.model.clients.load_env import load_env
 from openai import OpenAI, AsyncOpenAI
 import instructor
 from pydantic import BaseModel
+from typing import Optional
 
 
 class GoogleClient(Client):
@@ -55,6 +56,7 @@ class GoogleClientSync(GoogleClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
@@ -80,7 +82,11 @@ class GoogleClientSync(GoogleClient):
             return response.choices[0].message.content
 
     def stream(
-        self, model: str, input: "str | list", pydantic_model: BaseModel | None = None
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel | None = None,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
@@ -111,6 +117,7 @@ class GoogleClientAsync(GoogleClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]

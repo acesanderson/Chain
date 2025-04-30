@@ -7,6 +7,7 @@ TODO: implement a class SDK as a protocol for all the library clients (openai, o
 """
 
 from abc import ABC, abstractmethod
+from typing import Optional
 
 
 class Client(ABC):
@@ -34,7 +35,7 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def query(self, model: str, input: "str | list", pydantic_model: "BaseModel" = None, raw=False) -> "BaseModel | str":  # type: ignore
+    def query(self, model: str, input: "str | list", pydantic_model: "BaseModel" = None, raw=False, temperature: Optional[float] = None) -> "BaseModel | str":  # type: ignore
         """
         All client subclasses must have a query function that can take:
         - a model name

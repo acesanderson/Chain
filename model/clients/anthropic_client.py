@@ -10,6 +10,7 @@ import instructor
 from pydantic import BaseModel
 import os
 import json
+from typing import Optional
 
 
 class AnthropicClient(Client):
@@ -60,6 +61,7 @@ class AnthropicClientSync(AnthropicClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         """
         Handles all synchronous requests from Anthropic's models.
@@ -133,6 +135,7 @@ class AnthropicClientAsync(AnthropicClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         """
         Handles all asynchronous requests from Anthropic's models.

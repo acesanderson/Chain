@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from openai import OpenAI, AsyncOpenAI
 import instructor
 import ollama
+from typing import Optional
 
 # Logic for updating the models.json and for setting the context sizes for Ollama models.
 from pathlib import Path
@@ -49,12 +50,6 @@ class OllamaClient(Client):
         Best thing about Ollama; no API key needed.
         """
         return ""
-
-    def query(self, model: str, input: "str | list", pydantic_model: BaseModel = None):
-        """
-        Logic for this is unique to each client (sync / async).
-        """
-        pass
 
     def update_ollama_models(self):
         """
@@ -99,6 +94,7 @@ class OllamaClientSync(OllamaClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
@@ -133,7 +129,11 @@ class OllamaClientSync(OllamaClient):
             return response.choices[0].message.content
 
     def stream(
-        self, model: str, input: "str | list", pydantic_model: BaseModel = None
+        self,
+        model: str,
+        input: "str | list",
+        pydantic_model: BaseModel = None,
+        temperature: Optional[float] = None,
     ) -> "str | BaseModel":
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
@@ -158,6 +158,7 @@ class OllamaClientAsync(OllamaClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         raw=False,
+        temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
