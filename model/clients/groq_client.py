@@ -4,11 +4,10 @@ For Groq's online models.
 
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
-from openai import OpenAI
 import instructor
 from pydantic import BaseModel
-import os
 from groq import Groq
+import tiktoken
 
 
 class GroqClient(Client):
@@ -41,6 +40,15 @@ class GroqClient(Client):
         Logic for this is unique to each client (sync / async).
         """
         pass
+
+    def tokenize(self, model: str, text: str) -> int:
+        """
+        TBD: implementing a tokenizer specific to Groq.
+        Not immediately finding in API implementation, so defaulting to tiktoken (highly inaccurate depending on model!)
+        """
+        encoding = tiktoken.get_encoding("cl100k_base")
+        token_count = len(encoding.encode(text))
+        return token_count
 
 
 class GroqClientSync(GroqClient):
