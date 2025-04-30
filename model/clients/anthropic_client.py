@@ -31,6 +31,19 @@ class AnthropicClient(Client):
         else:
             return os.getenv("ANTHROPIC_API_KEY")
 
+    def tokenize(self, model: str, text: str) -> int:
+        """
+        Get token count per official Anthropic api endpoint.
+        """
+        # Convert text to message format
+        anthropic_client = Anthropic(api_key=self._get_api_key())
+        messages = [{"role": "user", "content": text}]
+        token_count = anthropic_client.messages.count_tokens(
+            model=model,
+            messages=messages,
+        )
+        return token_count.input_tokens
+
 
 class AnthropicClientSync(AnthropicClient):
 
