@@ -53,7 +53,11 @@ class OpenAIClientSync(OpenAIClient):
         # Build our params; pydantic_model will be None if we didn't request it.
         params = {"model": model, "messages": input, "response_model": pydantic_model}
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
-        if not model.startswith("o"):
+        if temperature:
+            if model.startswith("o"):
+                raise ValueError("OpenAI reasoning models don't take temperature.")
+            if temperature < 0 or temperature > 2:
+                raise ValueError("OpenAI models need a temperature between 0 and 2.")
             params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
         if raw and pydantic_model:

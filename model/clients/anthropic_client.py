@@ -89,35 +89,35 @@ class AnthropicClientSync(AnthropicClient):
             raise ValueError(
                 f"Input not recognized as a valid input type: {type(input)}: {input}"
             )
-
+        params = {
+            "messages": input,
+            "model": model,
+            "response_model": pydantic_model,
+            "max_retries": 0,
+            "system": system,
+        }
         # set max_tokens based on model
         if model == "claude-3-5-sonnet-20240620":
-            max_tokens = 8192
+            params["max_tokens"] = 8192
         else:
-            max_tokens = 8192
-
+            params["max_tokens"] = 8192
+        if temperature:
+            if temperature < 0 or temperature > 1:
+                raise ValueError(
+                    "Temperature for Anthropic models needs to be between 0 and 1."
+                )
+            else:
+                params["temperature"] = temperature
         # Pydantic models always return the tuple at client level (Model does further parsing)
         if raw and pydantic_model:
             obj, raw_response = self._client.chat.completions.create_with_completion(
-                model=model,
-                response_model=pydantic_model,
-                messages=input,
-                max_tokens=max_tokens,
-                max_retries=0,
-                system=system,  # This is the system message we grabbed earlier
+                **params
             )
             raw_text = json.dumps(raw_response.content[0].input)
             return obj, raw_text
         # Return just the string.
         else:
-            response = self._client.chat.completions.create(
-                model=model,
-                response_model=None,
-                messages=input,
-                max_tokens=max_tokens,
-                max_retries=0,
-                system=system,  # This is the system message we grabbed earlier
-            )
+            response = self._client.chat.completions.create(**params)
             return response.content[0].text
 
 
@@ -163,44 +163,36 @@ class AnthropicClientAsync(AnthropicClient):
             raise ValueError(
                 f"Input not recognized as a valid input type: {type(input)}: {input}"
             )
-
+        params = {
+            "messages": input,
+            "model": model,
+            "response_model": pydantic_model,
+            "max_retries": 0,
+            "system": system,
+        }
         # set max_tokens based on model
         if model == "claude-3-5-sonnet-20240620":
-            max_tokens = 8192
+            params["max_tokens"] = 8192
         else:
-            max_tokens = 8192
+            params["max_tokens"] = 8192
+        if temperature:
+            if temperature < 0 or temperature > 1:
+                raise ValueError(
+                    "Temperature for Anthropic models needs to be between 0 and 1."
+                )
+            else:
+                params["temperature"] = temperature
         # call our client
         if raw and pydantic_model:
             obj, raw_response = (
-                await self._client.chat.completions.create_with_completion(  # type:ignore[no-untyped-call]
-                    model=model,
-                    response_model=pydantic_model,  # type:ignore[no-untyped-call]
-                    messages=input,
-                    max_tokens=max_tokens,
-                    max_retries=0,
-                    system=system,  # This is the system message we grabbed earlier
-                )
+                await self._client.chat.completions.create_with_completion(**params)
             )
             raw_text = json.dumps(raw_response.content[0].input)
             return obj, raw_text
         elif pydantic_model:
-            obj = await self._client.chat.completions.create(  # type:ignore[no-untyped-call]
-                model=model,
-                response_model=pydantic_model,  # type:ignore[no-untyped-call]
-                messages=input,
-                max_tokens=max_tokens,
-                max_retries=0,
-                system=system,  # This is the system message we grabbed earlier
-            )
+            obj = await self._client.chat.completions.create(**params)
             return obj
         # If you are not passing pydantic models, you will get the text response.
         else:
-            response = await self._client.chat.completions.create(  # type:ignore[no-untyped-call]
-                # model = self.model,
-                model=model,
-                max_tokens=max_tokens,
-                max_retries=0,
-                system=system,  # This is the system message we grabbed earlier
-                messages=input,
-            )
+            response = await self._client.chat.completions.create(**params)
             return response.content[0].text
