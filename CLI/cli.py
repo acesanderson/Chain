@@ -193,5 +193,5 @@ class CLI:
 
 
 if __name__ == "__main__":
-    c = CLI(name="Chain Chat")
+    c = CLI(name="Chain Chat", history_file=".cli_history.log")
     c.run()

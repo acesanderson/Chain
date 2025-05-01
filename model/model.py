@@ -117,7 +117,10 @@ class Model:
         temperature: Optional[float] = None,  # None means just use the defaults
     ) -> BaseModel | str:
         if verbose:
-            print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
+            print(
+                f"Model: {self.model}  Temperature: {temperature}  Query: "
+                + self.pretty(str(input))
+            )
         if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
@@ -175,6 +178,7 @@ class Model:
         input: str | list,
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
+        temperature: Optional[float] = None,
     ):
         if verbose:
             print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
@@ -189,7 +193,7 @@ class Model:
                 user_input=input, model=self.model, llm_output=results
             )
             Model._chain_cache.insert_cached_request(cached_request)
-        stream = self._client.stream(self.model, input, pydantic_model)
+        stream = self._client.stream(self.model, input, pydantic_model, temperature)
         return stream
 
 
