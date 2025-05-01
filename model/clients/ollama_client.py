@@ -106,6 +106,7 @@ class OllamaClientSync(OllamaClient):
                 response_model=pydantic_model,
                 messages=input,
                 extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
+                temperature=temperature,
             )
             raw_text = raw_response.choices[0].message.content
             return obj, raw_text
@@ -116,6 +117,7 @@ class OllamaClientSync(OllamaClient):
                 response_model=pydantic_model,
                 messages=input,
                 extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
+                temperature=temperature,
             )
             return obj
         # If you are not passing pydantic models, you will get the text response.
@@ -125,6 +127,7 @@ class OllamaClientSync(OllamaClient):
                 response_model=None,
                 messages=input,
                 extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
+                temperature=temperature,
             )
             return response.choices[0].message.content
 
