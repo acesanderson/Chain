@@ -123,8 +123,7 @@ class Chat:
         """
         Clear the chat history.
         """
-        if self.messagestore:
-            self.messagestore.clear()
+        self.console.clear()
 
     def command_show_history(self):
         """
