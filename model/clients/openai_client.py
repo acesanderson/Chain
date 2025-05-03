@@ -1,6 +1,6 @@
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
-from openai import OpenAI, AsyncOpenAI
+from openai import OpenAI, AsyncOpenAI, Stream
 import instructor
 from pydantic import BaseModel
 import tiktoken
@@ -81,15 +81,20 @@ class OpenAIClientSync(OpenAIClient):
         input: "str | list",
         pydantic_model: BaseModel | None = None,
         temperature: Optional[float] = None,
-    ) -> "str | BaseModel":
+    ) -> Stream:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
         # Build our params; pydantic_model will be None if we didn't request it.
-        params = {"model": model, "messages": input, "response_model": pydantic_model}
+        params = {
+            "model": model,
+            "messages": input,
+            "response_model": pydantic_model,
+            "stream": True,
+        }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if not model.startswith("o"):
             params.update({"temperature": temperature})
-        stream = self._client.chat.completions.create(**params)
+        stream: Stream = self._client.chat.completions.create(**params)
         return stream
 
 
