@@ -60,25 +60,23 @@ class GoogleClientSync(GoogleClient):
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
-
+        # Build our params; pydantic_model will be None if we didn't request it.
+        params = {"model": model, "messages": input, "response_model": pydantic_model}
+        # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
+        if temperature:
+            if temperature < 0 or temperature > 2:
+                raise ValueError("Gemini models need a temperature between 0 and 2.")
+            params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
         if raw and pydantic_model:
             obj, raw_response = self._client.chat.completions.create_with_completion(
-                model=model, response_model=pydantic_model, messages=input
+                **params
             )
             raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
             return obj, raw_text
-        # Default behavior is to return only the pydantic model.
-        elif pydantic_model:
-            obj = self._client.chat.completions.create(
-                model=model, response_model=pydantic_model, messages=input
-            )
-            return obj
-        # If you are not passing pydantic models, you will get the text response.
+        # Default is just return the response, i.e. just BaseModel or text.
         else:
-            response = self._client.chat.completions.create(
-                model=model, response_model=None, messages=input
-            )
+            response = self._client.chat.completions.create(**params)
             return response.choices[0].message.content
 
     def stream(
@@ -90,7 +88,13 @@ class GoogleClientSync(GoogleClient):
     ) -> str | BaseModel:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
-
+        # Build our params; pydantic_model will be None if we didn't request it.
+        params = {"model": model, "messages": input, "response_model": pydantic_model}
+        # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
+        if temperature:
+            if temperature < 0 or temperature > 2:
+                raise ValueError("OpenAI models need a temperature between 0 and 2.")
+            params.update({"temperature": temperature})
         stream = self._client.chat.completions.create(
             model=model, response_model=pydantic_model, messages=input, stream=True
         )
@@ -121,24 +125,21 @@ class GoogleClientAsync(GoogleClient):
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
+        # Build our params; pydantic_model will be None if we didn't request it.
+        params = {"model": model, "messages": input, "response_model": pydantic_model}
+        # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
+        if temperature:
+            if temperature < 0 or temperature > 2:
+                raise ValueError("Gemini models need a temperature between 0 and 2.")
+            params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
         if raw and pydantic_model:
             obj, raw_response = (
-                await self._client.chat.completions.create_with_completion(
-                    model=model, response_model=pydantic_model, messages=input
-                )
+                await self._client.chat.completions.create_with_completion(**params)
             )
             raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
             return obj, raw_text
-        # Default behavior is to return only the pydantic model.
-        elif pydantic_model:
-            obj = await self._client.chat.completions.create(
-                model=model, response_model=pydantic_model, messages=input
-            )
-            return obj
-        # If you are not passing pydantic models, you will get the text response.
+        # Default is just return the response, i.e. just BaseModel or text.
         else:
-            response = await self._client.chat.completions.create(
-                model=model, response_model=None, messages=input
-            )
+            response = await self._client.chat.completions.create(**params)
             return response.choices[0].message.content
