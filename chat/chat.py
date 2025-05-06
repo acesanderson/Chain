@@ -39,7 +39,7 @@ class Chat:
     Basic CLI chat implementation.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model = Model("gpt")):
         self.model = model
         self.console = Console(width=100)
         self.messagestore = None  # This will be initialized in the chat method.
