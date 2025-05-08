@@ -37,26 +37,19 @@ def cli_arg(abbreviation):
 class CLI:
     """
     CLI class for Chain module: use this to create command line-based chat applications.
-    This has a base set of parsers and commands that can be extended by the user.
     """
 
     def __init__(
         self,
         name: str,
-        history_file: str = "",
-        log_file: str = "",
-        pruning: bool = False,
     ):
         """
         Initialize the CLI object with a name and optional history and log files.
         """
         self.name = name
-        self.preferred_model = Model("claude")
-        self.console = Console(width=120)
-        self.messagestore = MessageStore(self.console, history_file, log_file, pruning)
         self.catalog = {}
-        self.parser = self.init_parser()
         self.raw = False
+        self.parser = self.init_parser()
 
     def init_parser(self):
         """
@@ -105,6 +98,22 @@ class CLI:
             elif args[arg] != None and args[arg] != []:
                 self.catalog[arg](args[arg])
         sys.exit()
+
+
+class ChainCLI(CLI):
+
+    def __init__(
+        self,
+        name: str = "Chain CLI",
+        history_file: str = "",
+        log_file: str = "",
+        pruning: bool = False,
+    ):
+        # Inherit super
+        super().__init__(name=name)
+        self.preferred_model = Model("claude")
+        self.console = Console(width=120)
+        self.messagestore = MessageStore(self.console, history_file, log_file, pruning)
 
     # Our arg methods
     @cli_arg("")
@@ -193,5 +202,5 @@ class CLI:
 
 
 if __name__ == "__main__":
-    c = CLI(name="Chain Chat", history_file=".cli_history.log")
+    c = ChainCLI(name="Chain Chat", history_file=".cli_history.log")
     c.run()
