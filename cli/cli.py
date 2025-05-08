@@ -21,7 +21,7 @@ from typing import Callable
 import sys
 
 
-def cli_arg(abbreviation):
+def arg(abbreviation):
     """
     Decorator for adding arguments to the CLI.
     This is used to define the abbreviation for the argument.
@@ -116,7 +116,7 @@ class ChainCLI(CLI):
         self.messagestore = MessageStore(self.console, history_file, log_file, pruning)
 
     # Our arg methods
-    @cli_arg("")
+    @arg("")
     def arg_query(self, param):
         """
         Send a message.
@@ -136,14 +136,14 @@ class ChainCLI(CLI):
         else:
             raise ValueError("No response found.")
 
-    @cli_arg("-hi")
+    @arg("-hi")
     def arg_history(self):
         """
         Print the last 10 messages.
         """
         self.messagestore.view_history()
 
-    @cli_arg("-l")
+    @arg("-l")
     def arg_last(self):
         """
         Print the last message.
@@ -157,7 +157,7 @@ class ChainCLI(CLI):
         else:
             self.console.print("No messages yet.")
 
-    @cli_arg("-g")
+    @arg("-g")
     def arg_get(self, param):
         """
         Get a specific answer from the history.
@@ -177,7 +177,7 @@ class ChainCLI(CLI):
         else:
             self.console.print("Message not found.")
 
-    @cli_arg("-c")
+    @arg("-c")
     def arg_clear(self):
         """
         Clear the message history.
@@ -185,7 +185,7 @@ class ChainCLI(CLI):
         self.messagestore.clear()
         self.console.print("Message history cleared.")
 
-    @cli_arg("-m")
+    @arg("-m")
     def arg_model(self, param):
         """
         Specify a model.
@@ -193,7 +193,7 @@ class ChainCLI(CLI):
         self.preferred_model = Model(param)
         self.console.print(f"Model set to {param}.")
 
-    @cli_arg("-r")
+    @arg("-r")
     def arg_raw(self):
         """
         Print raw output.
