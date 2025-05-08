@@ -10,7 +10,7 @@ from Chain.cache.cache import ChainCache
 from Chain.chat.chat import Chat
 from Chain.api.server.ChainRequest import ChainRequest
 from Chain.api.client.ChainClient import ChainClient
-from Chain.cli.cli import CLI, ChainCLI
+from Chain.cli.cli import CLI, ChainCLI, arg
 
 
 __all__ = [
@@ -31,4 +31,5 @@ __all__ = [
     "ChainClient",
     "CLI",
     "ChainCLI",
+    "arg",
 ]
