@@ -89,22 +89,20 @@ class CLI:
         return _parser
 
     def run(self):
-        args = self.parser.parse_args()
-        args = vars(args)
-
+        parsed_args = self.parser.parse_args()
+        parsed_args = vars(parsed_args)
         # Detect null state
-        is_null_state = all(
-            arg is None or arg == [] or arg is False for arg in args.values()
-        )
-        if is_null_state and hasattr(self, "arg_default"):
+        is_null_state = all(not arg for arg in parsed_args.values())
+        if is_null_state and hasattr(self, "default"):
             self.default()
         else:
-            for arg in args:
-                if str(args[arg]) in ["True", "False"]:
-                    if args[arg]:
+            # Not null, parse the arguments
+            for arg in parsed_args:
+                if str(parsed_args[arg]) in ["True", "False"]:
+                    if parsed_args[arg]:
                         self.catalog[arg]()
-                elif args[arg] != None and args[arg] != []:
-                    self.catalog[arg](args[arg])
+                elif parsed_args[arg] != None and parsed_args[arg] != []:
+                    self.catalog[arg](parsed_args[arg])
             sys.exit()
 
     def default(self):
