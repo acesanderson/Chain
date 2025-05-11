@@ -91,12 +91,28 @@ class CLI:
     def run(self):
         args = self.parser.parse_args()
         args = vars(args)
-        for arg in args:
-            if str(args[arg]) in ["True", "False"]:
-                if args[arg]:
-                    self.catalog[arg]()
-            elif args[arg] != None and args[arg] != []:
-                self.catalog[arg](args[arg])
+
+        # Detect null state
+        is_null_state = all(
+            arg is None or arg == [] or arg is False for arg in args.values()
+        )
+        if is_null_state and hasattr(self, "arg_default"):
+            self.default()
+        else:
+            for arg in args:
+                if str(args[arg]) in ["True", "False"]:
+                    if args[arg]:
+                        self.catalog[arg]()
+                elif args[arg] != None and args[arg] != []:
+                    self.catalog[arg](args[arg])
+            sys.exit()
+
+    def default(self):
+        """
+        Default argument. This is the default function that runs if no other arguments are provided.
+        Can be overridden by inheriting classes.
+        """
+        self.parser.print_help()
         sys.exit()
 
 
