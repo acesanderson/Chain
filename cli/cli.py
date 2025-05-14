@@ -37,6 +37,8 @@ def arg(abbreviation):
 class CLI:
     """
     CLI class for Chain module: use this to create command line-based chat applications.
+    Define your arguments with the prefix "arg_" and decorate them with the @arg decorator.
+    You can override the default method to change the default behavior. (def default(self):)
     """
 
     def __init__(
@@ -93,8 +95,8 @@ class CLI:
         parsed_args = vars(parsed_args)
         # Detect null state
         is_null_state = all(not arg for arg in parsed_args.values())
-        if is_null_state and hasattr(self, "default"):
-            self.default()
+        if is_null_state and hasattr(self, "_default"):
+            self._default()
         else:
             # Not null, parse the arguments
             for arg in parsed_args:
@@ -105,7 +107,7 @@ class CLI:
                     self.catalog[arg](parsed_args[arg])
             sys.exit()
 
-    def default(self):
+    def _default(self):
         """
         Default argument. This is the default function that runs if no other arguments are provided.
         Can be overridden by inheriting classes.

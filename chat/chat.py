@@ -28,7 +28,7 @@ from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException
 from functools import partial
-from typing import Callable
+from typing import Callable, Optional
 import sys
 import inspect
 from pathlib import Path
@@ -39,10 +39,21 @@ class Chat:
     Basic CLI chat implementation.
     """
 
-    def __init__(self, model: Model = Model("gpt")):
+    def __init__(
+        self,
+        model: Model = Model("gpt"),
+        messagestore: Optional[MessageStore] = None,
+        console: Optional[Console] = None,
+    ):
+        """
+        User can inject their own messagestore, console, and model, otherwise defaults are used.
+        """
         self.model = model
-        self.console = Console(width=100)
-        self.messagestore = None  # This will be initialized in the chat method.
+        if not console:
+            self.console = Console(width=100)
+        else:
+            self.console = console
+        self.messagestore = messagestore  # This will be initialized in the chat method.
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         self.system_message: Message | None = None
         self.commands = self.get_commands()
@@ -170,10 +181,12 @@ class Chat:
     def chat(self):
         self.console.clear()
         self.console.print(self.welcome_message)
-        Chain._message_store = MessageStore(
-            console=self.console, log_file=self.log_file
-        )
-        self.messagestore = Chain._message_store
+        # If user passed a messagestore already, use that, otherwise declare a new one.
+        if not self.messagestore:
+            self.messagestore = MessageStore(
+                console=self.console, log_file=self.log_file
+            )
+        Chain._message_store = self.messagestore
         if self.system_message:
             self.messagestore.add(self.system_message)
         try:
