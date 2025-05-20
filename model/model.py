@@ -15,7 +15,6 @@ class Model:
     # Because models is a class-level variable (Model.models, not model.models).
     # We want it to dynamically load the models from the models file everytime you access the attribute, because Ollama models can change.
     @classmethod
-    @property
     def models(cls):
         with open(dir_path / "clients/models.json") as f:
             return json.load(f)
@@ -50,7 +49,7 @@ class Model:
 
         # Check data quality.
         for value in aliases.values():
-            if value not in list(itertools.chain.from_iterable(cls.models.values())):
+            if value not in list(itertools.chain.from_iterable(cls.models().values())):
                 raise ValueError(
                     f"WARNING: This model declared in aliases.json is not available: {value}."
                 )
@@ -58,7 +57,7 @@ class Model:
         if model in aliases.keys():
             model = aliases[model]
         elif model in list(
-            itertools.chain.from_iterable(cls.models.values())
+            itertools.chain.from_iterable(cls.models().values())
         ):  # any other model we support (flattened the list)
             model = model
         else:
@@ -72,7 +71,7 @@ class Model:
         Setting client_type for Model object is necessary for loading the correct client in the query functions.
         Returns a tuple with client type (which informs the module title) and the client class name (which is used to instantiate the client).
         """
-        model_list = self.__class__.models
+        model_list = self.__class__.models()
         if model in model_list["openai"]:
             return "openai", "OpenAIClientSync"
         elif model in model_list["anthropic"]:
