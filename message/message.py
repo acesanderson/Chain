@@ -4,6 +4,17 @@ Very lightweight pydantic class, used to validate messages.
 
 from pydantic import BaseModel
 from Chain.prompt.prompt import Prompt
+from enum import Enum
+
+
+class Role(Enum):
+    """
+    Enum for the role of the message.
+    """
+
+    USER = "user"
+    ASSISTANT = "assistant"
+    SYSTEM = "system"
 
 
 class Message(BaseModel):
@@ -12,7 +23,7 @@ class Message(BaseModel):
     System roles can have some weirdness (like with Anthropic), but role/content is standard.
     """
 
-    role: str
+    role: str | Role
     content: str | BaseModel | list[BaseModel]
 
     def __str__(self):
