@@ -72,7 +72,7 @@ class AnthropicImageMessage(Message):
     """
 
     role: str
-    content: list[AnthropicImageContent | TextContent]  # type: ignore
+    content: list[AnthropicImageContent | AnthropicTextContent]  # type: ignore
 
 
 # OpenAI-specific message classes
