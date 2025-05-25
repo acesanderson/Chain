@@ -77,27 +77,39 @@ class AnthropicImageMessage(Message):
 
 # OpenAI-specific message classes
 """
-Role is the same; but content is different.
-        "content": [
-            {"type": "input_text", "text": prompt},
-            {"type": "input_image", "image_url": f"data:image/png;base64,{b64_image}"},
-        ],
+OpenAI expects this structure:
+{
+    "content": [
+        {"type": "text", "text": prompt},
+        {
+            "type": "image_url", 
+            "image_url": {
+                "url": "data:image/png;base64,{b64_image}"
+            }
+        }
+    ]
+}
 """
 
 
 class OpenAITextContent(BaseModel):
-    type: str = "input_text"
+    type: str = "text"  # Changed from "input_text"
     text: str = Field(description="The text content of the message, i.e. the prompt.")
+
+
+class OpenAIImageUrl(BaseModel):
+    """Nested object for OpenAI image URL structure"""
+
+    url: str = Field(description="The data URL with base64 image")
 
 
 class OpenAIImageContent(BaseModel):
     """
-    image_url is a special string, composed of:
-    data:{mime_type};base64,{b64_image}
+    OpenAI requires image_url to be an object, not a string
     """
 
-    type: str = "input_image"
-    image_url: str = Field(description="The image URL, i.e. the base64-encoded image.")
+    type: str = "image_url"
+    image_url: OpenAIImageUrl = Field(description="The image URL object")
 
 
 class OpenAIImageMessage(Message):
@@ -105,7 +117,7 @@ class OpenAIImageMessage(Message):
     ImageMessage should have a single ImageContent and a single TextContent object.
 
         role: str
-        content: list[ImageContent | TextContent]
+        content: list[OpenAIImageContent | OpenAITextContent]
     """
 
     role: str
@@ -121,6 +133,9 @@ class ImageMessage(BaseModel):
         text_content: str
         image_content: str
         mime_type: str
+
+    You can splat it to an OpenAI or Anthropic message; with the to_openai() and to_anthropic() methods.
+    Model dump into the API query.
     """
 
     role: str = Field(
@@ -163,7 +178,18 @@ class ImageMessage(BaseModel):
         """
         Converts the ImageMessage to the OpenAI format.
         """
-        image_url = f"data:{self.mime_type};base64,{self.image_content}"
-        image_content = OpenAIImageContent(image_url=image_url)
+        # Create the nested URL object
+        image_url_obj = OpenAIImageUrl(
+            url=f"data:{self.mime_type};base64,{self.image_content}"
+        )
+
+        # Create image content with the nested object
+        image_content = OpenAIImageContent(image_url=image_url_obj)
+
+        # Create text content
         text_content = OpenAITextContent(text=self.text_content)
-        return OpenAIImageMessage(role=self.role, content=[image_content, text_content])
+
+        return OpenAIImageMessage(
+            role=self.role,
+            content=[text_content, image_content],  # Note: text first, then image
+        )

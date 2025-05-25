@@ -3,6 +3,8 @@ import importlib
 import json
 import itertools
 from Chain.cache.cache import ChainCache, CachedRequest
+from Chain.message.message import Message
+from Chain.message.imagemessage import ImageMessage
 from pydantic import BaseModel
 from typing import Optional
 
@@ -108,7 +110,7 @@ class Model:
 
     def query(
         self,
-        input: str | list,
+        input: str | list | Message | ImageMessage,
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
         raw=False,
