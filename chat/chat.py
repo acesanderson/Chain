@@ -170,7 +170,6 @@ class Chat:
         """
         Takes either a string or a list of Message objects.
         """
-        breakpoint()
         if self.messagestore:
             self.messagestore.add_new(role="user", content=str(input[-1].content))
         response = str(self.model.query(input, verbose=False))
