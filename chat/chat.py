@@ -24,6 +24,7 @@ TODO:
 """
 
 from Chain import Chain, Model, MessageStore, Message
+from Chain.message.imagemessage import ImageMessage
 from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException
@@ -57,6 +58,7 @@ class Chat:
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         self.system_message: Message | None = None
         self.commands = self.get_commands()
+        self.clipboard_image: str | None = None
         self.log_file: str | Path = ""  # Off by default, but can be initialized.
 
     def parse_input(self, input: str) -> Callable | partial | None:
@@ -164,6 +166,43 @@ class Chat:
             self.console.print(f"Set model to {param}", style="green")
         except ValueError:
             self.console.print("Invalid model.", style="red")
+
+    def command_paste_image(self):
+        """
+        Use this when you have an image in clipboard that you want to submit as context for LLM.
+        This gets saved as self.clipboard_image.
+        """
+        import os
+
+        if "SSH_CLIENT" in os.environ or "SSH_TTY" in os.environ:
+            self.console.print("Image paste not available over SSH.", style="red")
+            return
+
+        from PIL import ImageGrab
+        import base64, io
+
+        image = ImageGrab.grabclipboard()
+        if image:
+            buffer = io.BytesIO()
+            image.save(buffer, format="PNG")
+            img_base64 = base64.b64encode(buffer.getvalue()).decode()
+            # Save for next query
+            self.clipboard_image = img_base64
+            self.console.print(
+                "Image captured! Next query will include this image.", style="green"
+            )
+        else:
+            self.console.print("No image detected.", style="red")
+
+    def command_wipe_image(self):
+        """
+        Delete image from memory.
+        """
+        if self.clipboard_image:
+            self.clipboard_image = None
+            self.console.print("Image deleted.", style="green")
+        else:
+            self.console.print("No image to delete.", style="red")
 
     # Main query method
     def query_model(self, input: list[Message]) -> str | None:
