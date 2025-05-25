@@ -118,7 +118,9 @@ class ImageMessage(BaseModel):
     ImageMessage should have a single ImageContent and a single TextContent object.
 
         role: str
-        content: list[ImageContent | TextContent]
+        text_content: str
+        image_content: str
+        mime_type: str
     """
 
     role: str = Field(
@@ -140,6 +142,9 @@ class ImageMessage(BaseModel):
         # Validate the image content
         if not is_base64_simple(self.image_content):
             raise ValueError("Image content must be a base64-encoded string.")
+
+    def __repr__(self):
+        return f"ImageMessage(role={self.role}, text_content={self.text_content}, image_content={self.image_content:<.10}..., mime_type={self.mime_type})"
 
     def to_anthropic(self) -> AnthropicImageMessage:
         """
