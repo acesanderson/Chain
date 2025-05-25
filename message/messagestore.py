@@ -23,8 +23,7 @@ from Chain.message.message import Message
 from rich.console import Console
 from rich.rule import Rule
 from pydantic import BaseModel
-import os
-import pickle
+import os, pickle
 from pathlib import Path
 
 
