@@ -45,3 +45,15 @@ class Prompt:
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
         )
         return f"{self.__class__.__name__}({attributes})"
+
+
+class ImagePrompt(Prompt):
+    """
+    Extends the Prompt class to include image content.
+    You need to pass in the image content as a base64 string and the mimetype.
+    """
+
+    def __init__(self, prompt_string: str, mimetype: str, image_content: str):
+        super().__init__(prompt_string)
+        self.mimetype = mimetype
+        self.image_content = image_content

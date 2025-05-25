@@ -4,6 +4,7 @@ Client subclass for Anthropic models.
 
 from Chain.model.clients.client import Client
 from Chain.message.message import Message
+from Chain.message.imagemessage import ImageMessage
 from Chain.model.clients.load_env import load_env
 from anthropic import Anthropic, AsyncAnthropic
 import instructor
@@ -58,7 +59,7 @@ class AnthropicClientSync(AnthropicClient):
     def query(
         self,
         model: str,
-        input: "str | list",
+        input: str | list | Message | ImageMessage,
         pydantic_model: BaseModel | None = None,
         raw=False,
         temperature: Optional[float] = None,
@@ -75,6 +76,10 @@ class AnthropicClientSync(AnthropicClient):
         system = ""
         if isinstance(input, str):
             input = [Message(role="user", content=input)]
+        elif isinstance(input, ImageMessage):
+            input = [input.to_anthropic().model_dump()]
+        elif isinstance(input, Message):
+            input = [input.model_dump()]
         elif isinstance(input, list):
             input = input
             # This is anthropic quirk; we remove the system message and set it as a query parameter.
@@ -85,6 +90,17 @@ class AnthropicClientSync(AnthropicClient):
                 for message in input:
                     if message.role == "system":
                         message.role = "user"
+            # Process image messages if present; if there is an ImageMessage, change it to a dict: ImageMessage.to_anthropic().model_dump()
+            for message in input:
+                if isinstance(message, ImageMessage):
+                    input = [
+                        (
+                            message.to_anthropic().model_dump()
+                            if isinstance(message, ImageMessage)
+                            else message
+                        )
+                        for message in input
+                    ]
         else:
             raise ValueError(
                 f"Input not recognized as a valid input type: {type(input)}: {input}"
