@@ -24,7 +24,6 @@ TODO:
 """
 
 from Chain import Chain, Model, MessageStore, Message
-from Chain.message.imagemessage import ImageMessage
 from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException
