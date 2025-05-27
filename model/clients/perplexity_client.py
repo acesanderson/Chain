@@ -8,6 +8,8 @@ For this reason, we define a Pydantic class as our framework is fine with BaseMo
 
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
+from Chain.message.message import Message
+from Chain.message.imagemessage import ImageMessage
 from openai import OpenAI
 import instructor
 from pydantic import BaseModel
@@ -60,7 +62,7 @@ class PerplexityClientSync(PerplexityClient):
     def query(
         self,
         model: str,
-        input: "str | list",
+        input: str | list | Message | ImageMessage,
         pydantic_model: BaseModel | None = None,
         raw=False,
         temperature: Optional[float] = None,
