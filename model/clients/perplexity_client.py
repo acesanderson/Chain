@@ -8,6 +8,8 @@ For this reason, we define a Pydantic class as our framework is fine with BaseMo
 
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
+from Chain.message.message import Message
+from Chain.message.imagemessage import ImageMessage
 from openai import OpenAI
 import instructor
 from pydantic import BaseModel
@@ -60,22 +62,29 @@ class PerplexityClientSync(PerplexityClient):
     def query(
         self,
         model: str,
-        input: "str | list",
+        input: str | list | Message | ImageMessage,
         pydantic_model: BaseModel | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
-        """
-        Don't bother with function calling with Perplexity -- it already structures its responses (i.e. citations).
-        """
+        elif isinstance(input, ImageMessage):
+            input = [input.to_openai().model_dump()]
+        elif isinstance(input, Message):
+            input = [input.model_dump()]
+        elif isinstance(input, list):
+            input = [
+                (
+                    item.to_openai().model_dump()
+                    if isinstance(item, ImageMessage)
+                    else item.model_dump()
+                )
+                for item in input
+            ]
+        params = {"model": model, "messages": input, "response_model": pydantic_model}
         # call our client
-        response = self._client.chat.completions.create(
-            model=model,
-            response_model=None,
-            messages=input,
-        )
+        response = self._client.chat.completions.create(**params)
         # This is the custom handling for Perplexity -- just put citations in xml tag.
         perplexity_response = (
             response.choices[0].message.content
