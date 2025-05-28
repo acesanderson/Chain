@@ -23,7 +23,7 @@ TODO:
     - tools
 """
 
-from Chain import Chain, Model, MessageStore, Message
+from Chain import Chain, Model, MessageStore, Message, ImageMessage
 from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException
@@ -57,7 +57,6 @@ class Chat:
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         self.system_message: Message | None = None
         self.commands = self.get_commands()
-        self.clipboard_image: str | None = None
         self.log_file: str | Path = ""  # Off by default, but can be initialized.
 
     def parse_input(self, input: str) -> Callable | partial | None:
@@ -177,19 +176,38 @@ class Chat:
             self.console.print("Image paste not available over SSH.", style="red")
             return
 
+        import warnings
         from PIL import ImageGrab
         import base64, io
 
-        image = ImageGrab.grabclipboard()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # Suppress PIL warnings
+            image = ImageGrab.grabclipboard()
+
         if image:
             buffer = io.BytesIO()
             image.save(buffer, format="PNG")
             img_base64 = base64.b64encode(buffer.getvalue()).decode()
             # Save for next query
-            self.clipboard_image = img_base64
-            self.console.print(
-                "Image captured! Next query will include this image.", style="green"
+            self.console.print("Image captured! What is your query?", style="green")
+            user_input = self.console.input(
+                "[bold green]Query about image[/bold green]: "
             )
+            # Build our ImageMessage
+            text_content = user_input
+            image_content = img_base64
+            mime_type = "image/png"
+            role = "user"
+            imagemessage = ImageMessage(
+                role=role,
+                text_content=text_content,
+                image_content=image_content,
+                mime_type=mime_type,
+            )
+            self.messagestore.add(imagemessage)
+            response = self.query_model([self.messagestore.last()])
+            self.console.print(response)
+
         else:
             self.console.print("No image detected.", style="red")
 
@@ -204,12 +222,10 @@ class Chat:
             self.console.print("No image to delete.", style="red")
 
     # Main query method
-    def query_model(self, input: list[Message]) -> str | None:
+    def query_model(self, input: list[Message | ImageMessage]) -> str | None:
         """
         Takes either a string or a list of Message objects.
         """
-        if self.messagestore:
-            self.messagestore.add_new(role="user", content=str(input[-1].content))
         response = str(self.model.query(input, verbose=False))
         if self.messagestore:
             self.messagestore.add_new(role="assistant", content=str(response))

@@ -125,7 +125,7 @@ class OpenAIImageMessage(Message):
 
 
 # Our base ImageMessage class, with a factory method to convert to OpenAI or Anthropic format.
-class ImageMessage(BaseModel):
+class ImageMessage(Message):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
 
@@ -138,9 +138,7 @@ class ImageMessage(BaseModel):
     Model dump into the API query.
     """
 
-    role: str = Field(
-        description="The role of the message, e.g. 'user', 'assistant', or 'system'."
-    )
+    content: list[BaseModel] = Field(default=None)
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
     )
@@ -149,8 +147,10 @@ class ImageMessage(BaseModel):
         description="The MIME type of the image, e.g. 'image/jpeg', 'image/png'."
     )
 
-    def __init__(self, **data):
-        super().__init__(**data)
+    def model_post_init(self, __context) -> None:
+        """Called after model initialization to construct content field."""
+        self.content = [self.image_content, self.text_content]
+
         # Validate the MIME type
         if self.mime_type not in format_to_mime.values():
             raise ValueError(f"Unsupported MIME type: {self.mime_type}")
