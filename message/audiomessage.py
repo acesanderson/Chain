@@ -8,16 +8,10 @@ We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthro
 
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
+from Chain.message.imagemessage import OpenAITextContent
+from typing import Literal
+from pathlib import Path
 import re
-
-# Map PIL formats to MIME types
-format_to_mime = {
-    "jpeg": "image/jpeg",
-    "jpg": "image/jpeg",
-    "png": "image/png",
-    "gif": "image/gif",
-    "webp": "image/webp",
-}
 
 
 def is_base64_simple(s):
@@ -27,101 +21,118 @@ def is_base64_simple(s):
     return bool(re.match(r"^[A-Za-z0-9+/]*={0,2}$", s)) and len(s) % 4 == 0
 
 
-# Anthropic schema
+# Gemini schema
 """
-"content": [
-    {
-        "type": "image", 
-        "source": {
-            "type": "base64",
-            "media_type": "image/jpeg",
-            "data": image_base64
-        }
-    },
-    {
-        "type": "text",
-        "text": "What's in this image?"
-    }
-]
+Gemini (through openai sdk) supports audio input through the chat/completions endpoint. It expects a message format like this:
+{
+    "role": "user",
+    "content": [
+        {
+            "type": "text",
+            "text": "Transcribe this audio",
+        },
+        {
+            "type": "input_audio",
+            "input_audio": {"data": base64_audio, "format": "mp3"},
+        },
+    ],
+}
+
 """
 
 
-# Anthropic-specific message classes
-class AnthropicTextContent(BaseModel):
-    type: str = "text"
-    text: str
-
-
-class AnthropicImageSource(BaseModel):
-    type: str = "base64"
-    media_type: str
-    data: str
-
-
-class AnthropicImageContent(BaseModel):
-    type: str = "image"
-    source: AnthropicImageSource
-
-
-class AnthropicImageMessage(Message):
+class GeminiInputAudio(BaseModel):
     """
-    ImageMessage should have a single ImageContent and a single TextContent object.
+    We are using Gemini through the OpenAI SDK, so we need to define the input audio format.
+    Gemini usually supports a range of audio filetypes, but when used with OpenAI SDK, it's only mp3 and wav.
+    """
+
+    data: str = Field(description="The base64-encoded audio data.")
+    format: Literal["mp3", "wav"] = Field(
+        description="The format of the audio data, must be 'mp3' or 'wav'."
+    )
+
+
+class GeminiAudioContent(BaseModel):
+    """
+    Gemini AudioContent should have a single AudioContent object.
+    NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
+
+        type: str
+        input_audio: dict
+    """
+
+    type: str = Field(
+        default="input_audio", description="The type of content, must be 'input_audio'."
+    )
+    input_audio: GeminiInputAudio = Field(
+        description="The input audio data, must be a base64-encoded string with format 'mp3' or 'wav'."
+    )
+
+
+class GeminiAudioMessage(Message):
+    """
+    Gemini AudioMessage should have a single AudioContent and a single TextContent object.
+    NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
 
         role: str
-        content: list[ImageContent | TextContent]
+        content: list[GeminiAudioContent | OpenAITextContent]
     """
 
-    role: str
-    content: list[AnthropicImageContent | AnthropicTextContent]  # type: ignore
+    role: str  # type: ignore
+    content: list[GeminiAudioContent | OpenAITextContent]  # type: ignore
 
 
 # OpenAI-specific message classes
 """
-OpenAI expects this structure:
-{
-    "content": [
-        {"type": "text", "text": prompt},
-        {
-            "type": "image_url", 
-            "image_url": {
-                "url": "data:image/png;base64,{b64_image}"
-            }
-        }
-    ]
-}
+Note: OpenAI has a completely different endpoint for audio transcriptions, so we need to handle that separately.
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+with open("example.m4a", "rb") as audio_file:
+    audio_file = open("example.m4a", "rb")
+
+transcription = client.audio.transcriptions.create(model="whisper-1", file=audio_file)
 """
 
 
-class OpenAITextContent(BaseModel):
-    type: str = "text"  # Changed from "input_text"
-    text: str = Field(description="The text content of the message, i.e. the prompt.")
+class OpenAIAudioMessage(Message):
+    role: str = Field(
+        description="The role of the message, e.g. 'user', 'assistant', or 'system'."
+    )
+    file: str | Path
 
 
-class OpenAIImageUrl(BaseModel):
-    """Nested object for OpenAI image URL structure"""
-
-    url: str = Field(description="The data URL with base64 image")
-
-
-class OpenAIImageContent(BaseModel):
-    """
-    OpenAI requires image_url to be an object, not a string
-    """
-
-    type: str = "image_url"
-    image_url: OpenAIImageUrl = Field(description="The image URL object")
-
-
-class OpenAIImageMessage(Message):
-    """
-    ImageMessage should have a single ImageContent and a single TextContent object.
-
-        role: str
-        content: list[OpenAIImageContent | OpenAITextContent]
-    """
-
-    role: str
-    content: list[OpenAIImageContent | OpenAITextContent]  # type: ignore
+# class OpenAITextContent(BaseModel):
+#     type: str = "text"  # Changed from "input_text"
+#     text: str = Field(description="The text content of the message, i.e. the prompt.")
+#
+#
+# class OpenAIImageUrl(BaseModel):
+#     """Nested object for OpenAI image URL structure"""
+#
+#     url: str = Field(description="The data URL with base64 image")
+#
+#
+# class OpenAIImageContent(BaseModel):
+#     """
+#     OpenAI requires image_url to be an object, not a string
+#     """
+#
+#     type: str = "image_url"
+#     image_url: OpenAIImageUrl = Field(description="The image URL object")
+#
+#
+# class OpenAIImageMessage(Message):
+#     """
+#     ImageMessage should have a single ImageContent and a single TextContent object.
+#
+#         role: str
+#         content: list[OpenAIImageContent | OpenAITextContent]
+#     """
+#
+#     role: str
+#     content: list[OpenAIImageContent | OpenAITextContent]  # type: ignore
+#
 
 
 # Our base ImageMessage class, with a factory method to convert to OpenAI or Anthropic format.

@@ -51,9 +51,13 @@ class CLI:
         self.name = name
         self.catalog = {}
         self.raw = False
-        self.parser = self.init_parser()
+        self.parser = self._init_parser()
+        self.console = Console(width=120)
 
-    def init_parser(self):
+    def _print_markdown(self, markdown: str):
+        print_markdown(markdown, console=self.console)
+
+    def _init_parser(self):
         """
         Initialize the parser with all our arguments.
         """
@@ -99,12 +103,15 @@ class CLI:
             self._default()
         else:
             # Not null, parse the arguments
+            ## Start with the known "state setters"
+            for arg in ["raw"]:
+                if arg in parsed_args and parsed_args[arg]:
+                    self.catalog[arg]()
+            ## Then the remaining args
             for arg in parsed_args:
-                if str(parsed_args[arg]) in ["True", "False"]:
-                    if parsed_args[arg]:
-                        self.catalog[arg]()
-                elif parsed_args[arg] != None and parsed_args[arg] != []:
-                    self.catalog[arg](parsed_args[arg])
+                if parsed_args[arg] and arg not in ["raw"]:
+                    self.catalog[arg]()
+            # TBD: the above is a hack that reflects the fact that some arguments are just flags, and should not be executed. One potential implementation would be to have TWO decorators; a flag and the arg decorator, where flags are not executed but rather accessed by the actual arg functions.
             sys.exit()
 
     def _default(self):
@@ -128,8 +135,9 @@ class ChainCLI(CLI):
         # Inherit super
         super().__init__(name=name)
         self.preferred_model = Model("claude")
-        self.console = Console(width=120)
         self.messagestore = MessageStore(self.console, history_file, log_file, pruning)
+        if history_file:
+            self.messagestore.load()
 
     # Our arg methods
     @arg("")
@@ -148,7 +156,7 @@ class ChainCLI(CLI):
             if self.raw:
                 print(response)
             else:
-                print_markdown(str(response.content), console=self.console)
+                self._print_markdown(str(response.content))
         else:
             raise ValueError("No response found.")
 
@@ -169,7 +177,7 @@ class ChainCLI(CLI):
             if self.raw:
                 print(last_message.content)
             else:
-                print_markdown(str(last_message.content), console=self.console)
+                self._print_markdown(str(last_message.content))
         else:
             self.console.print("No messages yet.")
 
@@ -187,7 +195,7 @@ class ChainCLI(CLI):
                 if self.raw:
                     print(retrieved_message.content)
                 else:
-                    print_markdown(str(retrieved_message.content), console=self.console)
+                    self._print_markdown(str(retrieved_message.content))
             except ValueError:
                 self.console.print("Message not found.")
         else:
