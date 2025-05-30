@@ -93,24 +93,24 @@ def llm(func: Callable = None, *, model="haiku") -> Callable:  # Note the *
         return decorator(func)
 
 
-@llm
-def example_prompt():
-    """
-    Name ten mammals.
-    """
+# @llm
+# def example_prompt():
+#     """
+#     Name ten mammals.
+#     """
+#
 
-
-@llm
-def bad_example1(number: str, thing: str):
-    """Name {{number}} cats."""  # Missing {{thing}}
-
-
-@llm(model="gemini")
-def another(number: str, thing: str):
-    """
-    Name {{number}} {{thinxxxg}}s.
-    """
-
+# @llm
+# def bad_example1(number: str, thing: str):
+#     """Name {{number}} cats."""  # Missing {{thing}}
+#
+#
+# @llm(model="gemini")
+# def another(number: str, thing: str):
+#     """
+#     Name {{number}} {{thinxxxg}}s.
+#     """
+#
 
 # print(example_prompt())
 # print(another("5", "birds"))
