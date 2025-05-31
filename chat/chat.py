@@ -32,6 +32,9 @@ from typing import Callable, Optional
 import sys
 import inspect
 from pathlib import Path
+import readline  # Enables completion in the console
+
+_ = readline.get_current_history_length()
 
 
 class Chat:
@@ -50,7 +53,7 @@ class Chat:
         """
         self.model = model
         if not console:
-            self.console = Console(width=100)
+            self.console = Console(width=120)
         else:
             self.console = console
         self.messagestore = messagestore  # This will be initialized in the chat method.
