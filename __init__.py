@@ -14,6 +14,7 @@ from Chain.chat.chat import Chat
 from Chain.api.server.ChainRequest import ChainRequest
 from Chain.api.client.ChainClient import ChainClient
 from Chain.cli.cli import CLI, ChainCLI, arg
+from Chain.decorator.decorator import llm
 
 
 __all__ = [
@@ -36,4 +37,5 @@ __all__ = [
     "CLI",
     "ChainCLI",
     "arg",
+    "llm",
 ]
