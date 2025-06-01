@@ -4,6 +4,9 @@ from Chain.chain.chain import Chain
 from typing import Callable
 import inspect, re
 
+# Constants
+param_string_pattern = re.compile("{{(.+)}}")
+
 
 def _validate_template_params(func: Callable) -> None:
     """
@@ -55,6 +58,29 @@ def _validate_template_params(func: Callable) -> None:
         )
 
 
+def _wrap_params(prompt: str) -> str:
+    """
+    Generally speaking, wrapping context in xml tags is very helpful for LLMs.
+    All prompts written as docstrings for an llm function get wrapped in XML.
+
+    Example:
+
+    {{param_name}} becomes:
+
+    <param_name>
+    {{param_name}}
+    </param_name>
+    """
+    return (
+        re.sub(
+            param_string_pattern,
+            lambda m: f"<{m.group(1)}>\n{{{{{m.group(1)}}}}}\n</{m.group(1)}> ",
+            prompt,
+        )
+        + "\n"
+    )
+
+
 def llm(func: Callable = None, *, model="haiku") -> Callable:  # Note the *
     """
     Decorator to create a prompt function that can be used with an LLM.
@@ -80,7 +106,14 @@ def llm(func: Callable = None, *, model="haiku") -> Callable:  # Note the *
             bound_args.apply_defaults()
 
             model_object = Model(model)
-            prompt = Prompt(f.__doc__)
+            # Wrap any parameters in XML tags
+            prompt_string = _wrap_params(f.__doc__)
+            # Docstrings are tabbed / spaced, so we need to remove spaces at beginning of lines
+            prompt_string = "\n".join(
+                line.lstrip() for line in prompt_string.splitlines()
+            )
+            print(prompt_string)
+            prompt = Prompt(prompt_string)
             chain = Chain(prompt=prompt, model=model_object)
             response = chain.run(input_variables=dict(bound_args.arguments))
             return response.content  # Note: .content to get just the text
@@ -91,26 +124,3 @@ def llm(func: Callable = None, *, model="haiku") -> Callable:  # Note the *
         return decorator
     else:
         return decorator(func)
-
-
-# @llm
-# def example_prompt():
-#     """
-#     Name ten mammals.
-#     """
-#
-
-# @llm
-# def bad_example1(number: str, thing: str):
-#     """Name {{number}} cats."""  # Missing {{thing}}
-#
-#
-# @llm(model="gemini")
-# def another(number: str, thing: str):
-#     """
-#     Name {{number}} {{thinxxxg}}s.
-#     """
-#
-
-# print(example_prompt())
-# print(another("5", "birds"))
