@@ -112,7 +112,6 @@ def llm(func: Callable = None, *, model="haiku") -> Callable:  # Note the *
             prompt_string = "\n".join(
                 line.lstrip() for line in prompt_string.splitlines()
             )
-            print(prompt_string)
             prompt = Prompt(prompt_string)
             chain = Chain(prompt=prompt, model=model_object)
             response = chain.run(input_variables=dict(bound_args.arguments))

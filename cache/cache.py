@@ -7,6 +7,7 @@ TODO:
 
 from pydantic import field_validator, BaseModel
 from pydantic.dataclasses import dataclass
+from pathlib import Path
 import sqlite3
 
 
@@ -42,7 +43,7 @@ class ChainCache:
 
     def __init__(
         self,
-        db_name: str = ".cache.db",
+        db_name: str | Path = ".cache.db",
     ):
         self.db_name = db_name
         self.conn, self.cursor = self.load_db()
