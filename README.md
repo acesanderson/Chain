@@ -1,112 +1,235 @@
-## Chain
+# Chain
 
-A lightweight framework for building LLM applications
+A lightweight, unified framework for building LLM applications with support for multiple providers, structured outputs, and async operations.
 
-## Installation
+## Quick Start
 
-### Install the Chain package
 ```bash
-git clone https://github.com/acesanderson/Chain
-cd Chain
-pip install -r requirements.txt
-pip install .
+pip install git+https://github.com/acesanderson/Chain.git
 ```
-### Setup
 
-In a file titled `.env` in the root directory of your project, add the following environment variables for the LLM providers you wish to use:
+**Basic usage in 30 seconds:**
 
+```python
+from Chain import Chain, Model, Prompt
+
+# Simple completion
+chain = Chain(
+    prompt=Prompt("What is the capital of France?"),
+    model=Model("gpt-4o")
+)
+response = chain.run()
+print(response.content)  # "The capital of France is Paris."
 ```
+
+## Why Chain?
+
+- **Universal LLM Interface**: One API for OpenAI, Anthropic, Google, Groq, Ollama, and more
+- **Structured Outputs**: Built-in Pydantic integration via Instructor
+- **Async-First**: Native async support for high-throughput applications  
+- **Smart Caching**: Automatic response caching to reduce costs and latency
+- **Rich Templating**: Jinja2 templates with variable validation
+
+## Installation & Setup
+
+### Prerequisites
+- Python 3.8+
+- API keys for desired providers
+
+### Environment Setup
+Create a `.env` file in your project root:
+
+```env
 OPENAI_API_KEY=your_openai_api_key
 ANTHROPIC_API_KEY=your_anthropic_api_key
 GOOGLE_API_KEY=your_google_api_key
 GROQ_API_KEY=your_groq_api_key
-DEEPSEEK_API_KEY=your_deepseek_api_key
 ```
 
-If you wish to use local models, you will need to install [Ollama](https://github.com/ollama/ollama). Recommended models (from personal experience): llama3.1:latest, qwen.
+For local models, install [Ollama](https://github.com/ollama/ollama):
+```bash
+# Install Ollama, then pull models
+ollama pull llama3.1:latest
+ollama pull qwen2.5:latest
+```
 
-## Usage
+## Core Examples
 
-### Basic usage
+### 1. Multi-Provider Model Access
+
 ```python
-from Chain import Prompt, Model, Chain, Parser, Message, MessageStore
+from Chain import Model
 
-# List available models
-print(Model.models)
+# See all available models
+print(Model.models())
+# Returns: {'openai': ['gpt-4o', 'gpt-4o-mini', ...], 'anthropic': ['claude-3-5-sonnet', ...], ...}
 
-# {'ollama': ['phi3:latest', 'phi:latest', 'llama3.2:latest', 'llama3.1:latest', 'llama3.1:70b-instruct-q2_K', 'dolphin-mixtral:latest', 'dolphin-mixtral:8x7b', 'mistral:latest'], 'openai': ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo-0125', 'gpt-4o-mini', 'o1-preview', 'o1-mini'], 'anthropic': ['claude-3-opus-20240229', 'claude-3-sonnet-20240229', 'claude-3-haiku-20240307', 'claude-3-5-sonnet-20240620'], 'google': ['gemini-1.5-pro-latest', 'gemini-1.5-flash-latest', 'gemini-1.0-pro-latest'], 'groq': ['llama3-8b-8192', 'llama3-70b-8192', 'mixtral-8x7b-32768', 'gemma-7b-it']}
+# Use any model with identical syntax
+models = [
+    Model("gpt-4o"),           # OpenAI
+    Model("claude-3-5-sonnet"), # Anthropic  
+    Model("llama3.1:latest"),   # Ollama (local)
+    Model("gemini-1.5-pro"),    # Google
+]
+```
 
-# Simple GPT chain
+### 2. Dynamic Prompts with Variables
 
-prompt = Prompt("What is the capital of France?")
-model = Model("gpt")
-chain = Chain(prompt, model)
-response = chain.run()
-print(response)
+```python
+from Chain import Chain, Model, Prompt
 
-# Response(content='The capital of France is Paris.', status='success', prompt='What is the capitol of France?', model='gpt-4o', duration=0.9836819171905518, messages=[], variables=<built-in function input>)
+prompt = Prompt("List 5 {{category}} that are {{color}}")
+chain = Chain(prompt=prompt, model=Model("claude-3-5-sonnet"))
+
+response = chain.run(input_variables={
+    "category": "animals", 
+    "color": "red"
+})
 print(response.content)
-
-# "The capital of France is Paris."
 ```
 
-### Working with input variables
-
-Chain uses Jinja templating to allow for dynamic prompts. You can pass variables to the prompt and model using the `input_variables` parameter in the `Chain` and `Prompt` classes.
+### 3. Structured Outputs (Function Calling)
 
 ```python
-prompt_string = "Name ten {{things}} that are red."
-prompt = Prompt(prompt_string)
-model = Model("claude-3-5-sonnet-20240620")
-chain = Chain(prompt, model)
-response = chain.run(input_variables={"things": "frogs"})
-
-'Here are ten different types of frogs:\n\n1. Red-Eyed Tree Frog\n2. Poison Dart Frog\n3. American Bullfrog\n4. African Clawed Frog\n5. Green Tree Frog\n6. Glass Frog\n7. Tomato Frog\n8. Pacman Frog (Horned Frog)\n9. Northern Leopard Frog\n10. Goliath Frog\n\nThese frogs represent a diverse range of species from various habitats around the world, each with unique characteristics and adaptations.'
-```
-
-### Working with structured output (function calling)
-
-Chain uses the excellent [Instructor](https://github.com/instructor-ai/instructor) library to get pydantic objects from LLM calls. You can use the `Parser` class to parse the output of a chain into a pydantic object.
-
-```python
+from Chain import Chain, Model, Prompt, Parser
 from pydantic import BaseModel
-from Chain import Parser
 
-class Frog(BaseModel):
+class Animal(BaseModel):
     name: str
-    color: str
+    species: str
     habitat: str
+    conservation_status: str
 
-prompt = Prompt("Come up with a frog that is red and lives in the rainforest")
-model = Model("claude-3-5-sonnet-20240620")
-parser = Parser(Frog)
-chain = Chain(prompt, model, parser) # Note that the parser is passed to the Chain class in initialization
-response = chain.run()
-print(response.content)
+prompt = Prompt("Create a detailed profile for a {{animal_type}}")
+parser = Parser(Animal)
+chain = Chain(prompt=prompt, model=Model("gpt-4o"), parser=parser)
 
-# Frog(name='Fred', color='red', habitat='rainforest')
+result = chain.run(input_variables={"animal_type": "arctic fox"})
+print(result.content)  # Returns Animal object
+print(result.content.conservation_status)  # "Least Concern"
 ```
 
-### Async
+### 4. Async Batch Processing
 
 ```python
 from Chain import AsyncChain, ModelAsync
 
-prompt_strings = ["name 10 mammals", "name ten birds"]
+# Process multiple prompts concurrently
+prompts = [
+    "Explain quantum computing",
+    "What is machine learning?", 
+    "Define blockchain technology"
+]
 
-model = ModelAsync("llama3.1:latest")
+model = ModelAsync("gpt-4o-mini")
 chain = AsyncChain(model=model)
-results = chain.run(prompt_strings=prompt_strings)
+responses = chain.run(prompt_strings=prompts)
+
+for response in responses:
+    print(f"Response: {response.content[:100]}...")
 ```
 
+### 5. Image Analysis
 
-### Advanced
-- You can create a messagestore to either: save response objects in a Message format throughout a script; save a persistent chat conversation between sessions; log prompt flows.
-- You can set system prompts with the create_messages method in the MessageStore class.
-- Every client has an AsyncClient implementation for async calls.
+```python
+from Chain import Chain, Model, ImageMessage
+import base64
 
-### Upcoming features
-- Chatbot class
-- HuggingFace/unsloth implementation for working with finetuned models
-- Agentic support for tools, resources, using MCP protocol
+# Load and encode image
+with open("image.jpg", "rb") as f:
+    image_data = base64.b64encode(f.read()).decode()
 
+image_msg = ImageMessage(
+    role="user",
+    text_content="What's in this image?",
+    image_content=image_data,
+    mime_type="image/jpeg"
+)
+
+chain = Chain(model=Model("gpt-4o"))
+response = chain.run(messages=[image_msg])
+```
+
+## Advanced Features
+
+### Conversation Management
+```python
+from Chain import MessageStore, Message
+
+# Persistent chat history
+store = MessageStore(history_file="chat.pkl", log_file="chat.log")
+store.add_new("system", "You are a helpful assistant")
+store.add_new("user", "Hello!")
+
+chain = Chain(model=Model("gpt-4o"))
+response = chain.run(messages=store.messages)
+```
+
+### Smart Caching
+```python
+from Chain import ChainCache, Model
+
+# Enable caching for cost savings
+Model._chain_cache = ChainCache("cache.db")
+
+# Subsequent identical calls return cached results
+model = Model("gpt-4o")
+result1 = model.query("What is Python?")  # API call
+result2 = model.query("What is Python?")  # Cache hit!
+```
+
+### CLI Applications
+```python
+from Chain import ChainCLI
+
+# Create custom CLI apps
+class MyCLI(ChainCLI):
+    @arg("-t")
+    def arg_translate(self, text):
+        """Translate text to French"""
+        # Custom functionality
+        pass
+
+cli = MyCLI(name="My AI Assistant")
+cli.run()
+```
+
+## Model Support
+
+| Provider | Models | Features |
+|----------|--------|----------|
+| **OpenAI** | GPT-4o, GPT-4o-mini, o1-preview | Function calling, vision, reasoning |
+| **Anthropic** | Claude 3.5 Sonnet, Haiku | Large context, vision, tool use |
+| **Google** | Gemini 1.5/2.0 Pro/Flash | Multimodal, long context |
+| **Groq** | Llama, Mixtral, Gemma | Ultra-fast inference |
+| **Ollama** | 100+ local models | Privacy, offline, custom models |
+
+## Architecture
+
+```
+Chain Framework
+├── Model Layer       # Universal LLM interface
+├── Prompt System     # Jinja2 templating + validation  
+├── Message Handling  # Conversation + multimodal support
+├── Response System   # Structured outputs + metadata
+├── Async Engine      # Concurrent processing
+└── Extensions        # CLI, caching, API server
+```
+
+## Contributing
+
+Chain is actively developed and welcomes contributions:
+
+```bash
+git clone https://github.com/acesanderson/Chain
+cd Chain
+pip install -r requirements.txt
+pytest  # Run tests
+```
+
+## What's Next
+
+- 🔧 **Agentic Support**: Tools and resources via MCP protocol
+- 🤗 **HuggingFace Integration**: Fine-tuned model support  
+- 💬 **Enhanced Chat**: Improved conversation management
+- 🔌 **Plugin System**: Extensible tool ecosystem
