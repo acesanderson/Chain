@@ -7,6 +7,7 @@ from Chain.parser.parser import Parser
 from Chain.message.message import Message, Messages, create_system_message
 from Chain.message.imagemessage import (
     ImageMessage,
+    create_image_message,
 )
 from Chain.message.messagestore import MessageStore
 from Chain.cache.cache import ChainCache
@@ -27,6 +28,7 @@ __all__ = [
     "Response",
     "Message",
     "ImageMessage",
+    "create_image_message",
     "MessageStore",
     "create_system_message",
     "Messages",
