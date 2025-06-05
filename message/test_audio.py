@@ -8,15 +8,15 @@ output_mp3 = dir_path / "output.mp3"
 
 audiomessage = AudioMessage(
     role="user",
-    text_content="Transcribe this audio",
+    text_content="Transcribe this audio with high fidelity.",
     audio_file=output_mp3,
     format="mp3",
 )
 
 
 model = Model("flash")
-# chain = Chain(model=model)
-# response = chain.run(messages=[audiomessage])
+# model = Model("gpt-4o-audio-preview")
+chain = Chain(model=model)
 
 response = model.query(audiomessage)
 

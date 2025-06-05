@@ -1,9 +1,13 @@
 """
-There are two basic message formats:
-1. OpenAI (applicable to ollama, groq, gemini, etc.)
-2. Anthropic (the one hold out)
+Audio processing is a different beast with the proprietary models.
 
-We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthropic formats.
+OpenAI has a transcriptions endpoint, which we won't implement at this time. They do support multimodal audio through chat.completions endpoint with one specific model: gpt-4o-audio-preview (or something like that)
+
+Gemini is much more flexible in handling multimodal, and highly recommended as default model, as flash, 2.5, all of their big models seem to support it out of the box.
+
+We have a basic AudioMessage class, which is a wrapper for that multimodal OpenAI chat.completions format. If doing transcriptions at scale, implement the transcriptions endpoint as well.
+
+TBD: transcriptions endpoint for GPT (if we need it), ollama audio models. Note that for audio file transcriptions in the Siphon project, we use a few different hugging face models in a diarization / transcription workflow.
 """
 
 from pydantic import BaseModel, Field
@@ -23,7 +27,7 @@ def is_base64_simple(s):
 
 # Gemini schema
 """
-Gemini (through openai sdk) supports audio input through the chat/completions endpoint. It expects a message format like this:
+OpenAI (through openai sdk) supports audio input through the chat/completions endpoint. It expects a message format like this:
 {
     "role": "user",
     "content": [
@@ -41,19 +45,19 @@ Gemini (through openai sdk) supports audio input through the chat/completions en
 """
 
 
-class GeminiInputAudio(BaseModel):
+class OpenAIInputAudio(BaseModel):
     """
     We are using Gemini through the OpenAI SDK, so we need to define the input audio format.
     Gemini usually supports a range of audio filetypes, but when used with OpenAI SDK, it's only mp3 and wav.
     """
 
     data: str = Field(description="The base64-encoded audio data.")
-    format: Literal["mp3", "wav"] = Field(
+    format: Literal["mp3", "wav", ""] = Field(
         description="The format of the audio data, must be 'mp3' or 'wav'."
     )
 
 
-class GeminiAudioContent(BaseModel):
+class OpenAIAudioContent(BaseModel):
     """
     Gemini AudioContent should have a single AudioContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
@@ -63,7 +67,7 @@ class GeminiAudioContent(BaseModel):
     """
 
     # Init variables
-    input_audio: GeminiInputAudio = Field(
+    input_audio: OpenAIInputAudio = Field(
         description="The input audio data, must be a base64-encoded string with format 'mp3' or 'wav'."
     )
 
@@ -73,19 +77,19 @@ class GeminiAudioContent(BaseModel):
     )
 
 
-class GeminiAudioMessage(Message):
+class OpenAIAudioMessage(Message):
     """
     Gemini AudioMessage should have a single AudioContent and a single TextContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
 
         role: str
-        content: list[GeminiAudioContent | OpenAITextContent]
+        content: list[OpenAIAudioContent | OpenAITextContent]
     """
 
-    content: list[GeminiAudioContent | OpenAITextContent]  # type: ignore
+    content: list[OpenAIAudioContent | OpenAITextContent]  # type: ignore
 
 
-# OpenAI-specific message classes
+# Transcription-specific
 """
 Note: OpenAI has a completely different endpoint for audio transcriptions, so we need to handle that separately.
 
@@ -95,10 +99,6 @@ with open("example.m4a", "rb") as audio_file:
 
 transcription = client.audio.transcriptions.create(model="whisper-1", file=audio_file)
 """
-
-
-class OpenAIAudioMessage(Message):
-    file: str | Path
 
 
 # Our base ImageMessage class, with a factory method to convert to OpenAI or Anthropic format.
@@ -156,21 +156,13 @@ class AudioMessage(BaseModel):
     def __repr__(self):
         return f"AudioMessage(role={self.role}, text_content={self.text_content}, audio_file={self.audio_file}, format={self.format})"
 
-    def to_gemini(self) -> GeminiAudioMessage:
-        """
-        Converts the ImageMessage to the Gemini format.
-        """
-        geminiinputaudio = GeminiInputAudio(data=self.audio_content, format=self.format)
-        geminiaudiocontent = GeminiAudioContent(input_audio=geminiinputaudio)
-        text_content = OpenAITextContent(text=self.text_content)
-        return GeminiAudioMessage(
-            role=self.role, content=[text_content, geminiaudiocontent]
-        )
-
     def to_openai(self) -> OpenAIAudioMessage:
         """
         Converts the ImageMessage to the OpenAI format.
         """
+        openaiinputaudio = OpenAIInputAudio(data=self.audio_content, format=self.format)
+        openaiaudiocontent = OpenAIAudioContent(input_audio=openaiinputaudio)
+        text_content = OpenAITextContent(text=self.text_content)
         return OpenAIAudioMessage(
-            role=self.role, content=self.text_content, file=self.audio_file
+            role=self.role, content=[text_content, openaiaudiocontent]
         )

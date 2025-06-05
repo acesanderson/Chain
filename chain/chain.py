@@ -13,6 +13,8 @@ from Chain.response.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
+from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from typing import overload
 
 
@@ -75,7 +77,7 @@ class Chain:
 
     def run_messages(
         self,
-        messages: list[Message],
+        messages: list[Message | ImageMessage | AudioMessage],
         prompt: str | None = None,
         verbose=True,
         cache=True,

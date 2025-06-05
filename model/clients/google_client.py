@@ -66,7 +66,7 @@ class GoogleClientSync(GoogleClient):
         elif isinstance(input, ImageMessage):
             input = [input.to_openai().model_dump()]
         elif isinstance(input, AudioMessage):
-            input = [input.to_gemini().model_dump()]
+            input = [input.to_openai().model_dump()]
         elif isinstance(input, Message):
             input = [input.model_dump()]
         # Process lists of custom message types
@@ -83,7 +83,7 @@ class GoogleClientSync(GoogleClient):
             # Now AudioMessage
             input = [
                 (
-                    item.to_gemini().model_dump()
+                    item.to_openai().model_dump()
                     if isinstance(item, AudioMessage)
                     else item
                 )

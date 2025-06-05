@@ -55,13 +55,16 @@ class OpenAIClientSync(OpenAIClient):
             input = [{"role": "user", "content": input}]
         elif isinstance(input, ImageMessage):
             input = [input.to_openai().model_dump()]
-        elif isinstance(input, AudioMessage):
-            input = [input.to_openai().model_dump()]
         elif isinstance(input, Message):
             input = [input.model_dump()]
-        # Process custom message types
+        elif isinstance(input, AudioMessage):
+            if not model == "gpt-4o-audio-preview":
+                raise ValueError(
+                    "AudioMessage can only be used with the gpt-4o-audio-preview model."
+                )
+            input = [input.to_openai().model_dump()]
         elif isinstance(input, list):
-            # First, ImageMessage
+            # Process ImageMessages first
             input = [
                 (
                     item.to_openai().model_dump()
@@ -70,15 +73,20 @@ class OpenAIClientSync(OpenAIClient):
                 )
                 for item in input
             ]
-            # Now, AudioMessage
-            input = [
-                (
-                    item.to_openai().model_dump()
-                    if isinstance(item, AudioMessage)
-                    else item
-                )
-                for item in input
-            ]
+            # Now AudioMessages
+            if any(isinstance(item, AudioMessage) for item in input):
+                if not model == "gpt-4o-audio-preview":
+                    raise ValueError(
+                        "AudioMessage can only be used with the gpt-4o-audio-preview model."
+                    )
+                input = [
+                    (
+                        item.to_openai().model_dump()
+                        if isinstance(item, AudioMessage)
+                        else item
+                    )
+                    for item in input
+                ]
         params = {"model": model, "messages": input, "response_model": pydantic_model}
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if temperature:
