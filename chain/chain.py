@@ -39,28 +39,6 @@ class Chain:
         else:
             self.input_schema = set()
 
-    @overload
-    def run(self, verbose=True) -> Response:
-        """Run a completion, if no args provided, use the prompt and model already defined in the chain object."""
-        ...
-
-    @overload
-    def run(self, input_variables: dict, verbose=True) -> Response:
-        """Run a completion with input variables."""
-        ...
-
-    @overload
-    def run(self, *, messages: list[Message], verbose=True) -> Response:
-        """Run a completion with messages."""
-        ...
-
-    @overload
-    def run(
-        self, input_variables: dict, messages: list[Message], verbose=True
-    ) -> Response:
-        """Run a completion with input variables and messages."""
-        ...
-
     def run(
         self,
         input_variables: dict | None = None,
@@ -94,23 +72,6 @@ class Chain:
         else:
             raise ValueError("No prompt or messages passed to Chain.run.")
         return result
-
-    @overload
-    def run_messages(self, messages: list[Message]) -> Response:
-        """Run a completion with messages."""
-        ...
-
-    @overload
-    def run_messages(self, messages: list[Message], prompt: str) -> Response:
-        """Run a completion with messages and a prompt."""
-        ...
-
-    @overload
-    def run_messages(
-        self, messages: list[Message], prompt: str | None, verbose: bool
-    ) -> Response:
-        """Run a completion with messages, a prompt, and verbose."""
-        ...
 
     def run_messages(
         self,

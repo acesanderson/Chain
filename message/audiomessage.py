@@ -11,7 +11,7 @@ from Chain.message.message import Message
 from Chain.message.imagemessage import OpenAITextContent
 from typing import Literal
 from pathlib import Path
-import re
+import base64, re
 
 
 def is_base64_simple(s):
@@ -58,15 +58,18 @@ class GeminiAudioContent(BaseModel):
     Gemini AudioContent should have a single AudioContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
 
-        type: str
         input_audio: dict
+        type: str (Default variable)
     """
 
-    type: str = Field(
-        default="input_audio", description="The type of content, must be 'input_audio'."
-    )
+    # Init variables
     input_audio: GeminiInputAudio = Field(
         description="The input audio data, must be a base64-encoded string with format 'mp3' or 'wav'."
+    )
+
+    # Default variables
+    type: str = Field(
+        default="input_audio", description="The type of content, must be 'input_audio'."
     )
 
 
@@ -79,7 +82,6 @@ class GeminiAudioMessage(Message):
         content: list[GeminiAudioContent | OpenAITextContent]
     """
 
-    role: str  # type: ignore
     content: list[GeminiAudioContent | OpenAITextContent]  # type: ignore
 
 
@@ -96,111 +98,79 @@ transcription = client.audio.transcriptions.create(model="whisper-1", file=audio
 
 
 class OpenAIAudioMessage(Message):
-    role: str = Field(
-        description="The role of the message, e.g. 'user', 'assistant', or 'system'."
-    )
     file: str | Path
 
 
-# class OpenAITextContent(BaseModel):
-#     type: str = "text"  # Changed from "input_text"
-#     text: str = Field(description="The text content of the message, i.e. the prompt.")
-#
-#
-# class OpenAIImageUrl(BaseModel):
-#     """Nested object for OpenAI image URL structure"""
-#
-#     url: str = Field(description="The data URL with base64 image")
-#
-#
-# class OpenAIImageContent(BaseModel):
-#     """
-#     OpenAI requires image_url to be an object, not a string
-#     """
-#
-#     type: str = "image_url"
-#     image_url: OpenAIImageUrl = Field(description="The image URL object")
-#
-#
-# class OpenAIImageMessage(Message):
-#     """
-#     ImageMessage should have a single ImageContent and a single TextContent object.
-#
-#         role: str
-#         content: list[OpenAIImageContent | OpenAITextContent]
-#     """
-#
-#     role: str
-#     content: list[OpenAIImageContent | OpenAITextContent]  # type: ignore
-#
-
-
 # Our base ImageMessage class, with a factory method to convert to OpenAI or Anthropic format.
-class ImageMessage(BaseModel):
+class AudioMessage(BaseModel):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
 
-        role: str
-        text_content: str
-        image_content: str
-        mime_type: str
-
-    You can splat it to an OpenAI or Anthropic message; with the to_openai() and to_anthropic() methods.
-    Model dump into the API query.
+    You can splat it to an OpenAI or Gemini message; with the to_openai() and to_gemini() methods.
     """
 
+    # Init variables
     role: str = Field(
         description="The role of the message, e.g. 'user', 'assistant', or 'system'."
     )
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
     )
-    image_content: str = Field(description="The base64-encoded image.")
-    mime_type: str = Field(
-        description="The MIME type of the image, e.g. 'image/jpeg', 'image/png'."
+    audio_file: str | Path = Field(description="The path to the audio file to be sent.")
+
+    # Post-init variables
+    format: Literal["wav", "mp3", ""] = Field(
+        description="The audio format.", default=""
+    )
+    audio_content: str = Field(
+        description="The base64-encoded audio data.", default="", repr=False
     )
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        # Validate the MIME type
-        if self.mime_type not in format_to_mime.values():
-            raise ValueError(f"Unsupported MIME type: {self.mime_type}")
-        # Validate the image content
-        if not is_base64_simple(self.image_content):
-            raise ValueError("Image content must be a base64-encoded string.")
+    def model_post_init(self, __context):  # type: ignore
+        """
+        Convert the audio file to base64 string.
+        """
+        # Check if the audio file exists
+        if isinstance(self.audio_file, str):
+            self.audio_file = Path(self.audio_file)
+        if not self.audio_file.exists():
+            raise FileNotFoundError(f"Audio file {self.audio_file} does not exist.")
+        # Convert the audio file to base64 string
+        self.audio_content = self._convert_audio_to_base64(self.audio_file)
+        if not is_base64_simple(self.audio_content):
+            raise ValueError("Audio content is not a valid base64 string.")
+        # Infer the audio format from the file extension if not provided
+        if self.format == "":
+            if self.audio_file.suffix.lower()[1:] in ["mp3", "wav"]:
+                self.format = self.audio_file.suffix.lower()[1:]
+        # Change audio_file to str so it can be used in OpenAI API
+        self.audio_file = str(self.audio_file)
+
+    def _convert_audio_to_base64(self, file_path: Path) -> str:
+        """
+        Convert the audio file to base64 string.
+        """
+        with open(file_path, "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
 
     def __repr__(self):
-        return f"ImageMessage(role={self.role}, text_content={self.text_content}, image_content={self.image_content:<.10}..., mime_type={self.mime_type})"
+        return f"AudioMessage(role={self.role}, text_content={self.text_content}, audio_file={self.audio_file}, format={self.format})"
 
-    def to_anthropic(self) -> AnthropicImageMessage:
+    def to_gemini(self) -> GeminiAudioMessage:
         """
-        Converts the ImageMessage to the Anthropic format.
+        Converts the ImageMessage to the Gemini format.
         """
-        image_source = AnthropicImageSource(
-            type="base64", media_type=self.mime_type, data=self.image_content
-        )
-        image_content = AnthropicImageContent(source=image_source)
-        text_content = AnthropicTextContent(text=self.text_content)
-        return AnthropicImageMessage(
-            role=self.role, content=[image_content, text_content]
+        geminiinputaudio = GeminiInputAudio(data=self.audio_content, format=self.format)
+        geminiaudiocontent = GeminiAudioContent(input_audio=geminiinputaudio)
+        text_content = OpenAITextContent(text=self.text_content)
+        return GeminiAudioMessage(
+            role=self.role, content=[text_content, geminiaudiocontent]
         )
 
-    def to_openai(self) -> OpenAIImageMessage:
+    def to_openai(self) -> OpenAIAudioMessage:
         """
         Converts the ImageMessage to the OpenAI format.
         """
-        # Create the nested URL object
-        image_url_obj = OpenAIImageUrl(
-            url=f"data:{self.mime_type};base64,{self.image_content}"
-        )
-
-        # Create image content with the nested object
-        image_content = OpenAIImageContent(image_url=image_url_obj)
-
-        # Create text content
-        text_content = OpenAITextContent(text=self.text_content)
-
-        return OpenAIImageMessage(
-            role=self.role,
-            content=[text_content, image_content],  # Note: text first, then image
+        return OpenAIAudioMessage(
+            role=self.role, content=self.text_content, file=self.audio_file
         )

@@ -6,6 +6,7 @@ from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from openai import OpenAI, AsyncOpenAI
 import instructor
 from pydantic import BaseModel
@@ -55,7 +56,7 @@ class GoogleClientSync(GoogleClient):
     def query(
         self,
         model: str,
-        input: str | list | Message | ImageMessage,
+        input: str | list | Message | ImageMessage | AudioMessage,
         pydantic_model: BaseModel | None = None,
         raw=False,
         temperature: Optional[float] = None,
@@ -64,9 +65,13 @@ class GoogleClientSync(GoogleClient):
             input = [{"role": "user", "content": input}]
         elif isinstance(input, ImageMessage):
             input = [input.to_openai().model_dump()]
+        elif isinstance(input, AudioMessage):
+            input = [input.to_gemini().model_dump()]
         elif isinstance(input, Message):
             input = [input.model_dump()]
+        # Process lists of custom message types
         elif isinstance(input, list):
+            # First ImageMessage
             input = [
                 (
                     item.to_openai().model_dump()
@@ -75,6 +80,16 @@ class GoogleClientSync(GoogleClient):
                 )
                 for item in input
             ]
+            # Now AudioMessage
+            input = [
+                (
+                    item.to_gemini().model_dump()
+                    if isinstance(item, AudioMessage)
+                    else item
+                )
+                for item in input
+            ]
+
         # Build our params; pydantic_model will be None if we didn't request it.
         params = {"model": model, "messages": input, "response_model": pydantic_model}
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)

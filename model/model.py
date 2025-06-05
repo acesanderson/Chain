@@ -5,6 +5,7 @@ import itertools
 from Chain.cache.cache import ChainCache, CachedRequest
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from pydantic import BaseModel
 from typing import Optional
 
@@ -110,7 +111,7 @@ class Model:
 
     def query(
         self,
-        input: str | list | Message | ImageMessage,
+        input: str | list | Message | ImageMessage | AudioMessage,
         verbose: bool = True,
         pydantic_model: BaseModel | None = None,
         raw=False,

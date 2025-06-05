@@ -2,6 +2,7 @@ from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from openai import OpenAI, AsyncOpenAI, Stream
 import instructor
 from pydantic import BaseModel
@@ -45,7 +46,7 @@ class OpenAIClientSync(OpenAIClient):
     def query(
         self,
         model: str,
-        input: str | list | Message | ImageMessage,
+        input: str | list | Message | ImageMessage | AudioMessage,
         pydantic_model: BaseModel | None = None,
         raw=False,
         temperature: Optional[float] = None,
@@ -54,14 +55,27 @@ class OpenAIClientSync(OpenAIClient):
             input = [{"role": "user", "content": input}]
         elif isinstance(input, ImageMessage):
             input = [input.to_openai().model_dump()]
+        elif isinstance(input, AudioMessage):
+            input = [input.to_openai().model_dump()]
         elif isinstance(input, Message):
             input = [input.model_dump()]
+        # Process custom message types
         elif isinstance(input, list):
+            # First, ImageMessage
             input = [
                 (
                     item.to_openai().model_dump()
                     if isinstance(item, ImageMessage)
                     else item.model_dump()
+                )
+                for item in input
+            ]
+            # Now, AudioMessage
+            input = [
+                (
+                    item.to_openai().model_dump()
+                    if isinstance(item, AudioMessage)
+                    else item
                 )
                 for item in input
             ]
