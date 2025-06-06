@@ -6,15 +6,15 @@ import subprocess
 
 def get_url() -> str:
     hostnames = {
-        "remote": ["Botvinnik", "bianders-mn7180.linkedin.biz"],
-        "local": ["Caruana"],
+        "remote": ["Botvinnik", "bianders-mn7180.linkedin.biz", "Caruana"],
+        "local": ["AlphaBlue"],
     }
     # get hostname using subprocess
     hostname = subprocess.check_output(["hostname"]).decode("utf-8").strip()
     if hostname in hostnames["local"]:
         url = "http://localhost:8000/query"
     else:
-        url = "http://10.0.0.82:8000/query"
+        url = "http://10.0.0.87:8000/query"
     return url
 
 
