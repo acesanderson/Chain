@@ -1,5 +1,6 @@
 from fastapi import FastAPI, status
-from ChainRequest import ChainRequest, process_ChainRequest, Response
+from Chain.api.server.ChainRequest import ChainRequest, process_ChainRequest
+from Chain.response.response import Response
 
 # Create a FastAPI instance
 app = FastAPI()

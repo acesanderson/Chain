@@ -15,7 +15,7 @@ def main():
     m = Model("llama3.1:latest")
     m._client.update_ollama_models()
     console.print(
-        f"[green]Model list updated: [/green][yellow]{Model.models['ollama']}[/yellow]"
+        f"[green]Model list updated: [/green][yellow]{Model.models()['ollama']}[/yellow]"
     )
 
 

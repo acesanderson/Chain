@@ -2,6 +2,7 @@ from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from openai import OpenAI, AsyncOpenAI, Stream
 import instructor
 from pydantic import BaseModel
@@ -45,7 +46,7 @@ class OpenAIClientSync(OpenAIClient):
     def query(
         self,
         model: str,
-        input: str | list | Message | ImageMessage,
+        input: str | list | Message | ImageMessage | AudioMessage,
         pydantic_model: BaseModel | None = None,
         raw=False,
         temperature: Optional[float] = None,
@@ -56,7 +57,14 @@ class OpenAIClientSync(OpenAIClient):
             input = [input.to_openai().model_dump()]
         elif isinstance(input, Message):
             input = [input.model_dump()]
+        elif isinstance(input, AudioMessage):
+            if not model == "gpt-4o-audio-preview":
+                raise ValueError(
+                    "AudioMessage can only be used with the gpt-4o-audio-preview model."
+                )
+            input = [input.to_openai().model_dump()]
         elif isinstance(input, list):
+            # Process ImageMessages first
             input = [
                 (
                     item.to_openai().model_dump()
@@ -65,6 +73,20 @@ class OpenAIClientSync(OpenAIClient):
                 )
                 for item in input
             ]
+            # Now AudioMessages
+            if any(isinstance(item, AudioMessage) for item in input):
+                if not model == "gpt-4o-audio-preview":
+                    raise ValueError(
+                        "AudioMessage can only be used with the gpt-4o-audio-preview model."
+                    )
+                input = [
+                    (
+                        item.to_openai().model_dump()
+                        if isinstance(item, AudioMessage)
+                        else item
+                    )
+                    for item in input
+                ]
         params = {"model": model, "messages": input, "response_model": pydantic_model}
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if temperature:

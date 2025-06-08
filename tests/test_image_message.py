@@ -8,7 +8,6 @@ import base64
 from PIL import Image
 import io
 from pathlib import Path
-import os
 
 dir_path = Path(__file__).parent
 image_path = dir_path / "tr.jpg"

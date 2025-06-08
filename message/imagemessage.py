@@ -8,7 +8,11 @@ We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthro
 
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
+from pathlib import Path
 import re
+import base64
+from PIL import Image
+import io
 
 # Map PIL formats to MIME types
 format_to_mime = {
@@ -193,3 +197,51 @@ class ImageMessage(Message):
             role=self.role,
             content=[text_content, image_content],  # Note: text first, then image
         )
+
+
+# Helper functions
+def image_to_base64(file_path):
+    """
+    Simple version - load any image and convert to base64
+    """
+    with Image.open(file_path) as img:
+        # Get actual format
+        img_format = img.format.lower()
+
+        # Convert to RGB if needed (for JPEG compatibility)
+        if img.mode in ("RGBA", "LA", "P") and img_format in ["jpeg", "jpg"]:
+            img = img.convert("RGB")
+
+        # Save to buffer
+        buffer = io.BytesIO()
+        save_format = "JPEG" if img_format in ["jpeg", "jpg"] else img_format.upper()
+        img.save(buffer, format=save_format)
+
+        # Get base64
+        base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+        # Determine MIME type
+        mime_map = {
+            "jpeg": "image/jpeg",
+            "jpg": "image/jpeg",
+            "png": "image/png",
+            "gif": "image/gif",
+            "webp": "image/webp",
+        }
+        mime_type = mime_map.get(img_format, "image/jpeg")
+
+        return base64_data, mime_type
+
+
+def create_image_message(image_file_path: str | Path, prompt_str: str) -> ImageMessage:
+    """
+    Function to generate an image message from an image file path and a text prompt.
+    """
+    image_base64, mime_type = image_to_base64(image_file_path)
+    imagemessage = ImageMessage(
+        role="user",
+        text_content=prompt_str,
+        image_content=image_base64,
+        mime_type=mime_type,
+    )
+    return imagemessage
