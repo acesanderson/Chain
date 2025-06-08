@@ -136,7 +136,8 @@ class OpenAIAudioMessage(Message):
 
 
 # Our base ImageMessage class, with a factory method to convert to OpenAI or Anthropic format.
-class ImageMessage(BaseModel):
+class AudioMessage(BaseModel):
+==============NOTE: this needs to be implemented===================
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
 
@@ -204,3 +205,16 @@ class ImageMessage(BaseModel):
             role=self.role,
             content=[text_content, image_content],  # Note: text first, then image
         )
+
+    def play(self):
+        """
+        Play the audio.
+        """
+        from pydub import AudioSegment
+        from pydub.playback import play
+        from pathlib import Path
+
+        dir_path = Path(__file__).parent
+        audio = AudioSegment.from_file(str(dir_path / "allhands.m4a"))
+
+        play(audio)
