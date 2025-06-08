@@ -1,5 +1,7 @@
-from Chain import ChainRequest, Response
+from Chain.api.server.ChainRequest import ChainRequest
+from Chain.response.response import Response
 from Chain.api.server.test_ChainServer import example_requests
+from Chain.model.clients.client import Client
 import requests
 import subprocess
 
@@ -18,7 +20,7 @@ def get_url() -> str:
     return url
 
 
-class ChainClient:
+class ChainClient(Client):
     """
     A client for sending requests to the Chain server.
     Currently defined entirely by url endpoint.
@@ -26,6 +28,13 @@ class ChainClient:
 
     def __init__(self, url: str):
         self.url = url
+        self.client = self._initialize_client()
+
+    def _initialize_client(self) -> None:
+        """
+        This method is not needed for this client as it does not require any special initialization.
+        """
+        pass
 
     def send_request(self, chainrequest: ChainRequest) -> Response | None:
         """
