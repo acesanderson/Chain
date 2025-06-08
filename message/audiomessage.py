@@ -103,7 +103,6 @@ transcription = client.audio.transcriptions.create(model="whisper-1", file=audio
 
 # Our base ImageMessage class, with a factory method to convert to OpenAI or Anthropic format.
 class AudioMessage(BaseModel):
-==============NOTE: this needs to be implemented===================
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
 
