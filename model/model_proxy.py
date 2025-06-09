@@ -1,5 +1,11 @@
 from Chain.api.client.ChainClient import ChainClient, ChainRequest, get_url
+from Chain.message.audiomessage import AudioMessage
+from Chain.message.imagemessage import ImageMessage
+from Chain.message.message import Message
+from Chain.cache.cache import CachedRequest
 from Chain.model.model import Model
+from pydantic import BaseModel
+from typing import Optional
 
 
 class ModelClient(Model):

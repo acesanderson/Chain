@@ -15,7 +15,6 @@ from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
-from typing import overload
 
 
 class Chain:
