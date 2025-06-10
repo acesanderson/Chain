@@ -1,6 +1,7 @@
 from pathlib import Path
 from Chain.message.audiomessage import AudioMessage
-from Chain import Model, Chain
+from Chain.chain.chain import Chain
+from Chain.model.model import Model
 
 dir_path = Path(__file__).parent
 output_mp3 = dir_path / "output.mp3"
