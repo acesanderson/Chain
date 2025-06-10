@@ -46,7 +46,7 @@ class ModelAsync(Model):
         self,
         input: str | list,
         verbose: bool = True,
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         raw=False,
         cache=True,
         print_response=False,

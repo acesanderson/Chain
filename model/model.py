@@ -113,7 +113,7 @@ class Model:
         self,
         input: str | list | Message | ImageMessage | AudioMessage,
         verbose: bool = True,
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         raw=False,
         cache=True,
         temperature: Optional[float] = None,  # None means just use the defaults
@@ -179,7 +179,7 @@ class Model:
         self,
         input: str | list,
         verbose: bool = True,
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         temperature: Optional[float] = None,
     ):
         if verbose:

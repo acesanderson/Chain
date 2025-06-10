@@ -57,7 +57,7 @@ class GoogleClientSync(GoogleClient):
         self,
         model: str,
         input: str | list | Message | ImageMessage | AudioMessage,
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
@@ -113,7 +113,7 @@ class GoogleClientSync(GoogleClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         temperature: Optional[float] = None,
     ) -> str | BaseModel:
         if isinstance(input, str):

@@ -171,7 +171,7 @@ class HuggingFaceClient(Client):
         self,
         model: str,
         input: Union[str, list],
-        pydantic_model: Optional[BaseModel] = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         raw: bool = False,
         max_new_tokens: int = 256,  # Added common generation parameter
         **kwargs,  # Allow passing other pipeline kwargs

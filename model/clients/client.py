@@ -35,7 +35,7 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def query(self, model: str, input: "str | list", pydantic_model: "BaseModel" = None, raw=False, temperature: Optional[float] = None) -> "BaseModel | str":  # type: ignore
+    def query(self, model: str, input: "str | list", pydantic_model: "BaseModel | list[BaseModel]" = None, raw=False, temperature: Optional[float] = None) -> "BaseModel | str":  # type: ignore
         """
         All client subclasses must have a query function that can take:
         - a model name
