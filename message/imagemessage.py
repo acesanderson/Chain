@@ -186,12 +186,20 @@ class ImageMessage(Message):
         Display a base64-encoded image using chafa.
         Your mileage may vary depending on the terminal and chafa version.
         """
-        import subprocess
-        import base64
+        import subprocess, base64, os
 
         try:
             image_data = base64.b64decode(self.image_content)
-            process = subprocess.Popen(["chafa", "-"], stdin=subprocess.PIPE)
+            cmd = ["chafa", "-"]
+
+            # If in tmux or SSH, force text mode for consistency
+            if (
+                os.environ.get("TMUX")
+                or os.environ.get("SSH_CLIENT")
+                or os.environ.get("SSH_CONNECTION")
+            ):
+                cmd.extend(["--format", "symbols", "--symbols", "block"])
+            process = subprocess.Popen(cmd, stdin=subprocess.PIPE)
             process.communicate(input=image_data)
         except Exception as e:
             print(f"Error: {e}")
