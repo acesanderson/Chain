@@ -6,13 +6,11 @@ There are two basic message formats:
 We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthropic formats.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from pathlib import Path
-import re
-import base64
 from PIL import Image
-import io
+import re, base64, io
 
 # Map PIL formats to MIME types
 format_to_mime = {
@@ -138,22 +136,33 @@ class ImageMessage(Message):
         image_content: str
         mime_type: str
 
+    NOTE: you can also instantiate it with just a file_name and the text_content; conversion will happen under the hood.
+
     You can splat it to an OpenAI or Anthropic message; with the to_openai() and to_anthropic() methods.
-    Model dump into the API query.
     """
 
-    content: list[BaseModel] = Field(default=None)
+    content: list[BaseModel] | None = Field(default=None)
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
     )
-    image_content: str = Field(description="The base64-encoded image.")
+    file_path: str | Path = Field(
+        description="File name for the image, if available.", default=""
+    )
+    image_content: str = Field(description="The base64-encoded image.", default="")
     mime_type: str = Field(
-        description="The MIME type of the image, e.g. 'image/jpeg', 'image/png'."
+        description="The MIME type of the image, e.g. 'image/jpeg', 'image/png'.",
+        default="",
     )
 
     def model_post_init(self, __context) -> None:
         """Called after model initialization to construct content field."""
-        self.content = [self.image_content, self.text_content]
+        # If user submits a file_path instead of the mimetype / image_content
+        if self.file_path:
+            if self.image_content or self.mime_type:
+                raise ValueError(
+                    "Can't instantiate ImageMessage with both file_name and image_content at the same time."
+                )
+            self.image_content, self.mime_type = image_to_base64(self.file_path)
 
         # Validate the MIME type
         if self.mime_type not in format_to_mime.values():
@@ -162,8 +171,30 @@ class ImageMessage(Message):
         if not is_base64_simple(self.image_content):
             raise ValueError("Image content must be a base64-encoded string.")
 
+        # Construct our content
+        self.content = [self.image_content, self.text_content]
+
+        # Raise an error if we have an incomplete object at the end of this process.
+        if not self.image_content or not self.mime_type or not self.content:
+            raise ValidationError("Incorrect initialization for some reason.")
+
     def __repr__(self):
         return f"ImageMessage(role={self.role}, text_content={self.text_content}, image_content={self.image_content:<.10}..., mime_type={self.mime_type})"
+
+    def display(self):
+        """
+        Display a base64-encoded image using chafa.
+        Your mileage may vary depending on the terminal and chafa version.
+        """
+        import subprocess
+        import base64
+
+        try:
+            image_data = base64.b64decode(self.image_content)
+            process = subprocess.Popen(["chafa", "-"], stdin=subprocess.PIPE)
+            process.communicate(input=image_data)
+        except Exception as e:
+            print(f"Error: {e}")
 
     def to_anthropic(self) -> AnthropicImageMessage:
         """
@@ -231,17 +262,3 @@ def image_to_base64(file_path):
         mime_type = mime_map.get(img_format, "image/jpeg")
 
         return base64_data, mime_type
-
-
-def create_image_message(image_file_path: str | Path, prompt_str: str) -> ImageMessage:
-    """
-    Function to generate an image message from an image file path and a text prompt.
-    """
-    image_base64, mime_type = image_to_base64(image_file_path)
-    imagemessage = ImageMessage(
-        role="user",
-        text_content=prompt_str,
-        image_content=image_base64,
-        mime_type=mime_type,
-    )
-    return imagemessage

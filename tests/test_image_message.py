@@ -93,3 +93,4 @@ if __name__ == "__main__":
     # response = m.query(imagemessage)
     response = c.run(messages=[imagemessage])
     print(response)
+    imagemessage.display()

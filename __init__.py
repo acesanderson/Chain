@@ -6,10 +6,7 @@ from Chain.model.model_async import ModelAsync
 from Chain.response.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message, Messages, create_system_message
-from Chain.message.imagemessage import (
-    ImageMessage,
-    create_image_message,
-)
+from Chain.message.imagemessage import ImageMessage
 from Chain.message.messagestore import MessageStore
 from Chain.cache.cache import ChainCache
 from Chain.chat.chat import Chat
@@ -29,7 +26,6 @@ __all__ = [
     "Response",
     "Message",
     "ImageMessage",
-    "create_image_message",
     "MessageStore",
     "create_system_message",
     "Messages",
