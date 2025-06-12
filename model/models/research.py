@@ -49,7 +49,7 @@ def generate_model_specs(prompt_str: str, model: str = "sonar-pro") -> ModelSpec
         ModelSpecs: The generated model specifications.
     """
     prompt = Prompt(prompt_str)
-    parser = Parser(list[ModelSpecs])
+    parser = Parser(ModelSpecs)
     model = Model(model)
     chain = Chain(model=model, parser=parser, prompt=prompt)
     response = chain.run()

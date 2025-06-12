@@ -22,7 +22,7 @@ Create three frogs.
 
 if __name__ == "__main__":
     prompt = Prompt(prompt_str)
-    model = Model("claude")
+    model = Model("sonar")
     # model = Model("sonar")
     parser = Parser(Frogs)  # Single frog
     # parser = Parser(Frogs)
