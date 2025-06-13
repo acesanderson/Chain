@@ -1,11 +1,14 @@
 """
 Client subclass for Anthropic models.
+TBD: implement streaming support.
 """
 
 from Chain.model.clients.client import Client
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from Chain.model.clients.load_env import load_env
+from Chain.parser.parser import Parser
 from anthropic import Anthropic, AsyncAnthropic
 import instructor
 from pydantic import BaseModel
@@ -60,55 +63,59 @@ class AnthropicClientSync(AnthropicClient):
         self,
         model: str,
         input: str | list | Message | ImageMessage,
-        pydantic_model: BaseModel | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         """
         Handles all synchronous requests from Anthropic's models.
         Possibilities:
-        - pydantic object not provided, input is string -> return string
-        - pydantic object provided, input is string -> return pydantic object
+        - parser not provided, input is string -> return string
+        - parser provided, input is string -> return pydantic object
         - if raw=True, return a tuple of (pydantic object, raw text)
          Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
         """
         # Anthropic requires a system variable
         system = ""
         if isinstance(input, str):
-            input = [Message(role="user", content=input)]
-        elif isinstance(input, ImageMessage):
-            input = [input.to_anthropic().model_dump()]
+            messages = [Message(role="user", content=input)]
+        # We want to work with a list of message / image / audio message objects only
         elif isinstance(input, Message):
-            input = [input.model_dump()]
+            messages = [input]
+        # If it's a list, we assume it's a list of messages.
         elif isinstance(input, list):
-            input = input
-            # This is anthropic quirk; we remove the system message and set it as a query parameter.
-            if input[0].role == "system":
-                system = input[0]["content"]
-                input = input[1:]
-                # Remote "system" role from any messages in input. Another annoying quirk.
-                for message in input:
-                    if message.role == "system":
-                        message.role = "user"
-            # Process image messages if present; if there is an ImageMessage, change it to a dict: ImageMessage.to_anthropic().model_dump()
-            for message in input:
-                if isinstance(message, ImageMessage):
-                    input = [
-                        (
-                            message.to_anthropic().model_dump()
-                            if isinstance(message, ImageMessage)
-                            else message
-                        )
-                        for message in input
-                    ]
-        else:
-            raise ValueError(
-                f"Input not recognized as a valid input type: {type(input)}: {input}"
-            )
+            messages = input
+        # For dev -- we are expecting a list here, and a list only
+        assert isinstance(messages, list)
+        assert len(messages) > 0, "Input messages cannot be empty."
+        # Now we process that list of messages
+        ## Anthropic quirk: system message is a separate variable.
+        if messages[0].role == "system":
+            system = messages[0].content
+            messages = messages[1:]
+            # Remote "system" role from any messages in input. Another annoying quirk.
+            for message in messages:
+                if message.role == "system":
+                    message.role = "user"
+        # Now convert all Pydantic objects in list to model_dump
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, ImageMessage):
+                converted_message = message.to_anthropic().model_dump()
+                converted_messages.append(converted_message)
+            elif isinstance(message, AudioMessage):
+                raise NotImplementedError("AudioMessage not supported in Anthropic")
+            elif isinstance(message, Message):
+                converted_message = message.model_dump()
+                converted_messages.append(converted_message)
+            else:
+                raise ValueError(
+                    f"Input not recognized as a valid message type: {type(message)}: {message}"
+                )
         params = {
-            "messages": input,
+            "messages": converted_messages,
             "model": model,
-            "response_model": pydantic_model,
+            "response_model": None if not parser else parser.pydantic_model,
             "max_retries": 0,
             "system": system,
         }
@@ -125,7 +132,7 @@ class AnthropicClientSync(AnthropicClient):
             else:
                 params["temperature"] = temperature
         # Pydantic models always return the tuple at client level (Model does further parsing)
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = self._client.chat.completions.create_with_completion(
                 **params
             )
@@ -149,7 +156,7 @@ class AnthropicClientAsync(AnthropicClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
@@ -161,28 +168,33 @@ class AnthropicClientAsync(AnthropicClient):
         - if raw=True, return a tuple of (pydantic object, raw text)
         Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
         """
+        messages = []
         # Anthropic requires a system variable
         system = ""
         if isinstance(input, str):
-            input = [Message(role="user", content=input)]
+            messages = [Message(role="user", content=input)]
+        if isinstance(input, Message):
+            messages = [input]
+        # If it's a list, we assume it's a list of messages.
         elif isinstance(input, list):
-            input = input
-            # This is anthropic quirk; we remove the system message and set it as a query parameter.
-            if input[0].role == "system":
-                system = input[0]["content"]
-                input = input[1:]
-                # Remote "system" role from any messages in input. Another annoying quirk.
-                for message in input:
-                    if message.role == "system":
-                        message.role = "user"
-        else:
-            raise ValueError(
-                f"Input not recognized as a valid input type: {type(input)}: {input}"
-            )
+            messages = input
+        # For dev -- we are expecting a list here, and a list only
+        assert isinstance(messages, list)
+        assert len(messages) > 0, "Input messages cannot be empty."
+        # Now we process that list of messages
+        ## Anthropic quirk: system message is a separate variable.
+        if messages[0].role == "system":
+            system = messages[0].content
+            messages = messages[1:]
+            # Remote "system" role from any messages in input. Another annoying quirk.
+            for message in messages:
+                if message.role == "system":
+                    message.role = "user"
+        # Construct params
         params = {
             "messages": input,
             "model": model,
-            "response_model": pydantic_model,
+            "response_model": None if not parser else parser.pydantic_model,
             "max_retries": 0,
             "system": system,
         }
@@ -199,13 +211,13 @@ class AnthropicClientAsync(AnthropicClient):
             else:
                 params["temperature"] = temperature
         # call our client
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = (
                 await self._client.chat.completions.create_with_completion(**params)
             )
             raw_text = json.dumps(raw_response.content[0].input)
             return obj, raw_text
-        elif pydantic_model:
+        elif parser:
             obj = await self._client.chat.completions.create(**params)
             return obj
         # If you are not passing pydantic models, you will get the text response.

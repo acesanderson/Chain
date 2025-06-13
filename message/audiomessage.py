@@ -166,3 +166,16 @@ class AudioMessage(BaseModel):
         return OpenAIAudioMessage(
             role=self.role, content=[text_content, openaiaudiocontent]
         )
+
+    def play(self):
+        """
+        Play the audio.
+        """
+        from pydub import AudioSegment
+        from pydub.playback import play
+        from pathlib import Path
+
+        dir_path = Path(__file__).parent
+        audio = AudioSegment.from_file(str(dir_path / "allhands.m4a"))
+
+        play(audio)

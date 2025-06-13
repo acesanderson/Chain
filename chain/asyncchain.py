@@ -1,5 +1,5 @@
 from Chain.chain.chain import Chain, Prompt
-from Chain.model.model import ModelAsync
+from Chain.model.model_async import ModelAsync
 from Chain.response.response import Response
 from Chain.message.message import Message
 from Chain.parser.parser import Parser

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 
 class Response(BaseModel):
-    content: str | BaseModel
+    content: str | BaseModel | list[BaseModel]
     status: str
     prompt: str | None
     model: str

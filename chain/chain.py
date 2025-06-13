@@ -15,7 +15,6 @@ from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
-from typing import overload
 
 
 class Chain:
@@ -100,7 +99,7 @@ class Chain:
             result = self.model.query(
                 messages,
                 verbose=verbose,
-                pydantic_model=self.parser.pydantic_model,
+                parser=self.parser,
                 cache=cache,
             )
         else:
@@ -138,7 +137,7 @@ class Chain:
             result = self.model.query(
                 prompt,
                 verbose=verbose,
-                pydantic_model=self.parser.pydantic_model,
+                parser=self.parser,
                 cache=cache,
             )
         else:
@@ -164,13 +163,9 @@ class Chain:
     def run_stream(
         self, prompt: str, messages: list[Message] | None = None, verbose=True
     ):
-        if self.parser:
-            pydantic_model = self.parser.pydantic_model
-        else:
-            pydantic_model = None
         if messages:
             prompt = messages.append(Message(role="user", content=prompt))
-        return self.model.stream(prompt, verbose, pydantic_model)
+        return self.model.stream(prompt, verbose, parser)
 
     def __repr__(self) -> str:
         """

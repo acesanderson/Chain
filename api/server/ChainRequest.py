@@ -1,4 +1,8 @@
-from Chain import Chain, Model, Prompt, Response, Message
+from Chain.chain.chain import Chain
+from Chain.model.model import Model
+from Chain.prompt.prompt import Prompt
+from Chain.response.response import Response
+from Chain.message.message import Message
 from pydantic import BaseModel
 from typing import Optional
 
