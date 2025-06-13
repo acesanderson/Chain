@@ -5,6 +5,7 @@ Client subclass for Anthropic models.
 from Chain.model.clients.client import Client
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from Chain.model.clients.load_env import load_env
 from Chain.parser.parser import Parser
 from anthropic import Anthropic, AsyncAnthropic
@@ -73,41 +74,42 @@ class AnthropicClientSync(AnthropicClient):
         - if raw=True, return a tuple of (pydantic object, raw text)
          Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
         """
+        messages = []
         # Anthropic requires a system variable
         system = ""
         if isinstance(input, str):
-            input = [Message(role="user", content=input)]
-        elif isinstance(input, ImageMessage):
-            input = [input.to_anthropic().model_dump()]
-        elif isinstance(input, Message):
-            input = [input.model_dump()]
-        elif isinstance(input, list):
-            input = input
-            # This is anthropic quirk; we remove the system message and set it as a query parameter.
-            if input[0].role == "system":
-                system = input[0]["content"]
-                input = input[1:]
-                # Remote "system" role from any messages in input. Another annoying quirk.
-                for message in input:
-                    if message.role == "system":
-                        message.role = "user"
-            # Process image messages if present; if there is an ImageMessage, change it to a dict: ImageMessage.to_anthropic().model_dump()
-            for message in input:
-                if isinstance(message, ImageMessage):
-                    input = [
-                        (
-                            message.to_anthropic().model_dump()
-                            if isinstance(message, ImageMessage)
-                            else message
-                        )
-                        for message in input
-                    ]
-        else:
-            raise ValueError(
-                f"Input not recognized as a valid input type: {type(input)}: {input}"
-            )
+            messages = [Message(role="user", content=input)]
+        # We want to work with a list of message / image / audio message objects only
+        if isinstance(input, Message):
+            messages = [input]
+        # For dev -- we are expecting a list here, and a list only
+        assert isinstance(messages, list)
+        # Now we process that list of messages
+        ## Anthropic quirk: system message is a separate variable.
+        if messages[0].role == "system":
+            system = messages[0]["content"]
+            messages = messages[1:]
+            # Remote "system" role from any messages in input. Another annoying quirk.
+            for message in messages:
+                if message.role == "system":
+                    message.role = "user"
+        # Now convert all Pydantic objects in list to model_dump
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, ImageMessage):
+                converted_message = message.to_anthropic().model_dump()
+                converted_messages.append(converted_message)
+            elif isinstance(message, AudioMessage):
+                raise NotImplementedError("AudioMessage not supported in Anthropic")
+            elif isinstance(message, Message):
+                converted_message = message.model_dump()
+                converted_messages.append(converted_message)
+            else:
+                raise ValueError(
+                    f"Input not recognized as a valid message type: {type(message)}: {message}"
+                )
         params = {
-            "messages": input,
+            "messages": converted_messages,
             "model": model,
             "response_model": None if not parser else parser.pydantic_model,
             "max_retries": 0,
