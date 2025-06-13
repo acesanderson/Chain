@@ -1,5 +1,6 @@
 """
 Client subclass for Anthropic models.
+TBD: implement streaming support.
 """
 
 from Chain.model.clients.client import Client
@@ -74,20 +75,23 @@ class AnthropicClientSync(AnthropicClient):
         - if raw=True, return a tuple of (pydantic object, raw text)
          Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
         """
-        messages = []
         # Anthropic requires a system variable
         system = ""
         if isinstance(input, str):
             messages = [Message(role="user", content=input)]
         # We want to work with a list of message / image / audio message objects only
-        if isinstance(input, Message):
+        elif isinstance(input, Message):
             messages = [input]
+        # If it's a list, we assume it's a list of messages.
+        elif isinstance(input, list):
+            messages = input
         # For dev -- we are expecting a list here, and a list only
         assert isinstance(messages, list)
+        assert len(messages) > 0, "Input messages cannot be empty."
         # Now we process that list of messages
         ## Anthropic quirk: system message is a separate variable.
         if messages[0].role == "system":
-            system = messages[0]["content"]
+            system = messages[0].content
             messages = messages[1:]
             # Remote "system" role from any messages in input. Another annoying quirk.
             for message in messages:
@@ -164,24 +168,29 @@ class AnthropicClientAsync(AnthropicClient):
         - if raw=True, return a tuple of (pydantic object, raw text)
         Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
         """
+        messages = []
         # Anthropic requires a system variable
         system = ""
         if isinstance(input, str):
-            input = [Message(role="user", content=input)]
+            messages = [Message(role="user", content=input)]
+        if isinstance(input, Message):
+            messages = [input]
+        # If it's a list, we assume it's a list of messages.
         elif isinstance(input, list):
-            input = input
-            # This is anthropic quirk; we remove the system message and set it as a query parameter.
-            if input[0].role == "system":
-                system = input[0]["content"]
-                input = input[1:]
-                # Remote "system" role from any messages in input. Another annoying quirk.
-                for message in input:
-                    if message.role == "system":
-                        message.role = "user"
-        else:
-            raise ValueError(
-                f"Input not recognized as a valid input type: {type(input)}: {input}"
-            )
+            messages = input
+        # For dev -- we are expecting a list here, and a list only
+        assert isinstance(messages, list)
+        assert len(messages) > 0, "Input messages cannot be empty."
+        # Now we process that list of messages
+        ## Anthropic quirk: system message is a separate variable.
+        if messages[0].role == "system":
+            system = messages[0].content
+            messages = messages[1:]
+            # Remote "system" role from any messages in input. Another annoying quirk.
+            for message in messages:
+                if message.role == "system":
+                    message.role = "user"
+        # Construct params
         params = {
             "messages": input,
             "model": model,

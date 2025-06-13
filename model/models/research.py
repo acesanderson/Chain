@@ -60,5 +60,5 @@ def generate_model_specs(prompt_str: str, model: str = "sonar-pro") -> ModelSpec
 if __name__ == "__main__":
     # Example usage
     prompt = "You will help me create an inventory of AI models available from OpenAI. Please return a list of models with their specifications, including provider, deployment type, capabilities, formats, context window size, knowledge cutoff date, and a brief description. The output should be in the format of ModelSpecs. If a model DOESN'T meet the schema, please do not include. For example I don't want embedding models included."
-    specs = generate_model_specs(prompt, model="gpt")
+    specs = generate_model_specs(prompt, model="sonar")
     print(specs)

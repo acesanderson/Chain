@@ -74,6 +74,8 @@ class PerplexityClientSync(PerplexityClient):
             messages = [Message(role="user", content=input)]
         elif isinstance(input, Message):
             messages = [input]
+        elif isinstance(input, list):
+            messages = input
         # Dev: we should have a list of messages at this point.
         assert isinstance(messages, list)
         # Convert messages to OpenAI format
@@ -91,7 +93,7 @@ class PerplexityClientSync(PerplexityClient):
         params = {
             "model": model,
             "messages": converted_messages,
-            "response_model": parser.pydantic_model if parser else None,
+            "response_model": parser.to_perplexity() if parser else None,
         }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if temperature:
@@ -102,11 +104,21 @@ class PerplexityClientSync(PerplexityClient):
             params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
         if raw and parser:
-            obj, raw_response = self._client.chat.completions.create_with_completion(
-                **params
-            )
-            raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
-            return obj, raw_text
+            try:
+                obj, raw_response = (
+                    self._client.chat.completions.create_with_completion(**params)
+                )
+                raw_text = (
+                    raw_response.choices[0].message.tool_calls[0].function.arguments
+                )
+                return obj, raw_text
+            except AttributeError:
+                # Fallback: get the structured response and use model_dump_json()
+                obj = self._client.chat.completions.create(**params)
+                raw_text = (
+                    obj.model_dump_json()
+                )  # This gives you the JSON string for caching
+                return obj, raw_text
         # Default behavior is to return only the pydantic model.
         elif parser:
             obj = self._client.chat.completions.create(**params)
@@ -114,4 +126,4 @@ class PerplexityClientSync(PerplexityClient):
         # If you are not passing pydantic models, you will get the text response.
         else:
             response = self._client.chat.completions.create(**params)
-            return response.choices[0].message.content
+            return response.choices[0].messag

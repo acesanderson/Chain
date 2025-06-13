@@ -57,6 +57,8 @@ class OpenAIClientSync(OpenAIClient):
             messages = [Message(role="user", content=input)]
         elif isinstance(input, Message):
             messages = [input]
+        elif isinstance(input, list):
+            messages = input
         # Dev: we should have a list of messages at this point.
         assert isinstance(messages, list)
         # Convert messages to OpenAI format
@@ -110,12 +112,35 @@ class OpenAIClientSync(OpenAIClient):
         parser: Parser | None = None,
         temperature: Optional[float] = None,
     ) -> Stream:
+        messages = []
         if isinstance(input, str):
-            input = [{"role": "user", "content": input}]
+            messages = [Message(role="user", content=input)]
+        elif isinstance(input, Message):
+            messages = [input]
+        elif isinstance(input, list):
+            messages = input
+        # Dev: we should have a list of messages at this point.
+        assert isinstance(messages, list)
+        assert len(messages) > 0, "Input messages cannot be empty."
+        # Convert messages to OpenAI format
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, ImageMessage):
+                converted_messages.append(message.to_openai().model_dump())
+            elif isinstance(message, AudioMessage):
+                if not model == "gpt-4o-audio-preview":
+                    raise ValueError(
+                        "AudioMessage can only be used with the gpt-4o-audio-preview model."
+                    )
+                converted_messages.append(message.to_openai().model_dump())
+            if isinstance(message, Message):
+                converted_messages.append(message.model_dump())
+            else:
+                raise ValueError(f"Unsupported message type: {type(message)}")
         # Build our params; pydantic_model will be None if we didn't request it.
         params = {
             "model": model,
-            "messages": input,
+            "messages": converted_messages,
             "response_model": parser.pydantic_model if parser else None,
             "stream": True,
         }
@@ -143,11 +168,33 @@ class OpenAIClientAsync(OpenAIClient):
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
-            input = [{"role": "user", "content": input}]
+            messages = [Message(role="user", content=input)]
+        elif isinstance(input, Message):
+            messages = [input]
+        elif isinstance(input, list):
+            messages = input
+        # Dev: we should have a list of messages at this point.
+        assert isinstance(messages, list)
+        assert len(messages) > 0, "Input messages cannot be empty."
+        # Convert messages to OpenAI format
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, ImageMessage):
+                converted_messages.append(message.to_openai().model_dump())
+            elif isinstance(message, AudioMessage):
+                if not model == "gpt-4o-audio-preview":
+                    raise ValueError(
+                        "AudioMessage can only be used with the gpt-4o-audio-preview model."
+                    )
+                converted_messages.append(message.to_openai().model_dump())
+            if isinstance(message, Message):
+                converted_messages.append(message.model_dump())
+            else:
+                raise ValueError(f"Unsupported message type: {type(message)}")
         # Build our params; pydantic_model will be None if we didn't request it.
         params = {
             "model": model,
-            "messages": input,
+            "messages": converted_messages,
             "response_model": parser.pydantic_model if parser else None,
         }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
