@@ -47,7 +47,7 @@ class OpenAIClientSync(OpenAIClient):
         self,
         model: str,
         input: str | list | Message | ImageMessage | AudioMessage,
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
@@ -115,7 +115,7 @@ class OpenAIClientSync(OpenAIClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         temperature: Optional[float] = None,
     ) -> Stream:
         if isinstance(input, str):
@@ -146,7 +146,7 @@ class OpenAIClientAsync(OpenAIClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | None = None,
+        pydantic_model: BaseModel | list[BaseModel] | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:

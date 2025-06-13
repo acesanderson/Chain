@@ -1,13 +1,12 @@
-from pathlib import Path
-import importlib
-import json
-import itertools
 from Chain.cache.cache import ChainCache, CachedRequest
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.parser.parser import Parser
 from pydantic import BaseModel
 from typing import Optional
+from pathlib import Path
+import importlib, json, itertools
 
 dir_path = Path(__file__).resolve().parent
 
@@ -113,7 +112,7 @@ class Model:
         self,
         input: str | list | Message | ImageMessage | AudioMessage,
         verbose: bool = True,
-        pydantic_model: BaseModel | None = None,
+        parser: Parser | None = None,
         raw=False,
         cache=True,
         temperature: Optional[float] = None,  # None means just use the defaults
@@ -127,10 +126,10 @@ class Model:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
                 print("Cache hit!")
-                if pydantic_model:
+                if parser:
                     try:
                         cached_request_dict = json.loads(cached_request)
-                        obj = pydantic_model(**cached_request_dict)  # type: ignore
+                        obj = parser.pydantic_model(**cached_request_dict)  # type: ignore
                         if raw:
                             return (obj, cached_request)  # type: ignore
                         if not raw:
@@ -138,22 +137,20 @@ class Model:
                     except Exception as e:
                         print(f"Failed to parse cached request: {e}")
                 return cached_request
-        if pydantic_model == None:
+        if parser == None:
             llm_output = self._client.query(
                 self.model, input, raw=False, temperature=temperature
             )
         else:
-            obj, llm_output = self._client.query(
-                self.model, input, pydantic_model, raw=True
-            )
+            obj, llm_output = self._client.query(self.model, input, parser, raw=True)
         if Model._chain_cache and cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output
             )
             Model._chain_cache.insert_cached_request(cached_request)
-        if pydantic_model and not raw:
+        if parser and not raw:
             return obj  # type: ignore
-        elif pydantic_model and raw:
+        elif parser and raw:
             return obj, llm_output  # type: ignore
         else:
             return llm_output
@@ -179,7 +176,7 @@ class Model:
         self,
         input: str | list,
         verbose: bool = True,
-        pydantic_model: BaseModel | None = None,
+        parser: Parser | None = None,
         temperature: Optional[float] = None,
     ):
         if verbose:
@@ -189,11 +186,11 @@ class Model:
             if cached_request:
                 print("Cache hit!")
                 return cached_request
-        results = self._client.query(self.model, input, pydantic_model)
+        results = self._client.query(self.model, input, parser)
         if Model._chain_cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=results
             )
             Model._chain_cache.insert_cached_request(cached_request)
-        stream = self._client.stream(self.model, input, pydantic_model, temperature)
+        stream = self._client.stream(self.model, input, parser, temperature)
         return stream

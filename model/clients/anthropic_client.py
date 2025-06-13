@@ -6,6 +6,7 @@ from Chain.model.clients.client import Client
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.model.clients.load_env import load_env
+from Chain.parser.parser import Parser
 from anthropic import Anthropic, AsyncAnthropic
 import instructor
 from pydantic import BaseModel
@@ -60,15 +61,15 @@ class AnthropicClientSync(AnthropicClient):
         self,
         model: str,
         input: str | list | Message | ImageMessage,
-        pydantic_model: BaseModel | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         """
         Handles all synchronous requests from Anthropic's models.
         Possibilities:
-        - pydantic object not provided, input is string -> return string
-        - pydantic object provided, input is string -> return pydantic object
+        - parser not provided, input is string -> return string
+        - parser provided, input is string -> return pydantic object
         - if raw=True, return a tuple of (pydantic object, raw text)
          Anthropic is quirky about system messsages (The Messages API accepts a top-level "system" parameter, not "system" as an input message role.)
         """
@@ -108,7 +109,7 @@ class AnthropicClientSync(AnthropicClient):
         params = {
             "messages": input,
             "model": model,
-            "response_model": pydantic_model,
+            "response_model": None if not parser else parser.pydantic_model,
             "max_retries": 0,
             "system": system,
         }
@@ -125,7 +126,7 @@ class AnthropicClientSync(AnthropicClient):
             else:
                 params["temperature"] = temperature
         # Pydantic models always return the tuple at client level (Model does further parsing)
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = self._client.chat.completions.create_with_completion(
                 **params
             )
@@ -149,7 +150,7 @@ class AnthropicClientAsync(AnthropicClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
@@ -182,7 +183,7 @@ class AnthropicClientAsync(AnthropicClient):
         params = {
             "messages": input,
             "model": model,
-            "response_model": pydantic_model,
+            "response_model": None if not parser else parser.pydantic_model,
             "max_retries": 0,
             "system": system,
         }
@@ -199,13 +200,13 @@ class AnthropicClientAsync(AnthropicClient):
             else:
                 params["temperature"] = temperature
         # call our client
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = (
                 await self._client.chat.completions.create_with_completion(**params)
             )
             raw_text = json.dumps(raw_response.content[0].input)
             return obj, raw_text
-        elif pydantic_model:
+        elif parser:
             obj = await self._client.chat.completions.create(**params)
             return obj
         # If you are not passing pydantic models, you will get the text response.

@@ -1,5 +1,30 @@
 """
 Fragments that can be used to generate ModelSpecs using Perplexity API.
+NOTE: the list[BaseModel] usage of Parser requires more refactoring, as list[BaseModel] is not an object and therefore cannot be passed to Parser like I try below.
+
+This might work -- it's really a matter of debugging the fact that I use isinstance(message, BaseModel) in my conditionals in query functions. Need to expand it to GenericAlias (which list[BaseModel] is).
+```python
+from typing import get_origin, get_args
+from types import GenericAlias
+
+def is_valid_pydantic_type(obj):
+    # Check for Pydantic model class
+    if isinstance(obj, type) and issubclass(obj, BaseModel):
+        return True
+
+    # Check for list[PydanticModel]
+    if isinstance(obj, GenericAlias):
+        origin = get_origin(obj)
+        args = get_args(obj)
+        if origin is list and args and isinstance(args[0], type) and issubclass(args[0], BaseModel):
+            return True
+
+    return False
+
+# Usage:
+if pydantic_model and is_valid_pydantic_type(pydantic_model):
+    # Handle structured output
+```
 """
 
 from Chain.chain.chain import Chain
@@ -12,7 +37,7 @@ from Chain.model.models.ModelSpec import ModelSpec, ModelSpecs
 model_store = ModelStore()
 
 
-def generate_model_specs(prompt_str: str, model: str = "sonar") -> ModelSpecs:
+def generate_model_specs(prompt_str: str, model: str = "sonar-pro") -> ModelSpecs:
     """
     Generate model specifications using a prompt and a specified model.
 
@@ -27,6 +52,7 @@ def generate_model_specs(prompt_str: str, model: str = "sonar") -> ModelSpecs:
     parser = Parser(ModelSpecs)
     model_obj = Model(model)
     chain = Chain(model=model_obj, parser=parser, prompt=prompt)
+    model = Model(model)
     response = chain.run()
     return response.content
 
