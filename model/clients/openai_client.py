@@ -57,14 +57,9 @@ class OpenAIClientSync(OpenAIClient):
             messages = [Message(role="user", content=input)]
         elif isinstance(input, Message):
             messages = [input]
-        # elif isinstance(input, AudioMessage):
-        #     if not model == "gpt-4o-audio-preview":
-        #         raise ValueError(
-        #             "AudioMessage can only be used with the gpt-4o-audio-preview model."
-        #         )
-        #     input = [input.to_openai().model_dump()]
-        # Dev: we should have a list of Message objects now.
+        # Dev: we should have a list of messages at this point.
         assert isinstance(messages, list)
+        # Convert messages to OpenAI format
         converted_messages = []
         for message in messages:
             if isinstance(message, ImageMessage):
