@@ -3,6 +3,7 @@ from Chain.model.clients.load_env import load_env
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.parser.parser import Parser
 from openai import OpenAI, AsyncOpenAI, Stream
 import instructor
 from pydantic import BaseModel
@@ -47,47 +48,43 @@ class OpenAIClientSync(OpenAIClient):
         self,
         model: str,
         input: str | list | Message | ImageMessage | AudioMessage,
-        pydantic_model: BaseModel | list[BaseModel] | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
+        messages = []
         if isinstance(input, str):
-            input = [{"role": "user", "content": input}]
-        elif isinstance(input, ImageMessage):
-            input = [input.to_openai().model_dump()]
+            messages = [Message(role="user", content=input)]
         elif isinstance(input, Message):
-            input = [input.model_dump()]
-        elif isinstance(input, AudioMessage):
-            if not model == "gpt-4o-audio-preview":
-                raise ValueError(
-                    "AudioMessage can only be used with the gpt-4o-audio-preview model."
-                )
-            input = [input.to_openai().model_dump()]
-        elif isinstance(input, list):
-            # Process ImageMessages first
-            input = [
-                (
-                    item.to_openai().model_dump()
-                    if isinstance(item, ImageMessage)
-                    else item.model_dump()
-                )
-                for item in input
-            ]
-            # Now AudioMessages
-            if any(isinstance(item, AudioMessage) for item in input):
+            messages = [input]
+        # elif isinstance(input, AudioMessage):
+        #     if not model == "gpt-4o-audio-preview":
+        #         raise ValueError(
+        #             "AudioMessage can only be used with the gpt-4o-audio-preview model."
+        #         )
+        #     input = [input.to_openai().model_dump()]
+        # Dev: we should have a list of Message objects now.
+        assert isinstance(messages, list)
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, ImageMessage):
+                converted_messages.append(message.to_openai().model_dump())
+            elif isinstance(message, AudioMessage):
                 if not model == "gpt-4o-audio-preview":
                     raise ValueError(
                         "AudioMessage can only be used with the gpt-4o-audio-preview model."
                     )
-                input = [
-                    (
-                        item.to_openai().model_dump()
-                        if isinstance(item, AudioMessage)
-                        else item
-                    )
-                    for item in input
-                ]
-        params = {"model": model, "messages": input, "response_model": pydantic_model}
+                converted_messages.append(message.to_openai().model_dump())
+            if isinstance(message, Message):
+                converted_messages.append(message.model_dump())
+            else:
+                raise ValueError(f"Unsupported message type: {type(message)}")
+        # Construct params
+        params = {
+            "model": model,
+            "messages": converted_messages,
+            "response_model": parser.pydantic_model if parser else None,
+        }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if temperature:
             if model.startswith("o"):
@@ -96,14 +93,14 @@ class OpenAIClientSync(OpenAIClient):
                 raise ValueError("OpenAI models need a temperature between 0 and 2.")
             params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = self._client.chat.completions.create_with_completion(
                 **params
             )
             raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
             return obj, raw_text
         # Default behavior is to return only the pydantic model.
-        elif pydantic_model:
+        elif parser:
             obj = self._client.chat.completions.create(**params)
             return obj
         # If you are not passing pydantic models, you will get the text response.
@@ -115,7 +112,7 @@ class OpenAIClientSync(OpenAIClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | list[BaseModel] | None = None,
+        parser: Parser | None = None,
         temperature: Optional[float] = None,
     ) -> Stream:
         if isinstance(input, str):
@@ -124,7 +121,7 @@ class OpenAIClientSync(OpenAIClient):
         params = {
             "model": model,
             "messages": input,
-            "response_model": pydantic_model,
+            "response_model": parser.pydantic_model if parser else None,
             "stream": True,
         }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
@@ -146,26 +143,30 @@ class OpenAIClientAsync(OpenAIClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | list[BaseModel] | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
         if isinstance(input, str):
             input = [{"role": "user", "content": input}]
         # Build our params; pydantic_model will be None if we didn't request it.
-        params = {"model": model, "messages": input, "response_model": pydantic_model}
+        params = {
+            "model": model,
+            "messages": input,
+            "response_model": parser.pydantic_model if parser else None,
+        }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if not model.startswith("o"):
             params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = (
                 await self._client.chat.completions.create_with_completion(**params)
             )
             raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
             return obj, raw_text
         # Default behavior is to return only the pydantic model.
-        elif pydantic_model:
+        elif parser:
             obj = await self._client.chat.completions.create(**params)
             return obj
         # If you are not passing pydantic models, you will get the text response.
