@@ -13,10 +13,9 @@ from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.parser.parser import Parser
 from openai import OpenAI
-import instructor
+import instructor, tiktoken
 from pydantic import BaseModel
-import tiktoken
-from typing import Optional
+from typing import Optional, Any
 
 
 class PerplexityClient(Client):
@@ -59,7 +58,7 @@ class PerplexityClientSync(PerplexityClient):
         perplexity_client = OpenAI(
             api_key=self._get_api_key(), base_url="https://api.perplexity.ai"
         )
-        return instructor.from_openai(perplexity_client)
+        return instructor.from_perplexity(perplexity_client)
 
     def query(
         self,
@@ -90,6 +89,8 @@ class PerplexityClientSync(PerplexityClient):
             else:
                 raise ValueError(f"Unsupported message type: {type(message)}")
         # Construct params
+        # from Chain.model.models.ModelSpec import ModelSpec
+
         params = {
             "model": model,
             "messages": converted_messages,
@@ -115,10 +116,19 @@ class PerplexityClientSync(PerplexityClient):
             except AttributeError:
                 # Fallback: get the structured response and use model_dump_json()
                 obj = self._client.chat.completions.create(**params)
-                raw_text = (
-                    obj.model_dump_json()
-                )  # This gives you the JSON string for caching
+                if isinstance(obj, BaseModel):
+                    raw_text = (
+                        obj.model_dump_json()
+                    )  # This gives you the JSON string for caching
+                elif isinstance(obj, list):
+                    from pydantic import TypeAdapter
+
+                    # Create a TypeAdapter for the list type
+                    adapter = TypeAdapter(list[Any])
+                    # Convert list to JSON string
+                    raw_text = adapter.dump_json(obj).decode("utf-8")
                 return obj, raw_text
+
         # Default behavior is to return only the pydantic model.
         elif parser:
             obj = self._client.chat.completions.create(**params)
