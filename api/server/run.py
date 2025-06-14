@@ -28,7 +28,10 @@ async def query(request: ChainRequest) -> Response:
     return response
 
 
-if __name__ == "__main__":
+def main():
     import uvicorn
-
     uvicorn.run("run:app", host="0.0.0.0", port=8000, reload=True)
+
+if __name__ == "__main__":
+    main()
+

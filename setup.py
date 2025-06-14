@@ -8,6 +8,7 @@ setup(
         "console_scripts": [
             "update_ollama=Chain.scripts.update_ollama_list:main",
             "chat=Chain.chat.chat:main",
+            "chainserver=Chain.api.server.run:main",
         ],
     },
 )
