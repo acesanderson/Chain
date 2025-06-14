@@ -7,6 +7,7 @@ Should read content as string when invoked as such.
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from pydantic import BaseModel
+from typing import Optional
 
 
 class Response(BaseModel):
@@ -15,7 +16,7 @@ class Response(BaseModel):
     prompt: str | None
     model: str
     duration: float | None
-    messages: list[Message | ImageMessage]
+    messages: Optional[list[Message | ImageMessage]]
 
     def __repr__(self):
         attributes = ", ".join(
