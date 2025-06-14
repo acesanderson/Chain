@@ -1,10 +1,21 @@
 from fastapi import FastAPI, status
 from Chain.api.server.ChainRequest import ChainRequest, process_ChainRequest
 from Chain.response.response import Response
-import uvicorn
+import uvicorn, ollama
 
 # Create a FastAPI instance
 app = FastAPI()
+
+
+# We want an initial handshake to ensure the server is running as well as for server to list their available models.
+@app.get("/", status_code=status.HTTP_200_OK)
+async def root() -> list:
+    print("Root endpoint accessed.")
+    ollama_models = [m["name"] for m in ollama.list()["models"]]
+    print("Available models:", ollama_models)
+    return ollama_models
+
+
 
 # Our actual query
 @app.post("/query/", status_code=status.HTTP_201_CREATED)
@@ -16,7 +27,7 @@ async def query(request: ChainRequest) -> Response:
 
 
 def main():
-    uvicorn.run("run:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("Chain.api.server.run:app", host="0.0.0.0", port=8000, reload=True)
 
 if __name__ == "__main__":
     main()
