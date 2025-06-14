@@ -141,7 +141,7 @@ class ImageMessage(Message):
     You can splat it to an OpenAI or Anthropic message; with the to_openai() and to_anthropic() methods.
     """
 
-    content: list[BaseModel] | None = Field(default=None)
+    content: list[BaseModel | str] | None = Field(default=None)
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
     )

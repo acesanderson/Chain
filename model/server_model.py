@@ -21,4 +21,5 @@ class ServerModel(Model):
 if __name__ == "__main__":
     model = ServerModel("llama3.3:latest")
     print(model.models)
-    model.query("What is the capital of France?")
+    response = model.query("What is the capital of France?")
+    print(response)
