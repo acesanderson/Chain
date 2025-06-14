@@ -21,8 +21,8 @@ def process_ChainRequest(chainrequest: ChainRequest) -> Response:
     Takes a request and returns a response.
     """
     # Get our variables
-    breakpoint()
-    model = Model(chainrequest.model)
+    model = chainrequest.model # This will go in API request
+    model_obj = Model(model) # We need this to get client
     input = chainrequest.input
     pydantic_model = chainrequest.pydantic_model
     raw = chainrequest.raw
@@ -30,7 +30,7 @@ def process_ChainRequest(chainrequest: ChainRequest) -> Response:
     # Reconstruct parser if pydantic_model is provided
     parser = Parser(pydantic_model) if pydantic_model else None  # type: ignore
     # Run the query at client level
-    client = model._client
+    client = model_obj._client
     response = client.query(
         model=model,
         input=input,
