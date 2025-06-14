@@ -36,6 +36,38 @@ from Chain.model.models.ModelSpec import ModelSpec, ModelSpecs
 
 model_store = ModelStore()
 
+openai_models = """
+o4-mini
+o3
+o3-pro
+o1
+o1-mini
+o1-pro
+gpt-4.1
+gpt-4o
+gpt-4o-audio-preview
+o4-mini
+gpt-4.1-mini
+gpt-4.1-nano
+o3-mini
+gpt-4o-mini
+gpt-4o-mini-audio-preview
+o1-mini
+gpt-4o-realtime-preview
+gpt-4o-mini-realtime-preview
+gpt-image-1
+dall-e-3
+dall-e-2
+gpt-4o-mini-tts
+tts-1
+tts-1-hd
+gpt-4o-transcribe
+gpt-4o-mini-transcribe
+whisper-1
+""".strip().split(
+    "\n"
+)
+
 
 def generate_model_specs(prompt_str: str, model: str = "sonar-pro") -> ModelSpecs:
     """
@@ -59,6 +91,6 @@ def generate_model_specs(prompt_str: str, model: str = "sonar-pro") -> ModelSpec
 
 if __name__ == "__main__":
     # Example usage
-    prompt = "You will help me create an inventory of AI models available from OpenAI. Please return a list of models with their specifications, including provider, deployment type, capabilities, formats, context window size, knowledge cutoff date, and a brief description. The output should be in the format of ModelSpecs. If a model DOESN'T meet the schema, please do not include. For example I don't want embedding models included."
-    specs = generate_model_specs(prompt, model="sonar")
+    prompt = f"You will help me create an inventory of AI models available from OpenAI. Please return a list of models with their specifications, including provider, deployment type, capabilities, formats, context window size, knowledge cutoff date, and a brief description. The output should be in the format of ModelSpecs. If a model DOESN'T meet the schema, please do not include. For example I don't want embedding models included. Please only return data for this list of models:\n{openai_models}"
+    specs = generate_model_specs(prompt, model="gemini2.5")
     print(specs)
