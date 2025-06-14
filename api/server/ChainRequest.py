@@ -47,5 +47,6 @@ def process_ChainRequest(chainrequest: ChainRequest) -> Response:
         prompt = input,
         model = model,
         duration = end_time - start_time,
+        messages = None
     )
     return response_obj
