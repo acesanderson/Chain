@@ -4,6 +4,7 @@ from Chain.message.message import Message
 from Chain.parser.parser import Parser
 from pydantic import BaseModel
 from typing import Optional
+import time
 
 
 class ChainRequest(BaseModel):
@@ -31,6 +32,7 @@ def process_ChainRequest(chainrequest: ChainRequest) -> Response:
     parser = Parser(pydantic_model) if pydantic_model else None  # type: ignore
     # Run the query at client level
     client = model_obj._client
+    start_time = time.time()
     response = client.query(
         model=model,
         input=input,
@@ -38,4 +40,12 @@ def process_ChainRequest(chainrequest: ChainRequest) -> Response:
         raw=raw,
         temperature=temperature,
     )
-    return response
+    end_time = time.time()
+    response_obj = Response(
+        content = response,
+        status = "success",
+        prompt = input,
+        model = model,
+        duration = end_time - start_time,
+    )
+    return response_obj
