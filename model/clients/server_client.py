@@ -18,13 +18,12 @@ class ServerClient(Client):
     Currently defined entirely by url endpoint.
     """
 
-    _ollama_models = ""
-
     def __init__(self, url: str = ""):
         if not url:
             self.url = self._get_url()
         else:
             self.url = url
+        self.models = {}
         self.client = self._initialize_client()
 
     def _initialize_client(self):
@@ -33,8 +32,8 @@ class ServerClient(Client):
         """
         response = requests.get(self.url)
         if response.status_code == 200:
-            self._ollama_models = response.json()
-            print(f"Available ollama models: {self._ollama_models}")
+            self.models = response.json()
+            print(f"Available ollama models: {self.models}")
         else:
             print(f"Failed to initialize client. Status code: {response.status_code}")
             raise Exception("Failed to initialize ChainServer client.")
@@ -77,7 +76,7 @@ class ServerClientSync(ServerClient):
         request = chainrequest.model_dump()
         query_url = self.url + "query"
         http_response = requests.post(
-            url=self.url, json=request, headers={"Content-Type": "application/json"}
+            url=query_url, json=request, headers={"Content-Type": "application/json"}
         )
         if http_response.status_code == 201:
             response_data = http_response.json()
