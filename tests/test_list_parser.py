@@ -16,15 +16,15 @@ class Frogs(BaseModel):
 
 
 prompt_str = """
-Create three frogs.
+Create a frog.
 """.strip()
 
 
 if __name__ == "__main__":
     prompt = Prompt(prompt_str)
-    model = Model("claude")
+    model = Model("gemini")
     # model = Model("sonar")
-    parser = Parser(Frogs)  # Single frog
+    parser = Parser(Frog)  # Single frog
     # parser = Parser(Frogs)
     chain = Chain(prompt=prompt, model=model, parser=parser)
     response = chain.run()

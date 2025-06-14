@@ -64,7 +64,7 @@ class GoogleClientSync(GoogleClient):
     ) -> str | BaseModel | tuple[BaseModel, str]:
         messages = []
         if isinstance(input, str):
-            input = [Message(role="user", content=input)]
+            messages = [Message(role="user", content=input)]
         elif isinstance(input, Message):
             messages = [input]
         elif isinstance(input, list):
