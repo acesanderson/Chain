@@ -1,6 +1,6 @@
 from Chain.api.server.ChainRequest import ChainRequest
 from Chain.response.response import Response
-from Chain.api.server.test_ChainServer import example_requests
+# from Chain.api.server.test_ChainServer import example_requests
 from Chain.model.clients.client import Client
 import requests
 import subprocess
@@ -54,8 +54,8 @@ class ChainClient(Client):
             print(f"Response: {http_response.text}")
 
 
-if __name__ == "__main__":
-    client = ChainClient(url=get_url())
-    for example_request in example_requests:
-        response = client.send_request(example_request)
-        print(response)
+# if __name__ == "__main__":
+#     client = ChainClient(url=get_url())
+#     for example_request in example_requests:
+#         response = client.send_request(example_request)
+#         print(response)
