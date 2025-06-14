@@ -7,6 +7,7 @@ from Chain.model.clients.load_env import load_env
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.parser.parser import Parser
 from openai import OpenAI, AsyncOpenAI
 import instructor
 from pydantic import BaseModel
@@ -57,53 +58,51 @@ class GoogleClientSync(GoogleClient):
         self,
         model: str,
         input: str | list | Message | ImageMessage | AudioMessage,
-        pydantic_model: BaseModel | list[BaseModel] | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
+        messages = []
         if isinstance(input, str):
-            input = [{"role": "user", "content": input}]
-        elif isinstance(input, ImageMessage):
-            input = [input.to_openai().model_dump()]
-        elif isinstance(input, AudioMessage):
-            input = [input.to_openai().model_dump()]
+            input = [Message(role="user", content=input)]
         elif isinstance(input, Message):
-            input = [input.model_dump()]
-        # Process lists of custom message types
+            messages = [input]
         elif isinstance(input, list):
-            # First ImageMessage
-            input = [
-                (
-                    item.to_openai().model_dump()
-                    if isinstance(item, ImageMessage)
-                    else item.model_dump()
-                )
-                for item in input
-            ]
-            # Now AudioMessage
-            input = [
-                (
-                    item.to_openai().model_dump()
-                    if isinstance(item, AudioMessage)
-                    else item
-                )
-                for item in input
-            ]
-
-        # Build our params; pydantic_model will be None if we didn't request it.
-        params = {"model": model, "messages": input, "response_model": pydantic_model}
+            messages = input
+        # Dev: we should have a list of Message objects now.
+        assert isinstance(messages, list)
+        # Convert messages to OpenAI format
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, Message):
+                converted_messages.append(message.model_dump())
+            elif isinstance(message, ImageMessage):
+                converted_messages.append(message.to_openai().model_dump())
+            elif isinstance(message, AudioMessage):
+                converted_messages.append(message.to_openai().model_dump())
+            else:
+                raise TypeError("Unsupported message type: {}".format(type(message)))
+        # Construct params
+        params = {
+            "model": model,
+            "messages": converted_messages,
+            "response_model": parser.pydantic_model if parser else None,
+        }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if temperature:
             if temperature < 0 or temperature > 2:
                 raise ValueError("Gemini models need a temperature between 0 and 2.")
             params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = self._client.chat.completions.create_with_completion(
                 **params
             )
             raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
             return obj, raw_text
+        elif parser:
+            obj = self._client.chat.completions.create(**params)
+            return obj
         # Default is just return the response, i.e. just BaseModel or text.
         else:
             response = self._client.chat.completions.create(**params)
