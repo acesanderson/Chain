@@ -5,6 +5,7 @@ Great for ollama calls on a powerful remote computer.
 
 from Chain.api.server.ChainRequest import ChainRequest
 from Chain.response.response import Response
+
 # from Chain.tests.test_ChainServer import example_requests
 from Chain.model.clients.client import Client
 from Chain.parser.parser import Parser
@@ -33,7 +34,7 @@ class ServerClient(Client):
         response = requests.get(self.url)
         if response.status_code == 200:
             self.models = response.json()
-            print(f"Available ollama models: {self.models}")
+            print(f"Available models: {self.models}")
         else:
             print(f"Failed to initialize client. Status code: {response.status_code}")
             raise Exception("Failed to initialize ChainServer client.")
@@ -68,6 +69,19 @@ class ServerClientSync(ServerClient):
         """
         Our query function here needs to: create a ChainRequest object, submit it to self._send_request, and return the response.
         """
+        pydantic_model = parser.pydantic_model if parser else None
+        chainrequest = ChainRequest(
+            model=model,
+            input=input,
+            pydantic_model=pydantic_model,
+            raw=raw,
+            temperature=temperature,
+        )
+        response = self._send_request(chainrequest)
+        if response:
+            return response.content
+        else:
+            raise Exception("Failed to get a valid response from the server.")
 
     def _send_request(self, chainrequest: ChainRequest) -> Response | None:
         """

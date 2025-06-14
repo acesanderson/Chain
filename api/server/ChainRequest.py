@@ -11,9 +11,8 @@ class ChainRequest(BaseModel):
 
     model: str
     input: str | list[Message]
-    parser: Optional[Parser]
+    pydantic_model: Optional[BaseModel] = None
     raw: bool = False
-    input_variables: Optional[dict]
     temperature: Optional[float] = None
 
 
@@ -24,12 +23,13 @@ def process_ChainRequest(chainrequest: ChainRequest) -> Response:
     # Get our variables
     model = Model(chainrequest.model)
     input = chainrequest.input
-    parser = chainrequest.parser
+    pydantic_model = chainrequest.pydantic_model
     raw = chainrequest.raw
-    input_variables = chainrequest.input_variables
     temperature = chainrequest.temperature
+    # Reconstruct parser if pydantic_model is provided
+    parser = Parser(pydantic_model) if pydantic_model else None  # type: ignore
     # Run the query at client level
-    model_obj = Model(model)
+    model_obj = Model(model)  # type: ignore
     client = model_obj._client
     response = client.query(
         model=model,

@@ -14,10 +14,11 @@ class ServerModel(Model):
         :param url: The URL of the ChainServer.
         """
         self._client = ServerClientSync(url=url)
-        self.models = self._client.models
+        self.models = self._client.models  # type: ignore
         self.model = model
 
 
 if __name__ == "__main__":
     model = ServerModel("gpt")
     print(model.models)
+    model.query("What is the capital of France?")
