@@ -7,6 +7,8 @@ from typing import Optional
 
 
 class ChainRequest(BaseModel):
+    model_config = {"arbitrary_types_allowed": True}
+
     model: str
     input: str | list[Message]
     parser: Optional[Parser]
