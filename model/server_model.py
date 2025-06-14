@@ -19,6 +19,6 @@ class ServerModel(Model):
 
 
 if __name__ == "__main__":
-    model = ServerModel("gpt")
+    model = ServerModel("llama3.3:latest")
     print(model.models)
     model.query("What is the capital of France?")

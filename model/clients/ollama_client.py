@@ -7,10 +7,10 @@ We define preferred defaults for context sizes in a separate json file.
 """
 
 from Chain.model.clients.client import Client
+from Chain.parser.parser import Parser
 from pydantic import BaseModel
 from openai import OpenAI, AsyncOpenAI
-import instructor
-import ollama
+import instructor, ollama
 from typing import Optional
 
 # Logic for updating the models.json and for setting the context sizes for Ollama models.
@@ -92,7 +92,7 @@ class OllamaClientSync(OllamaClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | list[BaseModel] | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
@@ -100,10 +100,10 @@ class OllamaClientSync(OllamaClient):
             input = [{"role": "user", "content": input}]
 
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = self._client.chat.completions.create_with_completion(
                 model=model,
-                response_model=pydantic_model,
+                response_model=parser.pydantic_model,
                 messages=input,
                 extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
                 temperature=temperature,
@@ -111,10 +111,10 @@ class OllamaClientSync(OllamaClient):
             raw_text = raw_response.choices[0].message.content
             return obj, raw_text
         # Default behavior is to return only the pydantic model.
-        elif pydantic_model:
+        elif parser:
             obj = self._client.chat.completions.create(
                 model=model,
-                response_model=pydantic_model,
+                response_model=parser.pydantic_model,
                 messages=input,
                 extra_body={"options": {"num_ctx": self._ollama_context_sizes[model]}},
                 temperature=temperature,
