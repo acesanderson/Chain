@@ -5,7 +5,7 @@ Great for ollama calls on a powerful remote computer.
 
 from Chain.api.server.ChainRequest import ChainRequest
 from Chain.response.response import Response
-from Chain.tests.test_ChainServer import example_requests
+# from Chain.tests.test_ChainServer import example_requests
 from Chain.model.clients.client import Client
 from Chain.parser.parser import Parser
 from typing import Optional
@@ -88,8 +88,8 @@ class ServerClientSync(ServerClient):
             print(f"Response: {http_response.text}")
 
 
-if __name__ == "__main__":
-    client = ServerClientSync()
-    for example_request in example_requests:
-        response = client._send_request(example_request)
-        print(response)
+# if __name__ == "__main__":
+#     client = ServerClientSync()
+#     for example_request in example_requests:
+#         response = client._send_request(example_request)
+#         print(response)
