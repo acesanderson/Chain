@@ -88,7 +88,9 @@ if __name__ == "__main__":
     # # input = [imagemessage]
     # response = a.query(input=message, model=model_str)
     # print(response)
-    m = Model("gemini2.5")
+    # m = Model("gemini2.5")
+    # m = Model("llama3.3:latest")
+    m = Model("gpt")
     c = Chain(model=m)
     # response = m.query(imagemessage)
     response = c.run(messages=[imagemessage])
