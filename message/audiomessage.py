@@ -173,9 +173,7 @@ class AudioMessage(BaseModel):
         """
         from pydub import AudioSegment
         from pydub.playback import play
-        from pathlib import Path
 
-        dir_path = Path(__file__).parent
-        audio = AudioSegment.from_file(str(dir_path / "allhands.m4a"))
+        audio = AudioSegment.from_file(self.audio_file, format=self.format)
 
         play(audio)

@@ -72,7 +72,7 @@ class OpenAIClientSync(OpenAIClient):
                         "AudioMessage can only be used with the gpt-4o-audio-preview model."
                     )
                 converted_messages.append(message.to_openai().model_dump())
-            if isinstance(message, Message):
+            elif isinstance(message, Message):
                 converted_messages.append(message.model_dump())
             else:
                 raise ValueError(f"Unsupported message type: {type(message)}")

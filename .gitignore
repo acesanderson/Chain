@@ -13,3 +13,4 @@ ask_wrapper.sh
 /databases/
 *.log
 .DS_Store/
+tests/assets/*
