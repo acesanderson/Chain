@@ -4,62 +4,8 @@ from datetime import date
 from enum import Enum
 
 
-# Provider-specific endpoint enums
-class OpenAIEndpoint(str, Enum):
-    CHAT_COMPLETIONS = "chat/completions"
-    COMPLETIONS = "completions"
-    EMBEDDINGS = "embeddings"
-    FINE_TUNING = "fine_tuning/jobs"
-    IMAGES_GENERATIONS = "images/generations"
-    IMAGES_EDITS = "images/edits"
-    IMAGES_VARIATIONS = "images/variations"
-    AUDIO_SPEECH = "audio/speech"
-    AUDIO_TRANSCRIPTIONS = "audio/transcriptions"
-    AUDIO_TRANSLATIONS = "audio/translations"
-    MODERATIONS = "moderations"
-
-
-class AnthropicEndpoint(str, Enum):
-    MESSAGES = "messages"
-    COMPLETIONS = "complete"
-
-
-class GoogleEndpoint(str, Enum):
-    GENERATE_CONTENT = "generateContent"
-    STREAM_GENERATE_CONTENT = "streamGenerateContent"
-    COUNT_TOKENS = "countTokens"
-    EMBED_CONTENT = "embedContent"
-    BATCH_EMBED_CONTENTS = "batchEmbedContents"
-
-
-class GroqEndpoint(str, Enum):
-    CHAT_COMPLETIONS = "chat/completions"
-    EMBEDDINGS = "embeddings"
-
-
-class HuggingFaceEndpoint(str, Enum):
-    INFERENCE = "inference"
-    FEATURE_EXTRACTION = "feature-extraction"
-    TEXT_GENERATION = "text-generation"
-    TEXT_TO_IMAGE = "text-to-image"
-    IMAGE_TO_TEXT = "image-to-text"
-    AUTOMATIC_SPEECH_RECOGNITION = "automatic-speech-recognition"
-
-
-class OllamaEndpoint(str, Enum):
-    GENERATE = "generate"
-    CHAT = "chat"
-    EMBEDDINGS = "embeddings"
-    CREATE = "create"
-    PULL = "pull"
-    PUSH = "push"
-    LIST = "list"
-    SHOW = "show"
-
-
 # Provider-specific configuration classes
 class OpenAIConfig(BaseModel):
-    endpoints: list[OpenAIEndpoint] = Field(default_factory=list)
     max_tokens_default: Optional[int] = Field(
         None, description="Default max tokens for generation"
     )
@@ -70,57 +16,53 @@ class OpenAIConfig(BaseModel):
     supports_function_calling: bool = False
     supports_vision: bool = False
     supports_json_mode: bool = False
-    temperature_range: tuple[float, float] = (0.0, 2.0)
-    top_p_range: tuple[float, float] = (0.0, 1.0)
-    frequency_penalty_range: tuple[float, float] = (-2.0, 2.0)
-    presence_penalty_range: tuple[float, float] = (-2.0, 2.0)
+    temperature_range: list[float] = [0.0, 2.0]
+    top_p_range: list[float] = [0.0, 1.0]
+    frequency_penalty_range: list[float] = [-2.0, 2.0]
+    presence_penalty_range: list[float] = [-2.0, 2.0]
     supports_seed: bool = False
     supports_response_format: bool = False
 
 
 class AnthropicConfig(BaseModel):
-    endpoints: list[AnthropicEndpoint] = Field(default_factory=list)
     max_tokens_required: bool = True
     max_tokens_limit: Optional[int] = Field(
         None, description="Hard limit on max tokens"
     )
     system_message_separate: bool = True
     supports_streaming: bool = True
-    temperature_range: tuple[float, float] = (0.0, 1.0)
-    top_p_range: tuple[float, float] = (0.0, 1.0)
-    top_k_range: Optional[tuple[int, int]] = None
+    temperature_range: list[float] = [0.0, 1.0]
+    top_p_range: list[float] = [0.0, 1.0]
+    top_k_range: Optional[list[int]] = None
     supports_stop_sequences: bool = True
 
 
 class GoogleConfig(BaseModel):
-    endpoints: list[GoogleEndpoint] = Field(default_factory=list)
     max_output_tokens_limit: Optional[int] = Field(
         None, description="Hard limit on output tokens"
     )
     supports_system_instruction: bool = True
     supports_function_calling: bool = False
     supports_grounding: bool = False
-    temperature_range: tuple[float, float] = (0.0, 2.0)
-    top_p_range: tuple[float, float] = (0.0, 1.0)
-    top_k_range: tuple[int, int] = (1, 40)
+    temperature_range: list[float] = [0.0, 2.0]
+    top_p_range: list[float] = [0.0, 1.0]
+    top_k_range: list[int] = [1, 40]
     candidate_count_max: int = 1
     supports_safety_settings: bool = True
 
 
 class GroqConfig(BaseModel):
-    endpoints: list[GroqEndpoint] = Field(default_factory=list)
     max_tokens_limit: Optional[int] = Field(
         None, description="Hard limit on max tokens"
     )
     supports_streaming: bool = True
-    temperature_range: tuple[float, float] = (0.0, 2.0)
-    top_p_range: tuple[float, float] = (0.0, 1.0)
+    temperature_range: list[float] = [0.0, 2.0]
+    top_p_range: list[float] = [0.0, 1.0]
     supports_json_mode: bool = False
     ultra_fast_inference: bool = True
 
 
 class OllamaConfig(BaseModel):
-    endpoints: list[OllamaEndpoint] = Field(default_factory=list)
     # Ollama-specific parameters
     num_ctx: Optional[int] = Field(
         None, description="Context window size (number of tokens)"
@@ -161,7 +103,6 @@ class OllamaConfig(BaseModel):
 
 
 class HuggingFaceConfig(BaseModel):
-    endpoints: list[HuggingFaceEndpoint] = Field(default_factory=list)
     model_type: Optional[str] = Field(
         None, description="HuggingFace model type/architecture"
     )
@@ -172,9 +113,9 @@ class HuggingFaceConfig(BaseModel):
     max_new_tokens_limit: Optional[int] = Field(
         None, description="Hard limit on new tokens"
     )
-    temperature_range: tuple[float, float] = (0.0, 1.0)
-    top_p_range: tuple[float, float] = (0.0, 1.0)
-    top_k_range: tuple[int, int] = (1, 50)
+    temperature_range: list[float] = [0.0, 1.0]
+    top_p_range: list[float] = [0.0, 1.0]
+    top_k_range: list[int] = [1, 50]
     supports_streaming: bool = False
 
 
@@ -261,38 +202,16 @@ class ModelFormats(BaseModel):
     video_output: list[VideoFormat] = Field(default_factory=list)
 
 
-class ModelUseCases(BaseModel):
-    # Primary use cases - helps with model selection
-    chat: bool = False
-    completion: bool = False
-    analysis: bool = False
-    creative_writing: bool = False
-    code_assistance: bool = False
-    research: bool = False
-    summarization: bool = False
-    translation: bool = False
-    reasoning_tasks: bool = False
-
 
 class ModelSpec(BaseModel):
     # Core identifiers
     model_id: str = Field(
         ..., description="Official API/CLI identifier (e.g., 'gpt-4o', 'llama3.1:70b')"
     )
-    display_name: str = Field(
-        ..., description="Human-readable name (e.g., 'GPT-4o', 'Llama 3.1 70B')"
-    )
-    family: str = Field(
-        ..., description="Model family (e.g., 'gpt-4', 'llama', 'claude')"
-    )
-
     # Provider information
     provider: Literal[
         "openai", "anthropic", "google", "groq", "ollama", "huggingface"
     ] = Field(..., description="Provider of the model")
-    deployment: Literal["local", "api", "hybrid"] = Field(
-        ..., description="Deployment type of the model"
-    )
 
     # Model characteristics
     parameter_count: Optional[str] = Field(
@@ -307,35 +226,17 @@ class ModelSpec(BaseModel):
     # Capability specifications
     capabilities: ModelCapabilities = Field(description="What the model can do")
     formats: ModelFormats = Field(description="Supported input/output formats")
-    use_cases: ModelUseCases = Field(description="Recommended use cases")
 
     # Provider-specific configurations
     provider_config: ProviderConfig = Field(
         description="Provider-specific settings and constraints"
     )
 
-    # API endpoints this model supports (derived from provider_config)
-    @property
-    def endpoints(self) -> list[str]:
-        """Get list of supported endpoints from provider config"""
-        if hasattr(self.provider_config, "endpoints"):
-            return [endpoint.value for endpoint in self.provider_config.endpoints]
-        return []
-
-    # Additional metadata
-    description: str = Field(default="", description="Brief description of the model")
-    documentation_url: Optional[str] = Field(
-        None, description="Link to official documentation"
-    )
-    license: Optional[str] = Field(
-        None, description="Model license (e.g., 'Apache 2.0', 'Custom')"
-    )
-
     def __str__(self):
-        return f"{self.display_name} ({self.provider})"
+        return f"{self.model_id} ({self.provider})"
 
     def __repr__(self):
-        return f"ModelSpec(model_id={self.model_id}, provider={self.provider}, deployment={self.deployment})"
+        return f"ModelSpec(model_id={self.model_id}, provider={self.provider})"
 
     @property
     def is_multimodal(self) -> bool:
@@ -348,6 +249,46 @@ class ModelSpec(BaseModel):
             [caps.text_output, caps.image_output, caps.audio_output, caps.video_output]
         )
         return input_modalities > 1 or output_modalities > 1
+
+    @property
+    def accepts_image_input(self) -> bool:
+        """Check if model accepts image input"""
+        return self.capabilities.image_input
+
+    @property
+    def accepts_audio_input(self) -> bool:
+        """Check if model accepts audio input"""
+        return self.capabilities.audio_input
+
+    @property
+    def accepts_video_input(self) -> bool:
+        """Check if model accepts video input"""
+        return self.capabilities.video_input
+
+    @property
+    def accepts_text_input(self) -> bool:
+        """Check if model accepts text input"""
+        return self.capabilities.text_input
+
+    @property
+    def supports_image_output(self) -> bool:
+        """Check if model supports image output"""
+        return self.capabilities.image_output
+
+    @property
+    def supports_audio_output(self) -> bool:
+        """Check if model supports audio output (TTS)"""
+        return self.capabilities.audio_output
+
+    @property
+    def supports_video_output(self) -> bool:
+        """Check if model supports video output"""
+        return self.capabilities.video_output
+
+    @property
+    def supports_function_calling(self) -> bool:
+        """Check if model supports function calling"""
+        return self.capabilities.function_calling
 
     @property
     def is_reasoning_model(self) -> bool:
@@ -363,6 +304,35 @@ class ModelSpec(BaseModel):
         """Check if model supports a specific file format"""
         formats = getattr(self.formats, format_type, [])
         return file_format.lower() in [f.value.lower() for f in formats]
+
+    def card(self):
+        from rich.console import Console
+        from rich.tree import Tree
+
+        def display_model(model: BaseModel) -> None:
+            console = Console()
+            
+            tree = Tree(f"[bold blue]{model.__class__.__name__}[/bold blue]")
+            
+            for field_name, field_value in model.model_dump().items():
+                _add_to_tree(tree, field_name, field_value)
+            
+            console.print(tree)
+
+        def _add_to_tree(parent: Tree, key: str, value) -> None:
+            if isinstance(value, dict):
+                branch = parent.add(f"[green]{key}[/green]")
+                for k, v in value.items():
+                    _add_to_tree(branch, k, v)
+            elif isinstance(value, list):
+                branch = parent.add(f"[green]{key}[/green] [dim]({len(value)} items)[/dim]")
+                for i, item in enumerate(value):
+                    _add_to_tree(branch, f"[{i}]", item)
+            else:
+                parent.add(f"[green]{key}[/green]: [yellow]{repr(value)}[/yellow]")
+
+        display_model(self)
+
 
 
 class ModelSpecs(BaseModel):
