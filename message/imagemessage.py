@@ -8,9 +8,9 @@ We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthro
 
 from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
+from Chain.message.convert_image import convert_image, convert_image_file
 from pathlib import Path
-from PIL import Image
-import re, base64, io
+import re
 
 # Map PIL formats to MIME types
 format_to_mime = {
@@ -21,12 +21,25 @@ format_to_mime = {
     "webp": "image/webp",
 }
 
-
 def is_base64_simple(s):
     """
     Simple validation for base64 strings.
     """
     return bool(re.match(r"^[A-Za-z0-9+/]*={0,2}$", s)) and len(s) % 4 == 0
+
+def extension_to_mimetype(file_path: Path) -> str:
+    """
+    Given a Path object, return the mimetype. 
+    Returns 
+    """
+    extension = file_path.suffix.lower()
+    try:
+        mimetype = format_to_mime[extension]
+        return mimetype
+    except:
+        raise ValueError(
+            f"Unsupported image format: {extension}. Supported formats are: {', '.join(format_to_mime.keys())}"
+        )
 
 
 # Anthropic schema
@@ -154,15 +167,25 @@ class ImageMessage(Message):
         default="",
     )
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init__(self, __context) -> None:
         """Called after model initialization to construct content field."""
+        # If user adds image_content and mime_type, convert them to PNG, downsample, and update base64 string.
+        if self.image_content and self.mime_type:
+            # Convert the image_content to a base64-encoded PNG if it's not already in that format.
+            if self.mime_type != "image/png":
+                self.image_content = convert_image(self.image_content, self.mime_type)
+                self.mime_type = "image/png"
         # If user submits a file_path instead of the mimetype / image_content
         if self.file_path:
+            # Convert the file_path to a Path object if it's a string
+            if isinstance(self.file_path, str):
+                self.file_path = Path(self.file_path)
             if self.image_content or self.mime_type:
                 raise ValueError(
                     "Can't instantiate ImageMessage with both file_name and image_content at the same time."
                 )
-            self.image_content, self.mime_type = image_to_base64(self.file_path)
+            self.mime_type = extension_to_mimetype(Path(self.file_path))
+            self.image_content = convert_image_file(self.file_path)
 
         # Validate the MIME type
         if self.mime_type not in format_to_mime.values():
@@ -237,36 +260,3 @@ class ImageMessage(Message):
             content=[text_content, image_content],  # Note: text first, then image
         )
 
-
-# Helper functions
-def image_to_base64(file_path):
-    """
-    Simple version - load any image and convert to base64
-    """
-    with Image.open(file_path) as img:
-        # Get actual format
-        img_format = img.format.lower()
-
-        # Convert to RGB if needed (for JPEG compatibility)
-        if img.mode in ("RGBA", "LA", "P") and img_format in ["jpeg", "jpg"]:
-            img = img.convert("RGB")
-
-        # Save to buffer
-        buffer = io.BytesIO()
-        save_format = "JPEG" if img_format in ["jpeg", "jpg"] else img_format.upper()
-        img.save(buffer, format=save_format)
-
-        # Get base64
-        base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-        # Determine MIME type
-        mime_map = {
-            "jpeg": "image/jpeg",
-            "jpg": "image/jpeg",
-            "png": "image/png",
-            "gif": "image/gif",
-            "webp": "image/webp",
-        }
-        mime_type = mime_map.get(img_format, "image/jpeg")
-
-        return base64_data, mime_type
