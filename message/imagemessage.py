@@ -14,11 +14,12 @@ import re
 
 # Map PIL formats to MIME types
 format_to_mime = {
-    "jpeg": "image/jpeg",
-    "jpg": "image/jpeg",
-    "png": "image/png",
-    "gif": "image/gif",
-    "webp": "image/webp",
+    ".jpeg": "image/jpeg",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
 }
 
 def is_base64_simple(s):
@@ -30,7 +31,6 @@ def is_base64_simple(s):
 def extension_to_mimetype(file_path: Path) -> str:
     """
     Given a Path object, return the mimetype. 
-    Returns 
     """
     extension = file_path.suffix.lower()
     try:
@@ -167,20 +167,20 @@ class ImageMessage(Message):
         default="",
     )
 
-    def model_post_init__(self, __context) -> None:
+    def model_post_init(self, __context) -> None:
         """Called after model initialization to construct content field."""
         # If user adds image_content and mime_type, convert them to PNG, downsample, and update base64 string.
         if self.image_content and self.mime_type:
             # Convert the image_content to a base64-encoded PNG if it's not already in that format.
             if self.mime_type != "image/png":
-                self.image_content = convert_image(self.image_content, self.mime_type)
+                self.image_content = convert_image(self.image_content)
                 self.mime_type = "image/png"
         # If user submits a file_path instead of the mimetype / image_content
         if self.file_path:
             # Convert the file_path to a Path object if it's a string
             if isinstance(self.file_path, str):
                 self.file_path = Path(self.file_path)
-            if self.image_content or self.mime_type:
+            if self.image_content and self.mime_type:
                 raise ValueError(
                     "Can't instantiate ImageMessage with both file_name and image_content at the same time."
                 )
@@ -197,8 +197,11 @@ class ImageMessage(Message):
         # Construct our content
         self.content = [self.image_content, self.text_content]
 
+        # Change file_path back to a string for consistency
+        if isinstance(self.file_path, Path):
+            self.file_path = str(self.file_path)
         # Raise an error if we have an incomplete object at the end of this process.
-        if not self.image_content or not self.mime_type or not self.content:
+        if self.image_content == "" or not self.mime_type or not self.content:
             raise ValidationError("Incorrect initialization for some reason.")
 
     def __repr__(self):
