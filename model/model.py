@@ -12,61 +12,56 @@ dir_path = Path(__file__).resolve().parent
 
 
 class Model:
-    # Some class variables: models, clients, chain_cache
-    # Load models from the JSON file. Why classmethod?G
-    # Because models is a class-level method (Model.models, not model.models).
-    # We want it to dynamically load the models from the models file everytime you access the attribute, because Ollama models can change.
+    # Class singletons
+    _clients = {} # Store lazy-loaded client instances at the class level
+    _chain_cache: ChainCache | None = None # If you want to add a cache, add it at class level as a singleton.
+
+    # Class methods
     @classmethod
     def models(cls):
+        """ Definitive list of models supported by Chain library. """
         with open(dir_path / "clients/models.json") as f:
             return json.load(f)
 
-    # Store lazy-loaded client instances at the class level
-    _clients = {}
-    # If you want to add a cache, add it at class level as a singleton.
-    _chain_cache: ChainCache | None = None
+    @classmethod
+    def aliases(cls):
+        """ Definitive list of model aliases supported by Chain library. """
+        with open(dir_path / "aliases.json") as f:
+            return json.load(f)
 
-    def __init__(self, model: str = "gpt-4o"):
-        self.model = self._validate_model(model)
-        self._client_type = self._get_client_type(self.model)
-        # Add client loading logic
-        self._client = self.__class__._get_client(self._client_type)
+    def is_supported(cls, model: str) -> bool:
+        """
+        Check if the model is supported by the Chain library.
+        Returns True if the model is supported, False otherwise.
+        """
+        in_aliases = model in cls.aliases().keys()
+        in_models = model in list(itertools.chain.from_iterable(cls.models().values()))
+        return in_aliases or in_models
 
     def _validate_model(cls, model: str) -> str:
         """
-        This is where you can put in any model aliases you want to support.
+        Validate the model name against the supported models and aliases.
+        Converts aliases to their corresponding model names if necessary.
         """
-        # Load our aliases from aliases.json
-        try:
-            with open(dir_path / "aliases.json", "r") as f:
-                aliases = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(
-                f"WARNING: aliases.json not found. This may cause errors."
-            )
-        except json.JSONDecodeError:
-            raise ValueError(
-                f"WARNING: aliases.json is not a valid JSON file. This may cause errors."
-            )
-
-        # Check data quality.
-        for value in aliases.values():
-            if value not in list(itertools.chain.from_iterable(cls.models().values())):
-                raise ValueError(
-                    f"WARNING: This model declared in aliases.json is not available: {value}."
-                )
+        # Load aliases
+        aliases = cls.aliases()
         # Assign models based on aliases
-        if model in aliases.keys():
+        if model in cls.aliases().keys():
             model = aliases[model]
-        elif model in list(
-            itertools.chain.from_iterable(cls.models().values())
-        ):  # any other model we support (flattened the list)
+        elif cls.is_supported(model):
             model = model
         else:
             ValueError(
                 f"WARNING: Model not found locally: {model}. This may cause errors."
             )
         return model
+
+    # Object methods
+    def __init__(self, model: str = "gpt-4o"):
+        self.model = self._validate_model(model)
+        self._client_type = self._get_client_type(self.model)
+        # Add client loading logic
+        self._client = self.__class__._get_client(self._client_type)
 
     def _get_client_type(self, model: str) -> tuple:
         """
