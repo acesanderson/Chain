@@ -28,7 +28,8 @@ class Model:
         """ Definitive list of model aliases supported by Chain library. """
         with open(dir_path / "aliases.json") as f:
             return json.load(f)
-
+    
+    @classmethod
     def is_supported(cls, model: str) -> bool:
         """
         Check if the model is supported by the Chain library.
@@ -38,6 +39,7 @@ class Model:
         in_models = model in list(itertools.chain.from_iterable(cls.models().values()))
         return in_aliases or in_models
 
+    @classmethod
     def _validate_model(cls, model: str) -> str:
         """
         Validate the model name against the supported models and aliases.
