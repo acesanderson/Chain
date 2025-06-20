@@ -1,5 +1,6 @@
 from Chain.model.model import Model
 from Chain.cache.cache import CachedRequest
+from Chain.parser.parser import Parser
 import importlib, json
 from pydantic import BaseModel
 
@@ -46,7 +47,7 @@ class ModelAsync(Model):
         self,
         input: str | list,
         verbose: bool = True,
-        pydantic_model: BaseModel | list[BaseModel] | None = None,
+        parser: Parser | None = None,
         raw=False,
         cache=True,
         print_response=False,
@@ -57,10 +58,10 @@ class ModelAsync(Model):
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
                 print("Cache hit!")
-                if pydantic_model:
+                if parser:
                     try:
                         cached_request_dict = json.loads(cached_request)
-                        obj = pydantic_model(**cached_request_dict)  # type: ignore
+                        obj = parser.pydantic_model(**cached_request_dict)  # type: ignore
                         if raw:
                             return (obj, cached_request)  # type: ignore
                         if not raw:
@@ -70,22 +71,22 @@ class ModelAsync(Model):
                     if print_response:
                         print(f"Response: {cached_request}")
                 return cached_request
-        if pydantic_model == None:
+        if parser == None:
             llm_output = await self._client.query(self.model, input, raw=False)
         else:
             obj, llm_output = await self._client.query(
-                self.model, input, pydantic_model, raw=True
+                self.model, input, parser.pydantic_model, raw=True
             )
         if Model._chain_cache and cache:
             cached_request = CachedRequest(
                 user_input=input, model=self.model, llm_output=llm_output
             )
             Model._chain_cache.insert_cached_request(cached_request)
-        if pydantic_model and not raw:
+        if parser and not raw:
             if print_response:
                 print(f"Response: {llm_output}")
             return obj  # type: ignore
-        elif pydantic_model and raw:
+        elif parser and raw:
             if print_response:
                 print(f"Response: {llm_output}")
             return obj, llm_output  # type: ignore

@@ -136,4 +136,4 @@ class PerplexityClientSync(PerplexityClient):
         # If you are not passing pydantic models, you will get the text response.
         else:
             response = self._client.chat.completions.create(**params)
-            return response.choices[0].messag
+            return response.choices[0].message
