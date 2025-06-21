@@ -31,12 +31,6 @@ class AsyncChain(Chain):
         else:
             self.input_schema = set()
 
-    @overload
-    def run(self, input_variables_list: list[dict]) -> list[Response]: ...
-
-    @overload
-    def run(self, *, prompt_strings: list[str]) -> list[Response]: ...
-
     def run(
         self,
         input_variables_list: list[dict] | None = None,
@@ -72,14 +66,10 @@ class AsyncChain(Chain):
     ) -> Response:
         if not self.prompt:
             raise ValueError("No prompt assigned to AsyncChain object")
-        if self.parser:
-            pydantic_model = self.parser.pydantic_model
-        else:
-            pydantic_model = None
 
         async def process_with_semaphore(
             input_variables: dict,
-            pydantic_model: BaseModel | None,
+            parser: Parser | None,
             semaphore: Optional[asyncio.Semaphore],
             cache=cache,
             verbose=True,
@@ -90,7 +80,7 @@ class AsyncChain(Chain):
                 async with semaphore:
                     return await self.model.query_async(
                         input=self.prompt.render(input_variables=input_variables),
-                        pydantic_model=pydantic_model,
+                        parser=self.parser,
                         cache=cache,
                         verbose=verbose,
                         print_response=print_response,
@@ -98,7 +88,7 @@ class AsyncChain(Chain):
             else:
                 return await self.model.query_async(
                     input=self.prompt.render(input_variables=input_variables),
-                    pydantic_model=pydantic_model,
+                    parser=self.parser,
                     cache=cache,
                     verbose=verbose,
                     print_response=print_response,
@@ -107,7 +97,7 @@ class AsyncChain(Chain):
         coroutines = [
             process_with_semaphore(
                 input_variables,
-                pydantic_model,
+                self.parser,
                 semaphore,
                 cache=cache,
                 verbose=verbose,
@@ -126,14 +116,10 @@ class AsyncChain(Chain):
         verbose=True,
         print_response=False,
     ) -> Response:
-        if self.parser:
-            pydantic_model = self.parser.pydantic_model
-        else:
-            pydantic_model = None
 
         async def process_with_semaphore(
             prompt_string: str,
-            pydantic_model: BaseModel | None,
+            parser: Parser | None,
             semaphore: Optional[asyncio.Semaphore],
             cache=True,
             verbose=True,
@@ -144,7 +130,7 @@ class AsyncChain(Chain):
                 async with semaphore:
                     return await self.model.query_async(
                         input=prompt_string,
-                        pydantic_model=pydantic_model,
+                        parser=parser,
                         cache=cache,
                         verbose=verbose,
                         print_response=print_response,
@@ -152,7 +138,7 @@ class AsyncChain(Chain):
             else:
                 return await self.model.query_async(
                     input=prompt_string,
-                    pydantic_model=pydantic_model,
+                    parser=parser,
                     cache=cache,
                     verbose=verbose,
                     print_response=print_response,
@@ -160,7 +146,7 @@ class AsyncChain(Chain):
 
         coroutines = [
             process_with_semaphore(
-                prompt_string, pydantic_model, semaphore, cache, verbose, print_response
+                prompt_string, self.parser, semaphore, cache, verbose, print_response
             )
             for prompt_string in prompt_strings
         ]

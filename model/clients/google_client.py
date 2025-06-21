@@ -94,7 +94,9 @@ class GoogleClientSync(GoogleClient):
                 raise ValueError("Gemini models need a temperature between 0 and 2.")
             params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
-        if raw and parser:
+        if (
+            raw and parser
+        ):  # Note -- if you are having problems with Parser and gemini, copy implementation in async below
             obj, raw_response = self._client.chat.completions.create_with_completion(
                 **params
             )
@@ -148,26 +150,78 @@ class GoogleClientAsync(GoogleClient):
         self,
         model: str,
         input: "str | list",
-        pydantic_model: BaseModel | None = None,
+        parser: Parser | None = None,
         raw=False,
         temperature: Optional[float] = None,
     ) -> str | BaseModel | tuple[BaseModel, str]:
+        messages = []
         if isinstance(input, str):
-            input = [{"role": "user", "content": input}]
+            messages = [Message(role="user", content=input)]
+        elif isinstance(input, Message):
+            messages = [input]
+        elif isinstance(input, list):
+            messages = input
+        # Dev: we should have a list of Message objects now.
+        assert isinstance(messages, list)
+        # Convert messages to OpenAI format
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, Message):
+                converted_messages.append(message.model_dump())
+            elif isinstance(message, ImageMessage):
+                converted_messages.append(message.to_openai().model_dump())
+            elif isinstance(message, AudioMessage):
+                converted_messages.append(message.to_openai().model_dump())
+            else:
+                raise TypeError("Unsupported message type: {}".format(type(message)))
         # Build our params; pydantic_model will be None if we didn't request it.
-        params = {"model": model, "messages": input, "response_model": pydantic_model}
+        params = {
+            "model": model,
+            "messages": converted_messages,
+            "response_model": parser.pydantic_model if parser else None,
+        }
         # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
         if temperature:
             if temperature < 0 or temperature > 2:
                 raise ValueError("Gemini models need a temperature between 0 and 2.")
             params.update({"temperature": temperature})
         # If you are passing pydantic models and also want the text response, you need to set raw=True.
-        if raw and pydantic_model:
+        if raw and parser:
             obj, raw_response = (
                 await self._client.chat.completions.create_with_completion(**params)
             )
-            raw_text = raw_response.choices[0].message.tool_calls[0].function.arguments
+
+            # Handle Gemini's different response structure
+            try:
+                if (
+                    hasattr(raw_response.choices[0].message, "tool_calls")
+                    and raw_response.choices[0].message.tool_calls
+                    and len(raw_response.choices[0].message.tool_calls) > 0
+                ):
+                    raw_text = (
+                        raw_response.choices[0].message.tool_calls[0].function.arguments
+                    )
+                else:
+                    # Gemini doesn't use tool_calls, fallback to JSON dump
+                    raw_text = (
+                        obj.model_dump_json()
+                        if hasattr(obj, "model_dump_json")
+                        else str(obj)
+                    )
+            except (AttributeError, TypeError, IndexError):
+                # Safe fallback
+                raw_text = (
+                    obj.model_dump_json()
+                    if hasattr(obj, "model_dump_json")
+                    else str(obj)
+                )
+
             return obj, raw_text
+        elif parser:
+            print(f"DEBUG: Calling Gemini with params: {params}")
+            obj = await self._client.chat.completions.create(**params)
+            print(f"DEBUG: Gemini returned: {obj} (type: {type(obj)})")
+            return obj
         # Default is just return the response, i.e. just BaseModel or text.
         else:
             response = await self._client.chat.completions.create(**params)

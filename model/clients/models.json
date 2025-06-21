@@ -1,1 +1,71 @@
-{"ollama": ["mistral-nemo:12b", "mistral:latest", "deepseek-r1:32b", "llama3.3:latest", "llama3.2:latest", "llama4:16x17b", "llama3.1:latest", "qwen3:30b", "qwen2.5:14b", "qwen2.5:32b", "phi4:14b", "cogito:14b", "cogito:32b", "gemma3:27b", "granite3.2-vision:2b", "minicpm-v:8b", "llama3.2-vision:11b", "llava:13b", "qwen2.5vl:32b", "qwen3:14b", "cogito:70b", "qwq:latest", "dolphin-mixtral:latest"], "openai": ["gpt-4.1", "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo-0125", "gpt-4o-mini", "gpt-4o-audio-preview", "o1-preview", "o1-mini", "o3-mini", "o3-mini-high", "o4-mini"], "anthropic": ["claude-3-5-haiku-20241022", "claude-3-7-sonnet-20250219", "claude-opus-4-20250514", "claude-sonnet-4-20250514"], "google": ["gemini-2.5-flash-preview-05-20", "gemini-2.5-pro-exp-03-25", "gemini-2.5-pro-preview-05-06", "gemini-2.0-flash-001", "gemini-1.5-pro", "gemini-1.5-flash", "gemini-1.5-flash-8b"], "groq": ["llama3-8b-8192", "llama3-70b-8192", "mixtral-8x7b-32768", "gemma2-9b-it", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"], "deepseek": ["deepseek-chat"], "perplexity": ["sonar-reasoning", "sonar-pro", "sonar"]}
+{
+  "ollama": [
+    "mistral-nemo:12b",
+    "mistral:latest",
+    "deepseek-r1:32b",
+    "llama3.3:latest",
+    "llama3.2:latest",
+    "llama4:16x17b",
+    "llama3.1:latest",
+    "qwen3:30b",
+    "qwen2.5:14b",
+    "qwen2.5:32b",
+    "phi4:14b",
+    "cogito:14b",
+    "cogito:32b",
+    "gemma3:27b",
+    "granite3.2-vision:2b",
+    "minicpm-v:8b",
+    "llama3.2-vision:11b",
+    "llava:13b",
+    "qwen2.5vl:32b",
+    "qwen3:14b",
+    "cogito:70b",
+    "qwq:latest",
+    "dolphin-mixtral:latest"
+  ],
+  "openai": [
+    "gpt-4.1",
+    "gpt-4o",
+    "gpt-4-turbo",
+    "gpt-3.5-turbo-0125",
+    "gpt-4o-mini",
+    "gpt-4o-audio-preview",
+    "o1-preview",
+    "o1-mini",
+    "o3-mini",
+    "o3-mini-high",
+    "o4-mini"
+  ],
+  "anthropic": [
+    "claude-3-5-haiku-20241022",
+    "claude-3-7-sonnet-20250219",
+    "claude-opus-4-20250514",
+    "claude-sonnet-4-20250514"
+  ],
+  "google": [
+    "gemini-2.5-flash-preview-05-20",
+    "gemini-2.5-pro-exp-03-25",
+    "gemini-2.5-pro-preview-05-06",
+    "gemini-2.0-flash-001",
+    "gemini-1.5-pro",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-8b"
+  ],
+  "groq": [
+    "llama3-8b-8192",
+    "llama3-70b-8192",
+    "mixtral-8x7b-32768",
+    "gemma2-9b-it",
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant"
+  ],
+  "deepseek": [
+    "deepseek-chat"
+  ],
+  "perplexity": [
+    "sonar-reasoning",
+    "sonar-pro",
+    "sonar"
+  ]
+}
