@@ -58,7 +58,7 @@ class OllamaClient(Client):
         We run is every time ollama is initialized.
         """
         # Lazy load ollama module
-        ollama_models = [m["name"] for m in ollama.list()["models"]]
+        ollama_models = [m.model for m in ollama.list()["models"]]
         with open(dir_path / "models.json", "r") as f:
             model_list = json.load(f)
         model_list["ollama"] = ollama_models

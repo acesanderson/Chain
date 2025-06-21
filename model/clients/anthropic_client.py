@@ -190,9 +190,24 @@ class AnthropicClientAsync(AnthropicClient):
             for message in messages:
                 if message.role == "system":
                     message.role = "user"
+        # Now convert all Pydantic objects in list to model_dump
+        converted_messages = []
+        for message in messages:
+            if isinstance(message, ImageMessage):
+                converted_message = message.to_anthropic().model_dump()
+                converted_messages.append(converted_message)
+            elif isinstance(message, AudioMessage):
+                raise NotImplementedError("AudioMessage not supported in Anthropic")
+            elif isinstance(message, Message):
+                converted_message = message.model_dump()
+                converted_messages.append(converted_message)
+            else:
+                raise ValueError(
+                    f"Input not recognized as a valid message type: {type(message)}: {message}"
+                )
         # Construct params
         params = {
-            "messages": input,
+            "messages": converted_messages,
             "model": model,
             "response_model": None if not parser else parser.pydantic_model,
             "max_retries": 0,

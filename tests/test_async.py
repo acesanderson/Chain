@@ -1,7 +1,7 @@
 from Chain.model.clients.openai_client import OpenAIClientAsync
 from Chain.model.clients.anthropic_client import AnthropicClientAsync
 from Chain.chain.asyncchain import AsyncChain
-from Chain.model.model import ModelAsync
+from Chain.model.model_async import ModelAsync
 from Chain.response.response import Response
 from Chain.prompt.prompt import Prompt
 import asyncio
@@ -19,14 +19,14 @@ def prompt_object():
 
 @pytest.fixture
 def model_string():
-    # return "gpt-3.5-turbo-0125"
-    return "claude-3-haiku-20240307"
+    return "gpt-3.5-turbo-0125"
+    # return "claude-3-haiku-20240307"
 
 
 @pytest.fixture
 def async_client():
-    # return OpenAIClientAsync()
-    return AnthropicClientAsync()
+    return OpenAIClientAsync()
+    # return AnthropicClientAsync()
 
 
 @pytest.fixture
