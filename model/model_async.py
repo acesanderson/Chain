@@ -53,7 +53,9 @@ class ModelAsync(Model):
         print_response=False,
     ) -> BaseModel | str:
         if verbose:
-            print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
+            from datetime import datetime
+
+            print(f"Model: {self.model}   TIME: {datetime.now().strftime('%H:%M:%S')}")
         if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
@@ -75,7 +77,7 @@ class ModelAsync(Model):
             llm_output = await self._client.query(self.model, input, raw=False)
         else:
             obj, llm_output = await self._client.query(
-                self.model, input, parser.pydantic_model, raw=True
+                self.model, input, parser, raw=True
             )
         if Model._chain_cache and cache:
             cached_request = CachedRequest(
