@@ -3,9 +3,9 @@ from Chain.model.model_async import ModelAsync
 from Chain.response.response import Response
 from Chain.message.message import Message
 from Chain.parser.parser import Parser
-import asyncio
-from typing import overload, Optional
-from pydantic import BaseModel
+import asyncio, time
+from datetime import datetime
+from typing import Optional
 
 
 class AsyncChain(Chain):
@@ -56,6 +56,79 @@ class AsyncChain(Chain):
 
         return responses
 
+    async def _run_prompt_strings(
+        self,
+        prompt_strings: list[str],
+        semaphore: Optional[asyncio.Semaphore] = None,
+        cache=True,
+        verbose=True,
+        print_response=False,
+    ) -> list:
+        """Run multiple prompt strings concurrently with progress display"""
+        
+        if verbose:
+            console = self.model.console or self.__class__._console
+            if console:
+                console.print(f"[bold blue]Starting: {len(prompt_strings)} concurrent requests[/bold blue]")
+            else:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                print(f"[{timestamp}] Starting: {len(prompt_strings)} concurrent requests")
+
+        async def process_with_semaphore(
+            prompt_string: str,
+            parser: Parser | None,
+            semaphore: Optional[asyncio.Semaphore],
+            cache=True,
+            verbose=False,  # Suppress individual progress
+            print_response=False,
+        ):
+            if semaphore:
+                # Use a semaphore to limit the number of concurrent requests
+                async with semaphore:
+                    return await self.model.query_async(
+                        input=prompt_string,
+                        parser=parser,
+                        cache=cache,
+                        verbose=verbose,
+                        print_response=print_response,
+                    )
+            else:
+                return await self.model.query_async(
+                    input=prompt_string,
+                    parser=parser,
+                    cache=cache,
+                    verbose=verbose,
+                    print_response=print_response,
+                )
+
+        coroutines = [
+            process_with_semaphore(
+                prompt_string, 
+                self.parser, 
+                semaphore, 
+                cache, 
+                verbose=False,  # Suppress individual progress
+                print_response=print_response
+            )
+            for prompt_string in prompt_strings
+        ]
+        
+        start_time = time.time()
+        results = await asyncio.gather(*coroutines, return_exceptions=True)
+        duration = time.time() - start_time
+        
+        if verbose:
+            successful = len([r for r in results if not isinstance(r, Exception)])
+            console = self.model.console or self.__class__._console
+            if console:
+                console.print(f"[green]✓[/green] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
+            else:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                print(f"[{timestamp}] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
+        
+        return results
+
+
     async def _run_input_variables(
         self,
         input_variables_list: list[dict],
@@ -63,16 +136,26 @@ class AsyncChain(Chain):
         cache=True,
         verbose=True,
         print_response=False,
-    ) -> Response:
+    ) -> list:
+        """Run multiple input variable sets concurrently with progress display"""
+        
         if not self.prompt:
             raise ValueError("No prompt assigned to AsyncChain object")
+
+        if verbose:
+            console = self.model.console or self.__class__._console
+            if console:
+                console.print(f"[bold blue]Starting: {len(input_variables_list)} concurrent requests[/bold blue]")
+            else:
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                print(f"[{timestamp}] Starting: {len(input_variables_list)} concurrent requests")
 
         async def process_with_semaphore(
             input_variables: dict,
             parser: Parser | None,
             semaphore: Optional[asyncio.Semaphore],
-            cache=cache,
-            verbose=True,
+            cache=True,
+            verbose=False,  # Suppress individual progress
             print_response=False,
         ):
             if semaphore:
@@ -100,57 +183,26 @@ class AsyncChain(Chain):
                 self.parser,
                 semaphore,
                 cache=cache,
-                verbose=verbose,
+                verbose=False,  # Suppress individual progress
                 print_response=print_response,
             )
             for input_variables in input_variables_list
         ]
-        # Need to convert these to Response objects
-        return await asyncio.gather(*coroutines, return_exceptions=True)
-
-    async def _run_prompt_strings(
-        self,
-        prompt_strings: list[str],
-        semaphore: Optional[asyncio.Semaphore] = None,
-        cache=True,
-        verbose=True,
-        print_response=False,
-    ) -> Response:
-
-        async def process_with_semaphore(
-            prompt_string: str,
-            parser: Parser | None,
-            semaphore: Optional[asyncio.Semaphore],
-            cache=True,
-            verbose=True,
-            print_response=False,
-        ):
-            if semaphore:
-                # Use a semaphore to limit the number of concurrent requests
-                async with semaphore:
-                    return await self.model.query_async(
-                        input=prompt_string,
-                        parser=parser,
-                        cache=cache,
-                        verbose=verbose,
-                        print_response=print_response,
-                    )
+        
+        start_time = time.time()
+        results = await asyncio.gather(*coroutines, return_exceptions=True)
+        duration = time.time() - start_time
+        
+        if verbose:
+            successful = len([r for r in results if not isinstance(r, Exception)])
+            console = self.model.console or self.__class__._console
+            if console:
+                console.print(f"[green]✓[/green] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
             else:
-                return await self.model.query_async(
-                    input=prompt_string,
-                    parser=parser,
-                    cache=cache,
-                    verbose=verbose,
-                    print_response=print_response,
-                )
-
-        coroutines = [
-            process_with_semaphore(
-                prompt_string, self.parser, semaphore, cache, verbose, print_response
-            )
-            for prompt_string in prompt_strings
-        ]
-        return await asyncio.gather(*coroutines, return_exceptions=True)
+                timestamp = datetime.now().strftime("%H:%M:%S")
+                print(f"[{timestamp}] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
+        
+        return results
 
     def convert_results_to_responses(self, results: list[str]) -> list[Response]:
         # Convert results to Response objects

@@ -73,16 +73,28 @@ class Model:
     @property
     def console(self):
         """
-        Returns the effective console (hierarchy: instance -> Chain class -> None)
+        Returns the effective console (hierarchy: instance -> Chain/AsyncChain class -> None)
         """
         if self._console:
             return self._console
+        
         import sys
+        # Check for Chain._console
         if "Chain.chain.chain" in sys.modules:
             Chain = sys.modules["Chain.chain.chain"].Chain
-            return getattr(Chain, "_console", None)
-        else:
-            return None
+            chain_console = getattr(Chain, "_console", None)
+            if chain_console:
+                return chain_console
+        
+        # Check for AsyncChain._console  
+        if "Chain.chain.asyncchain" in sys.modules:
+            AsyncChain = sys.modules["Chain.chain.asyncchain"].AsyncChain
+            async_console = getattr(AsyncChain, "_console", None)
+            if async_console:
+                return async_console
+                
+        return None
+
 
     @console.setter
     def console(self, console: "Console"):

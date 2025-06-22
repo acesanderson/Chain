@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from typing import Protocol
 
 class ProgressEvent(BaseModel):
     pass
@@ -14,16 +15,14 @@ class SyncEvent(ProgressEvent):
 
 class AsyncEvent(ProgressEvent):
     request_id: int
-    event_type: str  # "started", "complete", "failed", "canceled", "batch_start", "batch_complete"
+    event_type: str  # "started", "complete", "failed", "canceled"
     timestamp: datetime
     model: str
     query_preview: str  # First ~30 chars of the query
     duration: float | None = None  # Duration in seconds
-    batch_total: int | None = None  # Total number of items in the batch
     error: str | None = None  # Error message if any
 
-
-def ProgressHandler(Protocol):
+class ProgressHandler(Protocol):
     def handle_event(self, event: ProgressEvent) -> None:
         """Handle a progress event."""
         ...
@@ -34,3 +33,4 @@ class ProgressTracker:
 
     def emit_event(self, event: ProgressEvent):
         self.handler.handle_event(event)
+
