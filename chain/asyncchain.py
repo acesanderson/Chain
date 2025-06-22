@@ -64,27 +64,38 @@ class AsyncChain(Chain):
         verbose=True,
         print_response=False,
     ) -> list:
-        """Run multiple prompt strings concurrently with progress display"""
-        
+        """Run multiple prompt strings concurrently with enhanced progress display"""
+
+        # Create concurrent progress tracker if verbose
+        tracker = None
         if verbose:
             console = self.model.console or self.__class__._console
-            if console:
-                console.print(f"[bold blue]Starting: {len(prompt_strings)} concurrent requests[/bold blue]")
-            else:
-                timestamp = datetime.now().strftime("%H:%M:%S")
-                print(f"[{timestamp}] Starting: {len(prompt_strings)} concurrent requests")
+            from Chain.progress.tracker import ConcurrentTracker
+            from Chain.progress.wrappers import create_concurrent_progress_tracker
+            
+            tracker = create_concurrent_progress_tracker(console, len(prompt_strings))
+            tracker.emit_concurrent_start()
 
-        async def process_with_semaphore(
+        async def process_with_semaphore_and_tracking(
             prompt_string: str,
             parser: Parser | None,
             semaphore: Optional[asyncio.Semaphore],
+            tracker: Optional[ConcurrentTracker],
             cache=True,
-            verbose=False,  # Suppress individual progress
+            verbose=False,  # Always suppress individual progress during concurrent
             print_response=False,
         ):
-            if semaphore:
-                # Use a semaphore to limit the number of concurrent requests
-                async with semaphore:
+            async def do_work():
+                if semaphore:
+                    async with semaphore:
+                        return await self.model.query_async(
+                            input=prompt_string,
+                            parser=parser,
+                            cache=cache,
+                            verbose=verbose,
+                            print_response=print_response,
+                        )
+                else:
                     return await self.model.query_async(
                         input=prompt_string,
                         parser=parser,
@@ -92,40 +103,37 @@ class AsyncChain(Chain):
                         verbose=verbose,
                         print_response=print_response,
                     )
+            
+            # Wrap with concurrent tracking if available
+            if tracker:
+                from Chain.progress.wrappers import concurrent_wrapper
+                return await concurrent_wrapper(do_work(), tracker)
             else:
-                return await self.model.query_async(
-                    input=prompt_string,
-                    parser=parser,
-                    cache=cache,
-                    verbose=verbose,
-                    print_response=print_response,
-                )
+                return await do_work()
 
+        # Create coroutines with tracking
         coroutines = [
-            process_with_semaphore(
-                prompt_string, 
-                self.parser, 
-                semaphore, 
-                cache, 
-                verbose=False,  # Suppress individual progress
+            process_with_semaphore_and_tracking(
+                prompt_string,
+                self.parser,
+                semaphore,
+                tracker,
+                cache,
+                verbose=False,  # Always suppress individual progress
                 print_response=print_response
             )
             for prompt_string in prompt_strings
         ]
-        
+
+        # Run all operations concurrently
         start_time = time.time()
         results = await asyncio.gather(*coroutines, return_exceptions=True)
         duration = time.time() - start_time
-        
-        if verbose:
-            successful = len([r for r in results if not isinstance(r, Exception)])
-            console = self.model.console or self.__class__._console
-            if console:
-                console.print(f"[green]✓[/green] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
-            else:
-                timestamp = datetime.now().strftime("%H:%M:%S")
-                print(f"[{timestamp}] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
-        
+
+        # Complete concurrent tracking
+        if tracker:
+            tracker.emit_concurrent_complete()
+
         return results
 
 
@@ -137,30 +145,41 @@ class AsyncChain(Chain):
         verbose=True,
         print_response=False,
     ) -> list:
-        """Run multiple input variable sets concurrently with progress display"""
-        
+        """Run multiple input variable sets concurrently with enhanced progress display"""
+
         if not self.prompt:
             raise ValueError("No prompt assigned to AsyncChain object")
 
+        # Create concurrent progress tracker if verbose
+        tracker = None
         if verbose:
             console = self.model.console or self.__class__._console
-            if console:
-                console.print(f"[bold blue]Starting: {len(input_variables_list)} concurrent requests[/bold blue]")
-            else:
-                timestamp = datetime.now().strftime("%H:%M:%S")
-                print(f"[{timestamp}] Starting: {len(input_variables_list)} concurrent requests")
+            from Chain.progress.tracker import ConcurrentTracker
+            from Chain.progress.wrappers import create_concurrent_progress_tracker
+            
+            tracker = create_concurrent_progress_tracker(console, len(input_variables_list))
+            tracker.emit_concurrent_start()
 
-        async def process_with_semaphore(
+        async def process_with_semaphore_and_tracking(
             input_variables: dict,
             parser: Parser | None,
             semaphore: Optional[asyncio.Semaphore],
+            tracker: Optional[ConcurrentTracker],
             cache=True,
-            verbose=False,  # Suppress individual progress
+            verbose=False,  # Always suppress individual progress during concurrent
             print_response=False,
         ):
-            if semaphore:
-                # Use a semaphore to limit the number of concurrent requests
-                async with semaphore:
+            async def do_work():
+                if semaphore:
+                    async with semaphore:
+                        return await self.model.query_async(
+                            input=self.prompt.render(input_variables=input_variables),
+                            parser=self.parser,
+                            cache=cache,
+                            verbose=verbose,
+                            print_response=print_response,
+                        )
+                else:
                     return await self.model.query_async(
                         input=self.prompt.render(input_variables=input_variables),
                         parser=self.parser,
@@ -168,41 +187,39 @@ class AsyncChain(Chain):
                         verbose=verbose,
                         print_response=print_response,
                     )
+            
+            # Wrap with concurrent tracking if available
+            if tracker:
+                from Chain.progress.wrappers import concurrent_wrapper
+                return await concurrent_wrapper(do_work(), tracker)
             else:
-                return await self.model.query_async(
-                    input=self.prompt.render(input_variables=input_variables),
-                    parser=self.parser,
-                    cache=cache,
-                    verbose=verbose,
-                    print_response=print_response,
-                )
+                return await do_work()
 
+        # Create coroutines with tracking
         coroutines = [
-            process_with_semaphore(
+            process_with_semaphore_and_tracking(
                 input_variables,
                 self.parser,
                 semaphore,
+                tracker,
                 cache=cache,
-                verbose=False,  # Suppress individual progress
+                verbose=False,  # Always suppress individual progress
                 print_response=print_response,
             )
             for input_variables in input_variables_list
         ]
-        
+
+        # Run all operations concurrently
         start_time = time.time()
         results = await asyncio.gather(*coroutines, return_exceptions=True)
         duration = time.time() - start_time
-        
-        if verbose:
-            successful = len([r for r in results if not isinstance(r, Exception)])
-            console = self.model.console or self.__class__._console
-            if console:
-                console.print(f"[green]✓[/green] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
-            else:
-                timestamp = datetime.now().strftime("%H:%M:%S")
-                print(f"[{timestamp}] All requests complete: {successful}/{len(results)} successful in {duration:.1f}s")
-        
+
+        # Complete concurrent tracking
+        if tracker:
+            tracker.emit_concurrent_complete()
+
         return results
+
 
     def convert_results_to_responses(self, results: list[str]) -> list[Response]:
         # Convert results to Response objects

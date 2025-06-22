@@ -154,3 +154,28 @@ def progress_display(func):
         return async_decorator
     else:
         return sync_decorator
+
+
+async def concurrent_wrapper(operation, tracker):
+    """Wrap individual async operations for concurrent tracking"""
+    try:
+        tracker.operation_started()
+        result = await operation
+        tracker.operation_completed()
+        return result
+    except Exception as e:
+        tracker.operation_failed()
+        raise  # Re-raise the exception
+
+
+def create_concurrent_progress_tracker(console, total: int):
+    """Factory function to create appropriate concurrent tracker"""
+    if console:
+        from Chain.progress.handlers import RichProgressHandler
+        handler = RichProgressHandler(console)
+    else:
+        from Chain.progress.handlers import PlainProgressHandler
+        handler = PlainProgressHandler()
+   
+    from Chain.progress.tracker import ConcurrentTracker
+    return ConcurrentTracker(handler, total)
