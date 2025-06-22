@@ -3,7 +3,7 @@ import time
 from functools import wraps
 
 
-def extract_query_preview(input_data, max_length=20):
+def extract_query_preview(input_data, max_length=30):
     """Extract a preview of the query for display purposes"""
 
     def strip_it(query_preview: str) -> str:
