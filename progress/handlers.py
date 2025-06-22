@@ -1,55 +1,85 @@
-from rich.console import Console
 from datetime import datetime
 
-class PlainProgressHandler:
-    """Simple progress handler for environments without Rich"""
-    
+
+class RichProgressHandler:
+    """Rich-based progress handler with spinners and colors"""
+
+    def __init__(self, console):
+        self.console = console
+
     def show_spinner(self, model_name, query_preview):
-        """Show spinner state (plain text version)"""
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] [{model_name}] Starting: {query_preview}", end="", flush=True)
-    
+        """Show Rich spinner with live status"""
+        self.console.print(
+            f"⠋ {model_name} | {query_preview}",
+            end="\r",
+            highlight=False,
+            soft_wrap=True,
+        )
+
     def show_complete(self, model_name, query_preview, duration):
-        """Update same line with completion"""
-        print(f"\r[{datetime.now().strftime('%H:%M:%S')}] [{model_name}] Complete: ({duration:.1f}s)")
-    
+        """Update same line with green checkmark, keeping context"""
+        self.console.print(
+            f"✓ {model_name} | {query_preview} | ({duration:.1f}s)", style="green"
+        )
+
     def show_canceled(self, model_name, query_preview):
-        """Update same line with cancellation"""
-        print(f"\r[{datetime.now().strftime('%H:%M:%S')}] [{model_name}] Canceled")
-    
+        """Update same line with warning, keeping context"""
+        self.console.print(
+            f"⚠ {model_name} | {query_preview} | Canceled", style="yellow"
+        )
+
     def show_failed(self, model_name, query_preview, error):
-        """Update same line with failure"""
-        print(f"\r[{datetime.now().strftime('%H:%M:%S')}] [{model_name}] Failed: {error}")
+        """Update same line with error, keeping context"""
+        self.console.print(
+            f"✗ {model_name} | {query_preview} | Failed: {error}", style="red"
+        )
 
     # Fallback methods for backwards compatibility
     def emit_started(self, model_name, query_preview):
         self.show_spinner(model_name, query_preview)
-    
+
     def emit_complete(self, model_name, query_preview, duration):
         self.show_complete(model_name, query_preview, duration)
-    
+
     def emit_canceled(self, model_name, query_preview):
         self.show_canceled(model_name, query_preview)
-    
+
     def emit_failed(self, model_name, query_preview, error):
         self.show_failed(model_name, query_preview, error)
 
 
-class RichProgressHandler:
-    """Rich console progress handler"""
-    
-    def __init__(self, console: Console):
-        self.console = console
+class PlainProgressHandler:
+    """Simple progress handler for environments without Rich"""
 
-    def emit_started(self, model, query_preview):
-        self.console.print(f"[yellow]⠋[/yellow] {model} | {query_preview}")
+    def show_spinner(self, model_name, query_preview):
+        """Show starting state (plain text - no spinner)"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] [{model_name}] Starting: {query_preview}")
 
-    def emit_complete(self, model, query_preview, duration):
-        duration_str = f"({duration:.1f}s)" if duration else ""
-        self.console.print(f"[green]✓[/green] {model} {duration_str}")
+    def show_complete(self, model_name, query_preview, duration):
+        """Show completion on new line"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] [{model_name}] Complete: ({duration:.1f}s)")
 
-    def emit_failed(self, model, query_preview, error):
-        self.console.print(f"[red]✗[/red] {model} | {error}")
+    def show_canceled(self, model_name, query_preview):
+        """Show cancellation on new line"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] [{model_name}] Canceled")
 
-    def emit_canceled(self, model, query_preview):
-        self.console.print(f"[yellow]⚠[/yellow] {model} | Canceled")
+    def show_failed(self, model_name, query_preview, error):
+        """Show failure on new line"""
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] [{model_name}] Failed: {error}")
+
+    # Fallback methods for backwards compatibility
+    def emit_started(self, model_name, query_preview):
+        self.show_spinner(model_name, query_preview)
+
+    def emit_complete(self, model_name, query_preview, duration):
+        self.show_complete(model_name, query_preview, duration)
+
+    def emit_canceled(self, model_name, query_preview):
+        self.show_canceled(model_name, query_preview)
+
+    def emit_failed(self, model_name, query_preview, error):
+        self.show_failed(model_name, query_preview, error)
