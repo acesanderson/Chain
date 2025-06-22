@@ -154,6 +154,36 @@ class Model:
         cache=True,
         temperature: Optional[float] = None,  # None means just use the defaults
     ) -> BaseModel | str:
+        """
+        Execute a query against the language model with optional progress tracking.
+        
+        Args:
+            input: The query text or list of messages to send to the model
+            parser: Optional parser to structure the response
+            cache: Whether to use response caching (default: True)
+            verbose: Whether to display progress information (default: True)
+            index: Current item number for batch progress display (requires total)
+            total: Total number of items for batch progress display (requires index)
+            **kwargs: Additional model-specific parameters
+            
+        Returns:
+            str: The model's response, optionally parsed if parser provided
+            
+        Raises:
+            ValueError: If only one of index/total is provided
+            
+        Examples:
+            # Basic usage
+            response = model.query("What is 2+2?")
+            
+            # Batch processing with progress
+            for i, item in enumerate(items):
+                response = model.query(item, index=i+1, total=len(items))
+                # Shows: ⠋ gpt-4o | [1/100] Processing item...
+            
+            # Suppress progress
+            response = model.query("What is 2+2?", verbose=False)
+        """
         if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
