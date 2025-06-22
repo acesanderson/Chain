@@ -1,13 +1,10 @@
-"""
-
-"""
-
-
 from pydantic import BaseModel, Field
-from typing import Optional, Any, ClassVar
+from typing import Optional, Any, ClassVar, TYPE_CHECKING
 from Chain.message.message import Message
-from Chain.model.model import Model
-from Chain.parser.parser import Parser
+from Chain.model.models.models import ModelStore
+
+if TYPE_CHECKING:
+    from Chain.parser.parser import Parser
 
 # Sub classes for specialized params
 ## Special instructor-native params
@@ -109,7 +106,7 @@ class Params(BaseModel):
     """
     # Core parameters
     model: str = Field(..., description="The model identifier to use for inference.")
-    messages: list[Message] = Field(..., description="List of messages to send to the model. Can include text, images, audio, etc.")
+    messages: list[Message] = Field(default_factory=list, description="List of messages to send to the model. Can include text, images, audio, etc.")
    
     # Optional parameters
     temperature: Optional[float] = Field(default=None, description="Temperature for sampling. If None, defaults to provider-specific value.")
@@ -118,7 +115,7 @@ class Params(BaseModel):
     verbose: bool = True
     
     # Post model init parameters
-    parser: Optional[Parser] = Field(default=None, description="Parser to convert messages to a specific format. Not intended for direct use.")
+    parser: Optional[Any] = Field(default=None, description="Parser to convert messages to a specific format. Not intended for direct use.")
     query_input: str | Message | list[Message] | None = Field(default=None, description="Various possible input types that we coerce to a list of Messages. Not intended for direct use.")
     provider: Optional[str] = Field(default=None, description="Provider of the model, populated post init. Not intended for direct use.")
      
@@ -140,18 +137,21 @@ class Params(BaseModel):
         # 1. Coerce query_input to a list of Messages
         self._coerce_query_input()
         # 2. Validate model
-        if not Model.is_supported(self.model):
+        if not ModelStore.is_supported(self.model):
             raise ValueError(f"Model '{self.model}' is not supported.")
         # 3. Set provider
         if self.provider is None:
-            for provider in Model.models().keys():
-                if self.model in Model.models()[provider]:
+            for provider in ModelStore.models().keys():
+                if self.model in ModelStore.models()[provider]:
                     self.provider = provider
                     break
         if self.provider is None:
             raise ValueError(f"Provider not identified for model: {self.model}")
         # 4. Validate temperature
         self.validate_temperature()
+        # 5. Validate Parser object in self.parser
+        if self.parser is not None and not isinstance(self.parser, Parser):
+            raise TypeError("parser must be an instance of Parser")
 
     def validate_temperature(self):
         """
@@ -202,10 +202,21 @@ class Params(BaseModel):
         pass
 
     def __str__(self) -> str:
-        pass
+        """
+        Generate a string representation of the Params instance.
+        """
+        return f"Params(model={self.model}, messages={self.messages}, temperature={self.temperature}, provider={self.provider})"
+
 
     def __repr__(self) -> str:
-        pass
+        """
+        Generate a detailed string representation of the Params instance.
+        """
+        return (
+            f"Params(model={self.model!r}, messages={self.messages!r}, "
+            f"temperature={self.temperature!r}, provider={self.provider!r}, "
+            f"client_params={self.client_params!r}, parser={self.parser!r})"
+        )
 
     # Convert to dict -- clients use this to send to the API
     def to_openai(self) -> dict:

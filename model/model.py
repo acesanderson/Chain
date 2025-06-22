@@ -4,10 +4,12 @@ from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
+from Chain.model.params.params import Params
+from Chain.model.models.models import ModelStore
 from pydantic import BaseModel
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
-import importlib, json, itertools
+import importlib, json
 
 dir_path = Path(__file__).resolve().parent
 
@@ -25,51 +27,10 @@ class Model:
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
 
-    # Class methods
-    @classmethod
-    def models(cls):
-        """Definitive list of models supported by Chain library."""
-        with open(dir_path / "clients/models.json") as f:
-            return json.load(f)
-
-    @classmethod
-    def aliases(cls):
-        """Definitive list of model aliases supported by Chain library."""
-        with open(dir_path / "aliases.json") as f:
-            return json.load(f)
-
-    @classmethod
-    def is_supported(cls, model: str) -> bool:
-        """
-        Check if the model is supported by the Chain library.
-        Returns True if the model is supported, False otherwise.
-        """
-        in_aliases = model in cls.aliases().keys()
-        in_models = model in list(itertools.chain.from_iterable(cls.models().values()))
-        return in_aliases or in_models
-
-    @classmethod
-    def _validate_model(cls, model: str) -> str:
-        """
-        Validate the model name against the supported models and aliases.
-        Converts aliases to their corresponding model names if necessary.
-        """
-        # Load aliases
-        aliases = cls.aliases()
-        # Assign models based on aliases
-        if model in cls.aliases().keys():
-            model = aliases[model]
-        elif cls.is_supported(model):
-            model = model
-        else:
-            ValueError(
-                f"WARNING: Model not found locally: {model}. This may cause errors."
-            )
-        return model
 
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
-        self.model = self._validate_model(model)
+        self.model = ModelStore._validate_model(model)
         self._client_type = self._get_client_type(self.model)
         self._client = self.__class__._get_client(self._client_type)
         self._console = console
@@ -113,7 +74,7 @@ class Model:
         Setting client_type for Model object is necessary for loading the correct client in the query functions.
         Returns a tuple with client type (which informs the module title) and the client class name (which is used to instantiate the client).
         """
-        model_list = self.__class__.models()
+        model_list = ModelStore.models()
         if model in model_list["openai"]:
             return "openai", "OpenAIClientSync"
         elif model in model_list["anthropic"]:
@@ -148,10 +109,17 @@ class Model:
             raise ValueError(f"Client {client_type} not found in clients")
         return client_object
 
+    def construct_params(self, *args, **kwargs) -> Params:
+        """
+        Splat Chain- or user-submitted query args into a Params class to be fed to Clients.
+        """
+        pass
+
+
     @progress_display
     def query(
         self,
-        input: str | list | Message | ImageMessage | AudioMessage,
+        query_input: str | list | Message | ImageMessage | AudioMessage | None = None,
         parser: Parser | None = None,
         raw=False,
         cache=True,
@@ -190,6 +158,18 @@ class Model:
             # Suppress progress
             response = model.query("What is 2+2?", verbose=False)
         """
+        import inspect
+        frame = inspect.currentframe()
+        args, _, _, values = inspect.getargvalues(frame)
+        
+        query_args = {k: values[k] for k in args if k != "self"}
+        query_args["model"] = self.model
+        params = Params(**query_args)
+        print(params)
+        import sys
+        sys.exit()
+
+
         if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
