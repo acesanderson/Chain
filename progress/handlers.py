@@ -1,16 +1,22 @@
 from rich.console import Console
+import datetime
 
 class PlainProgressHandler:
-    def handle_event(self, event):
-        timestamp = event.timestamp.strftime("%H:%M:%S")
-        
-        if event.event_type == "started":
-            print(f"[{timestamp}] Starting: {event.model} | {event.query_preview}")
-        elif event.event_type == "complete":
-            duration = f"({event.duration:.1f}s)" if event.duration else ""
-            print(f"[{timestamp}] Complete: {event.model} {duration}")
-        elif event.event_type == "failed":
-            print(f"[{timestamp}] Failed: {event.model} | {event.error}")
+   def emit_started(self, model, query_preview):
+       timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+       print(f"[{timestamp}] [{model}] Starting: {query_preview}")
+   
+   def emit_complete(self, model, query_preview, duration):
+       timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+       print(f"[{timestamp}] [{model}] Complete: ({duration:.1f}s)")
+   
+   def emit_failed(self, model, query_preview, error):
+       timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+       print(f"[{timestamp}] [{model}] Failed: {error}")
+   
+   def emit_canceled(self, model, query_preview):
+       timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+       print(f"[{timestamp}] [{model}] Canceled: {query_preview}")
 
 class RichProgressHandler:
     def __init__(self, console: Console):

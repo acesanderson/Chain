@@ -3,6 +3,7 @@ from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.parser.parser import Parser
+from Chain.progress.wrappers import progress_display
 from pydantic import BaseModel
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
@@ -131,6 +132,7 @@ class Model:
             raise ValueError(f"Client {client_type} not found in clients")
         return client_object
 
+    @progress_display
     def query(
         self,
         input: str | list | Message | ImageMessage | AudioMessage,

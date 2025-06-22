@@ -1,6 +1,7 @@
 from Chain.model.model import Model
 from Chain.cache.cache import CachedRequest
 from Chain.parser.parser import Parser
+from Chain.progress.wrappers import progress_display
 import importlib, json
 from pydantic import BaseModel
 
@@ -43,6 +44,7 @@ class ModelAsync(Model):
             raise ValueError(f"Client {client_type} not found in clients")
         return client_object
 
+    @progress_display
     async def query_async(
         self,
         input: str | list,
