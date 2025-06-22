@@ -58,7 +58,44 @@ class Chain:
         total: int = 0,
     ) -> Response:
         """
-        Input should be a dict with named variables that match the prompt.
+        Executes the Chain, processing the prompt and interacting with the language model.
+
+        This method acts as a central dispatcher, routing the request based on
+        whether 'messages' are provided or if a streaming response is requested.
+        It renders the prompt with `input_variables` if a `Prompt` object is
+        associated with the Chain.
+
+        Args:
+            input_variables (dict | None): A dictionary of variables to render
+                the prompt template. Required if the Chain's prompt contains
+                Jinja2 placeholders. Defaults to None.
+            messages (list[Message] | None): A list of `Message` objects
+                representing a conversation history or a single message. If
+                provided, the Chain will operate in chat mode. Defaults to an
+                empty list.
+            verbose (bool): If True, displays progress information during the
+                model query. This is managed by the `progress_display` decorator
+                on the underlying `Model.query` call. Defaults to True.
+            stream (bool): If True, attempts to stream the response from the
+                model. Note that streaming requests do not return a `Response`
+                object directly but rather a generator. Defaults to False.
+            cache (bool): If True, the response will be cached if caching is
+                enabled on the `Model` class. Defaults to True.
+            index (int): The current index of the item being processed in a
+                batch operation. Used for progress display (e.g., "[1/100]").
+                Requires `total` to be provided. Defaults to 0.
+            total (int): The total number of items in a batch operation. Used
+                for progress display (e.g., "[1/100]"). Requires `index` to be
+                provided. Defaults to 0.
+
+        Returns:
+            Response: A `Response` object containing the model's output, status,
+            duration, and associated messages. Returns a generator if `stream`
+            is True.
+
+        Raises:
+            ValueError: If neither a prompt nor messages are provided.
+            ValueError: If `index` is provided without `total`, or vice-versa.
         """
         # Render our prompt with the input_variables if variables are passed. Should throw a jinja error if it doesn't match.
         if input_variables and self.prompt:

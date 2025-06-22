@@ -2,7 +2,7 @@ from fastapi import FastAPI, status
 from Chain.api.server.ChainRequest import ChainRequest, process_ChainRequest
 from Chain.response.response import Response
 from Chain.model.model import Model
-import uvicorn, ollama, json
+import uvicorn, json
 
 # Create a FastAPI instance
 app = FastAPI()

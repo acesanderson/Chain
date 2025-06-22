@@ -40,6 +40,63 @@ class AsyncChain(Chain):
         verbose=True,
         print_response=False,
     ) -> list[Response]:
+        """
+        Asynchronously runs multiple prompt strings or input variable sets in parallel.
+
+        This method facilitates concurrent LLM calls, making it ideal for batch
+        processing and high-throughput applications. It manages an internal
+        asynchronous event loop to execute queries concurrently. Progress
+        display is automatically handled, showing overall batch progress.
+
+        Args:
+            input_variables_list (list[dict] | None): A list of dictionaries,
+                where each dictionary contains input variables for a prompt
+                template. Used when the Chain's prompt is a template. Defaults
+                to None.
+            prompt_strings (list[str] | None): A list of pre-rendered prompt
+                strings to be sent to the model. Used when no prompt template
+                is involved or prompts are pre-generated. Defaults to None.
+            semaphore (Optional[asyncio.Semaphore]): An optional asyncio.Semaphore
+                to control the maximum number of concurrent requests. If None,
+                requests will run as fast as possible. Defaults to None.
+            cache (bool): If True, responses will be looked up in the cache
+                and saved to it if not found. Defaults to True.
+            verbose (bool): If True, displays real-time progress information
+                for the entire batch of operations. Individual operation progress
+                is suppressed during concurrent execution. Defaults to True.
+            print_response (bool): If True, prints the content of each individual
+                response as it is received. Useful for debugging but can be verbose.
+                Defaults to False.
+
+        Returns:
+            list[Response]: A list of `Response` objects, each corresponding
+            to an individual query in the batch. Exceptions during individual
+            queries are caught and returned as part of the result list.
+
+        Raises:
+            ValueError: If neither `prompt_strings` nor `input_variables_list`
+                are provided.
+            ValueError: If `input_variables_list` is provided but no `Prompt`
+                is assigned to the `AsyncChain` object.
+
+        Examples:
+            >>> # Process multiple simple prompts concurrently
+            >>> prompts = ["What is 1+1?", "What is 2+2?"]
+            >>> model_async = ModelAsync("gpt-4o-mini")
+            >>> async_chain = AsyncChain(model=model_async)
+            >>> responses = async_chain.run(prompt_strings=prompts)
+            >>> for resp in responses:
+            >>>     print(resp.content)
+
+            >>> # Process prompts from a template with input variables
+            >>> prompt_template = Prompt("Describe a {{color}} {{animal}}.")
+            >>> input_vars = [{"color": "red", "animal": "fox"}, {"color": "blue", "animal": "whale"}]
+            >>> model_async = ModelAsync("claude-3-haiku")
+            >>> async_chain = AsyncChain(prompt=prompt_template, model=model_async)
+            >>> responses = async_chain.run(input_variables_list=input_vars, semaphore=asyncio.Semaphore(2))
+            >>> for resp in responses:
+            >>>     print(resp.content)
+        """
 
         async def _run_async():
             if prompt_strings:

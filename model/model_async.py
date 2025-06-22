@@ -54,6 +54,67 @@ class ModelAsync(Model):
         cache=True,
         print_response=False,
     ) -> BaseModel | str:
+        """
+        Asynchronously executes a query against the language model with optional
+        progress tracking.
+
+        This method handles asynchronous interaction with the underlying LLM
+        client, applying caching and parsing as configured. It's designed to
+        be awaited in an async context, often used within `AsyncChain` for
+        concurrent processing.
+
+        Args:
+            input (str | list): The query text (string) or a list of `Message`
+                objects to send to the model. Supports multimodal messages
+                (e.g., `ImageMessage`, `AudioMessage`) if the model client
+                supports them.
+            verbose (bool): If True, displays progress information (e.g., a
+                spinner) for this individual query. Defaults to True.
+            parser (Parser | None): An optional `Parser` object to structure
+                the model's response into a Pydantic `BaseModel`. Defaults to None.
+            raw (bool): If True and a `parser` is provided, returns a tuple
+                containing both the parsed Pydantic object and the raw JSON/text
+                output from the model. This is primarily used internally for caching.
+                Defaults to False.
+            cache (bool): If True, the query attempts to retrieve a response
+                from the `Model._chain_cache` before making an API call. If a
+                response is not found, it is cached upon successful completion.
+                Defaults to True.
+            print_response (bool): If True, prints the model's raw output to
+                the console after the query is complete. Useful for debugging.
+                Defaults to False.
+
+        Returns:
+            BaseModel | str | tuple[BaseModel, str]:
+                - If `parser` is provided and `raw` is False: the parsed Pydantic model.
+                - If `parser` is not provided: the raw text response from the model.
+                - If `parser` is provided and `raw` is True: a tuple containing
+                  the parsed Pydantic model and its raw JSON/text representation.
+
+        Examples:
+            >>> import asyncio
+            >>> from Chain import ModelAsync
+            >>>
+            >>> async def main():
+            >>>     model = ModelAsync("gpt-4o-mini")
+            >>>     # Basic async query
+            >>>     response_text = await model.query_async("Explain asynchronous programming.")
+            >>>     print(f"Response: {response_text[:50]}...")
+            >>>
+            >>>     # Query with a parser
+            >>>     from pydantic import BaseModel
+            >>>     from Chain import Parser
+            >>>
+            >>>     class CapitalInfo(BaseModel):
+            >>>         city: str
+            >>>         country: str
+            >>>
+            >>>     parser = Parser(CapitalInfo)
+            >>>     capital_obj = await model.query_async("What is the capital of France?", parser=parser)
+            >>>     print(f"Capital: {capital_obj.city}, Country: {capital_obj.country}")
+            >>>
+            >>> asyncio.run(main())
+        """
         if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:

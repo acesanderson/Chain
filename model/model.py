@@ -152,13 +152,13 @@ class Model:
     def query(
         self,
         input: str | list | Message | ImageMessage | AudioMessage,
-        verbose: bool = True,
         parser: Parser | None = None,
         raw=False,
         cache=True,
-        temperature: Optional[float] = None,  # None means just use the defaults
-        index: int = 0,
-        total: int = 0,
+        temperature: Optional[float] = None,
+        verbose: bool = True, # Captured by decorator
+        index: int = 0, # Captured by decorator
+        total: int = 0, # Captured by decorator
     ) -> BaseModel | str:
         """
         Execute a query against the language model with optional progress tracking.
