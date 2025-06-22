@@ -15,7 +15,11 @@ from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from typing import TYPE_CHECKING, Optional
 
+# Our TYPE_CHECKING imports, these ONLY load for IDEs, so you can still lazy load in production.
+if TYPE_CHECKING:
+    from rich.console import Console
 
 class Chain:
     """
@@ -27,7 +31,9 @@ class Chain:
     """
 
     # If you want logging, initialize a message store with log_file_path parameter, and assign it to your Chain class as a singleton.
-    _message_store: MessageStore | None = None
+    _message_store: Optional[MessageStore] = None
+    # If you want rich progress reporting, add a rich.console.Console object to Chain. (also can be added at Model level)
+    _console: Optional["Console"] = None
 
     def __init__(
         self, model: Model, prompt: Prompt | None = None, parser: Parser | None = None

@@ -4,17 +4,21 @@ from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.parser.parser import Parser
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 import importlib, json, itertools
 
 dir_path = Path(__file__).resolve().parent
 
+if TYPE_CHECKING:
+    from rich.console import Console
 
 class Model:
     # Class singletons
     _clients = {} # Store lazy-loaded client instances at the class level
-    _chain_cache: ChainCache | None = None # If you want to add a cache, add it at class level as a singleton.
+    _chain_cache: Optional[ChainCache] = None # If you want to add a cache, add it at class level as a singleton.
+    _console: Optional["Console"] = None  # For rich console output, if needed. This is overridden in the Chain class.
+
 
     # Class methods
     @classmethod
@@ -59,11 +63,33 @@ class Model:
         return model
 
     # Object methods
-    def __init__(self, model: str = "gpt-4o"):
+    def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
         self.model = self._validate_model(model)
         self._client_type = self._get_client_type(self.model)
-        # Add client loading logic
         self._client = self.__class__._get_client(self._client_type)
+        self._console = console
+
+    @property
+    def console(self):
+        """
+        Returns the effective console (hierarchy: instance -> Chain class -> None)
+        """
+        if self._console:
+            return self._console
+        import sys
+        if "Chain.chain.chain" in sys.modules:
+            Chain = sys.modules["Chain.chain.chain"].Chain
+            return getattr(Chain, "_console", None)
+        else:
+            return None
+
+    @console.setter
+    def console(self, console: "Console"):
+        """
+        Sets the console object for rich output.
+        This is useful if you want to override the default console for a specific instance.
+        """
+        self._console = console
 
     def _get_client_type(self, model: str) -> tuple:
         """
