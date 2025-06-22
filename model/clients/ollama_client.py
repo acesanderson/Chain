@@ -224,7 +224,6 @@ class OllamaClientAsync(OllamaClient):
             "model": model,
             "messages": converted_messages,
             "response_model": parser.pydantic_model if parser else None,
-            "stream": True,
             "extra_body": {"options": {"num_ctx": self._ollama_context_sizes[model]}},
         }
         if temperature:
