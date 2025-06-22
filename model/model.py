@@ -14,26 +14,30 @@ dir_path = Path(__file__).resolve().parent
 if TYPE_CHECKING:
     from rich.console import Console
 
+
 class Model:
     # Class singletons
-    _clients = {} # Store lazy-loaded client instances at the class level
-    _chain_cache: Optional[ChainCache] = None # If you want to add a cache, add it at class level as a singleton.
-    _console: Optional["Console"] = None  # For rich console output, if needed. This is overridden in the Chain class.
-
+    _clients = {}  # Store lazy-loaded client instances at the class level
+    _chain_cache: Optional[ChainCache] = (
+        None  # If you want to add a cache, add it at class level as a singleton.
+    )
+    _console: Optional["Console"] = (
+        None  # For rich console output, if needed. This is overridden in the Chain class.
+    )
 
     # Class methods
     @classmethod
     def models(cls):
-        """ Definitive list of models supported by Chain library. """
+        """Definitive list of models supported by Chain library."""
         with open(dir_path / "clients/models.json") as f:
             return json.load(f)
 
     @classmethod
     def aliases(cls):
-        """ Definitive list of model aliases supported by Chain library. """
+        """Definitive list of model aliases supported by Chain library."""
         with open(dir_path / "aliases.json") as f:
             return json.load(f)
-    
+
     @classmethod
     def is_supported(cls, model: str) -> bool:
         """
@@ -77,24 +81,24 @@ class Model:
         """
         if self._console:
             return self._console
-        
+
         import sys
+
         # Check for Chain._console
         if "Chain.chain.chain" in sys.modules:
             Chain = sys.modules["Chain.chain.chain"].Chain
             chain_console = getattr(Chain, "_console", None)
             if chain_console:
                 return chain_console
-        
-        # Check for AsyncChain._console  
+
+        # Check for AsyncChain._console
         if "Chain.chain.asyncchain" in sys.modules:
             AsyncChain = sys.modules["Chain.chain.asyncchain"].AsyncChain
             async_console = getattr(AsyncChain, "_console", None)
             if async_console:
                 return async_console
-                
-        return None
 
+        return None
 
     @console.setter
     def console(self, console: "Console"):
@@ -153,10 +157,12 @@ class Model:
         raw=False,
         cache=True,
         temperature: Optional[float] = None,  # None means just use the defaults
+        index: int = 0,
+        total: int = 0,
     ) -> BaseModel | str:
         """
         Execute a query against the language model with optional progress tracking.
-        
+
         Args:
             input: The query text or list of messages to send to the model
             parser: Optional parser to structure the response
@@ -165,22 +171,22 @@ class Model:
             index: Current item number for batch progress display (requires total)
             total: Total number of items for batch progress display (requires index)
             **kwargs: Additional model-specific parameters
-            
+
         Returns:
             str: The model's response, optionally parsed if parser provided
-            
+
         Raises:
             ValueError: If only one of index/total is provided
-            
+
         Examples:
             # Basic usage
             response = model.query("What is 2+2?")
-            
+
             # Batch processing with progress
             for i, item in enumerate(items):
                 response = model.query(item, index=i+1, total=len(items))
                 # Shows: ⠋ gpt-4o | [1/100] Processing item...
-            
+
             # Suppress progress
             response = model.query("What is 2+2?", verbose=False)
         """

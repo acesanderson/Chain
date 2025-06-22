@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Optional
 if TYPE_CHECKING:
     from rich.console import Console
 
+
 class Chain:
     """
     How we chain things together.
@@ -53,6 +54,8 @@ class Chain:
         verbose: bool = True,
         stream: bool = False,
         cache: bool = True,
+        index: int = 0,
+        total: int = 0,
     ) -> Response:
         """
         Input should be a dict with named variables that match the prompt.
@@ -70,11 +73,21 @@ class Chain:
         # Route input; if string, if message
         if messages:
             result = self.run_messages(
-                prompt=prompt, messages=messages, verbose=verbose, cache=cache
+                prompt=prompt,
+                messages=messages,
+                verbose=verbose,
+                cache=cache,
+                index=index,
+                total=total,
             )
         elif prompt:
             result = self.run_completion(
-                prompt=prompt, verbose=verbose, stream=stream, cache=cache
+                prompt=prompt,
+                verbose=verbose,
+                stream=stream,
+                cache=cache,
+                index=index,
+                total=total,
             )
         else:
             raise ValueError("No prompt or messages passed to Chain.run.")
@@ -86,6 +99,8 @@ class Chain:
         prompt: str | None = None,
         verbose=True,
         cache=True,
+        index: int = 0,
+        total: int = 0,
     ):
         """
         Special version of Chain.run that takes a messages object.
@@ -107,6 +122,8 @@ class Chain:
                 verbose=verbose,
                 parser=self.parser,
                 cache=cache,
+                index=index,
+                total=total,
             )
         else:
             result = self.model.query(messages, verbose=verbose, cache=cache)
@@ -129,7 +146,15 @@ class Chain:
         )
         return response
 
-    def run_completion(self, prompt: str, verbose=True, stream=False, cache=True):
+    def run_completion(
+        self,
+        prompt: str,
+        verbose=True,
+        stream=False,
+        cache=True,
+        index: int = 0,
+        total: int = 0,
+    ):
         """
         Standard version of Chain.run which returns a string (i.e. a completion).
         Input should be a dict with named variables that match the prompt.
@@ -145,6 +170,8 @@ class Chain:
                 verbose=verbose,
                 parser=self.parser,
                 cache=cache,
+                index=index,
+                total=total,
             )
         else:
             result = self.model.query(prompt, verbose=verbose, cache=cache)
