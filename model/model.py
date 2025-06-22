@@ -154,11 +154,6 @@ class Model:
         cache=True,
         temperature: Optional[float] = None,  # None means just use the defaults
     ) -> BaseModel | str:
-        if verbose:
-            print(
-                f"Model: {self.model}  Temperature: {temperature}  Query: "
-                + self.pretty(str(input))
-            )
         if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:

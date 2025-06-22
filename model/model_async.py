@@ -54,10 +54,6 @@ class ModelAsync(Model):
         cache=True,
         print_response=False,
     ) -> BaseModel | str:
-        if verbose:
-            from datetime import datetime
-
-            print(f"Model: {self.model}   TIME: {datetime.now().strftime('%H:%M:%S')}")
         if Model._chain_cache and cache:
             cached_request = Model._chain_cache.cache_lookup(input, self.model)
             if cached_request:
