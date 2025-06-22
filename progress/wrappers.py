@@ -5,7 +5,14 @@ from functools import wraps
 
 def extract_query_preview(input_data, max_length=20):
     """Extract a preview of the query for display purposes"""
+
+    def strip_it(query_preview: str) -> str:
+        query_preview = query_preview.strip()
+        query_preview = query_preview.replace("\n", " \\ ")
+        return query_preview
+
     if isinstance(input_data, str):
+        input_data = strip_it(input_data)
         return (
             input_data[:max_length] + "..."
             if len(input_data) > max_length
@@ -21,6 +28,7 @@ def extract_query_preview(input_data, max_length=20):
                     content = content.model_dump_json()
                 else:
                     content = str(content)
+                content = strip_it(content)
                 return (
                     content[:max_length] + "..."
                     if len(content) > max_length
