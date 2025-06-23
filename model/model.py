@@ -160,6 +160,7 @@ class Model:
 
         query_args = {k: values[k] for k in args if k != "self"}
         query_args["model"] = self.model
+        cache = query_args.pop("cache", False)
         params = Params(**query_args)
         # We need to handle the following:
         # ADD THIS CACHE LOGIC:
