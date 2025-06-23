@@ -90,13 +90,17 @@ class OllamaClientSync(OllamaClient):
         params: Params,
         ) -> str | BaseModel | Stream:
         result = self._client.chat.completions.create(**params.to_ollama())
+        # Try to retrieve the text first
+        try:
+            return result.choices[0].message.content
+        except AttributeError:
+            # If the result is not in the expected format, return the raw result
+            pass
         if isinstance(result, BaseModel):
             return result
         if isinstance(result, Stream):
             # Handle streaming response if needed
             return result
-        else:
-            return result.choices[0].message.content
 
 class OllamaClientAsync(OllamaClient):
     def _initialize_client(self):
@@ -114,8 +118,12 @@ class OllamaClientAsync(OllamaClient):
         params: Params,
         ) -> str | BaseModel:
         result = await self._client.chat.completions.create(**params.to_ollama())
+        # Try to retrieve the text first
+        try:
+            return result.choices[0].message.content
+        except AttributeError:
+            # If the result is not in the expected format, return the raw result
+            pass
         if isinstance(result, BaseModel):
             return result
-        else:
-            return result.choices[0].message.content
 
