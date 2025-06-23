@@ -7,9 +7,8 @@ TODO: implement a class SDK as a protocol for all the library clients (openai, o
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional
-from Chain.parser.parser import Parser
-
+from Chain.model.params.params import Params
+from pydantic import BaseModel
 
 class Client(ABC):
     @abstractmethod
@@ -36,16 +35,13 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def query(self, model: str, input: "str | list", parser: Parser | None = None, raw=False, temperature: Optional[float] = None) -> "BaseModel | str":  # type: ignore
+    def query(self, params: Params) -> str | BaseModel:
         """
         All client subclasses must have a query function that can take:
-        - a model name
-        - input in the form of EITHER a string or a Messages-style list of dictionaries
-        - an optional Pydantic model to validate the response
-        - an optional boolean to return the raw response (needed for caching objects)
+        - a Params object, which contains all the parameters needed for the query
+
         And returns
         - either a string (i.e. text generation) or a Pydantic model (function calling)
-        - optionally a tuple of the Pydantic model and the raw response.
         """
         pass
 

@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Any, ClassVar, TYPE_CHECKING
 from Chain.message.message import Message
+from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from Chain.model.models.models import ModelStore
 
 if TYPE_CHECKING:
@@ -111,7 +113,6 @@ class Params(BaseModel):
     # Optional parameters
     temperature: Optional[float] = Field(default=None, description="Temperature for sampling. If None, defaults to provider-specific value.")
     stream: bool = False
-    raw: bool = False
     verbose: bool = True
     
     # Post model init parameters
@@ -152,6 +153,8 @@ class Params(BaseModel):
         # 5. Validate Parser object in self.parser
         if self.parser is not None and not isinstance(self.parser, Parser):
             raise TypeError("parser must be an instance of Parser")
+        # 6. Validate client_params TBD
+
 
     def validate_temperature(self):
         """
@@ -189,17 +192,33 @@ class Params(BaseModel):
         else:
             raise ValueError("query_input must be a Message, a string, or a list of Messages.")
         self.query_input = None
-        if self.messages is not None:
+        if self.messages != []:
             input_messages = self.messages + input_messages
             self.messages = input_messages
         else:
             self.messages = input_messages
 
-    def __hash__(self) -> str:
+    def generate_cache_key(self) -> str:
         """
-        Generate a hash for the Params instance for our caching system.
+        Generate a reliable cache key for the Params instance.
+        Only includes fields that would affect the LLM response.
         """
-        pass
+        from hashlib import sha256
+        import json
+        
+        # Use sort_keys for deterministic JSON ordering
+        messages_str = json.dumps(self.convert_messages(), sort_keys=True)
+        
+        # Include parser since it affects response format
+        parser_str = self.parser.pydantic_model.__name__ if self.parser else "none"
+        
+        # Handle None temperature gracefully
+        temp_str = str(self.temperature) if self.temperature is not None else "none"
+        
+        params_str = "|".join([messages_str, self.model, temp_str, parser_str])
+        
+        return sha256(params_str.encode('utf-8')).hexdigest()
+
 
     def __str__(self) -> str:
         """
@@ -219,17 +238,66 @@ class Params(BaseModel):
         )
 
     # Convert to dict -- clients use this to send to the API
+    def convert_messages(self) -> list[dict]:
+        """
+        Convert messages to a list of dictionaries.
+        This is used by clients to send messages to the API.
+        """
+        # If no messages at all, that's an error
+        if not self.messages:
+            raise ValueError("No messages to convert. Messages list cannot be empty.")
+            
+        converted_messages = []
+        for message in self.messages:
+            if isinstance(message, ImageMessage):
+                match self.provider:
+                    case "openai" | "ollama" | "gemini" | "perplexity":
+                        converted_messages.append(message.to_openai().model_dump())
+                    case "anthropic":
+                        converted_messages.append(message.to_anthropic().model_dump())
+            elif isinstance(message, AudioMessage):
+                # Currently we only use GPT for this, specifically the gpt-4o-audio-preview model.
+                if not self.model == "gpt-4o-audio-preview":
+                    raise ValueError(
+                        "AudioMessage can only be used with the gpt-4o-audio-preview model."
+                        )
+                converted_messages.append(message.to_openai().model_dump())
+            elif isinstance(message, Message) and self.provider == "anthropic":
+                # For Anthropic, we need to convert the message to the appropriate format.
+                converted_messages.append(message.model_dump())
+            else:
+                # For other message types, we use the default model_dump method.
+                if not isinstance(message, Message):
+                    raise ValueError(f"Unsupported message type: {type(message)}")
+                converted_messages.append(message.model_dump())
+        
+        return converted_messages
+
     def to_openai(self) -> dict:
-        pass
+        base_params = {
+            "model": self.model,
+            "messages": self.convert_messages(),
+            "response_model": self.parser.pydantic_model if self.parser else None,
+            "temperature": self.temperature,
+            "stream": self.stream,
+        }
+
+        # Automatically include all client params
+        if self.client_params:
+            client_dict = self.client_params.model_dump(exclude_none=True)
+            base_params.update(client_dict)
+
+        # Filter out None values and return
+        return {k: v for k, v in base_params.items() if v is not None or k == "response_model"}  # Actually filter None values EXCEPT for response_model, as Instructor expects it to be present
 
     def to_ollama(self) -> dict:
-        pass
+        return self.to_openai()
 
     def to_anthropic(self) -> dict:
         pass
 
     def to_gemini(self) -> dict:
-        pass
+        return self.to_openai()
 
     def to_perplexity(self) -> dict:
-        pass
+        return self.to_openai()

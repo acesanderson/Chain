@@ -109,19 +109,12 @@ class Model:
             raise ValueError(f"Client {client_type} not found in clients")
         return client_object
 
-    def construct_params(self, *args, **kwargs) -> Params:
-        """
-        Splat Chain- or user-submitted query args into a Params class to be fed to Clients.
-        """
-        pass
-
 
     @progress_display
     def query(
         self,
         query_input: str | list | Message | ImageMessage | AudioMessage | None = None,
         parser: Parser | None = None,
-        raw=False,
         cache=True,
         temperature: Optional[float] = None,
         verbose: bool = True, # Captured by decorator
@@ -158,6 +151,7 @@ class Model:
             # Suppress progress
             response = model.query("What is 2+2?", verbose=False)
         """
+        # Here's the magic -- kwargs goes right into our Params object.
         import inspect
         frame = inspect.currentframe()
         args, _, _, values = inspect.getargvalues(frame)
@@ -165,43 +159,10 @@ class Model:
         query_args = {k: values[k] for k in args if k != "self"}
         query_args["model"] = self.model
         params = Params(**query_args)
-        print(params)
-        import sys
-        sys.exit()
-
-
-        if Model._chain_cache and cache:
-            cached_request = Model._chain_cache.cache_lookup(input, self.model)
-            if cached_request:
-                print("Cache hit!")
-                if parser:
-                    try:
-                        cached_request_dict = json.loads(cached_request)
-                        obj = parser.pydantic_model(**cached_request_dict)  # type: ignore
-                        if raw:
-                            return (obj, cached_request)  # type: ignore
-                        if not raw:
-                            return obj
-                    except Exception as e:
-                        print(f"Failed to parse cached request: {e}")
-                return cached_request
-        if parser == None:
-            llm_output = self._client.query(
-                self.model, input, raw=False, temperature=temperature
-            )
-        else:
-            obj, llm_output = self._client.query(self.model, input, parser, raw=True)
-        if Model._chain_cache and cache:
-            cached_request = CachedRequest(
-                user_input=input, model=self.model, llm_output=llm_output
-            )
-            Model._chain_cache.insert_cached_request(cached_request)
-        if parser and not raw:
-            return obj  # type: ignore
-        elif parser and raw:
-            return obj, llm_output  # type: ignore
-        else:
-            return llm_output
+        # We need to handle the following:
+        ## Chaincache implementation (if cache = True)
+        response: str | BaseModel = self._client.query(params)
+        return response
 
     def tokenize(self, text: str) -> int:
         """

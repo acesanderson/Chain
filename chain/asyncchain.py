@@ -146,7 +146,7 @@ class AsyncChain(Chain):
                 if semaphore:
                     async with semaphore:
                         return await self.model.query_async(
-                            input=prompt_string,
+                            query_input=prompt_string,
                             parser=parser,
                             cache=cache,
                             verbose=verbose,
@@ -154,7 +154,7 @@ class AsyncChain(Chain):
                         )
                 else:
                     return await self.model.query_async(
-                        input=prompt_string,
+                        query_input=prompt_string,
                         parser=parser,
                         cache=cache,
                         verbose=verbose,
@@ -277,18 +277,29 @@ class AsyncChain(Chain):
 
         return results
 
-
-    def convert_results_to_responses(self, results: list[str]) -> list[Response]:
-        # Convert results to Response objects
+    def convert_results_to_responses(self, results: list) -> list[Response]:
+        """Convert results to Response objects, handling exceptions properly"""
         responses = []
         for result in results:
-            response = Response(
-                content=result,
-                status="success",
-                prompt=None,  # This would be very hard to calculate; maybe later
-                model=self.model.model,
-                duration=None,  # This would be very hard to calculate; maybe later
-                messages=[Message(role="assistant", content=result)],
-            )
+            if isinstance(result, Exception):
+                # Handle failed requests
+                response = Response(
+                    content=f"Error: {str(result)}",
+                    status="failed", 
+                    prompt=None,
+                    model=self.model.model,
+                    duration=None,
+                    messages=[Message(role="assistant", content=f"Error: {str(result)}")],
+                )
+            else:
+                # Handle successful requests
+                response = Response(
+                    content=result,
+                    status="success",
+                    prompt=None,
+                    model=self.model.model, 
+                    duration=None,
+                    messages=[Message(role="assistant", content=str(result))],
+                )
             responses.append(response)
         return responses
