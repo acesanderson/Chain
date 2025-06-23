@@ -1,7 +1,5 @@
-from Chain.cache.cache import ChainCache, CachedRequest
+from Chain.cache.cache import ChainCache, check_cache_and_query
 from Chain.message.message import Message
-from Chain.message.imagemessage import ImageMessage
-from Chain.message.audiomessage import AudioMessage
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.model.params.params import Params
@@ -9,7 +7,7 @@ from Chain.model.models.models import ModelStore
 from pydantic import BaseModel
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
-import importlib, json
+import importlib
 
 dir_path = Path(__file__).resolve().parent
 
@@ -115,9 +113,9 @@ class Model:
     @progress_display
     def query(
         self,
-        query_input: str | list | Message | ImageMessage | AudioMessage | None = None,
+        query_input: str | list | Message | None = None,
         parser: Parser | None = None,
-        cache=True,
+        cache=False,
         temperature: Optional[float] = None,
         stream: bool = False, 
         verbose: bool = True, # Captured by decorator
@@ -163,9 +161,11 @@ class Model:
         query_args["model"] = self.model
         params = Params(**query_args)
         # We need to handle the following:
-        ## Chaincache implementation (if cache = True)
-        response: str | BaseModel = self._client.query(params)
-        return response
+           # ADD THIS CACHE LOGIC:
+        if cache and hasattr(self, '_chain_cache') and self._chain_cache:
+            return check_cache_and_query(self, params, lambda: self._client.query(params))
+        else:
+            return self._client.query(params)
 
     def tokenize(self, text: str) -> int:
         """

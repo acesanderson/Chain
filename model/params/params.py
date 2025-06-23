@@ -3,10 +3,9 @@ from typing import Optional, Any, ClassVar, TYPE_CHECKING
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
 
-if TYPE_CHECKING:
-    from Chain.parser.parser import Parser
 
 # Sub classes for specialized params
 ## Special instructor-native params

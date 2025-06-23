@@ -1,4 +1,5 @@
 from Chain.model.model import Model
+from Chain.cache.cache import check_cache_and_query_async
 from Chain.model.models.models import ModelStore
 from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
@@ -52,7 +53,7 @@ class ModelAsync(Model):
         verbose: bool = True,
         parser: Parser | None = None,
         raw=False,
-        cache=True,
+        cache=False,
         print_response=False,
     ) -> BaseModel | str:
         """
@@ -72,7 +73,11 @@ class ModelAsync(Model):
         query_args = {k: values[k] for k in args if k != "self"}
         query_args["model"] = self.model
         params = Params(**query_args)
-        # We need to handle the following:
-        ## Chaincache implementation (if cache = True)
-        response: str | BaseModel = await self._client.query(params)
-        return response
+        # Cache implementation
+         # ADD THIS CACHE LOGIC:
+        if cache and hasattr(self, '_chain_cache') and self._chain_cache:
+            async def execute_query():
+                return await self._client.query(params)
+            return await check_cache_and_query_async(self, params, execute_query)
+        else:
+            return await self._client.query(params)
