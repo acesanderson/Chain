@@ -56,15 +56,19 @@ class AnthropicClientSync(AnthropicClient):
     def query(
         self,
         params: Params,
-        ) -> str | BaseModel | Stream:
+    ) -> str | BaseModel | Stream | None:
         result = self._client.chat.completions.create(**params.to_anthropic())
+        # First try to get text content from the result
+        try:
+            result = result.content[0].text
+            return result
+        except AttributeError:
+            pass
         if isinstance(result, BaseModel):
             return result
         elif isinstance(result, Stream):
             # Handle streaming response if needed
             return result
-        else:
-            return result.choices[0].message.content
 
 
 class AnthropicClientAsync(AnthropicClient):
@@ -78,12 +82,16 @@ class AnthropicClientAsync(AnthropicClient):
     async def query(
         self,
         params: Params,
-        ) -> str | BaseModel | Stream:
+    ) -> str | BaseModel | Stream:
         result = await self._client.chat.completions.create(**params.to_anthropic())
+        # First try to get text content from the result
+        try:
+            result = result.content[0].text
+            return result
+        except AttributeError:
+            pass
         if isinstance(result, BaseModel):
             return result
         elif isinstance(result, Stream):
             # Handle streaming response if needed
             return result
-        else:
-            return result.choices[0].message.content
