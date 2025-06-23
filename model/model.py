@@ -163,7 +163,6 @@ class Model:
         cache = query_args.pop("cache", False)
         params = Params(**query_args)
         # Caching
-        breakpoint()
         if cache and hasattr(self, "_chain_cache") and self._chain_cache:
             return check_cache_and_query(
                 self, params, lambda: self._client.query(params)
