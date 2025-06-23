@@ -53,15 +53,20 @@ class GoogleClientSync(GoogleClient):
     def query(
         self,
         params: Params,
-        ) -> "str | BaseModel | Stream | AnthropicStream":
+    ) -> "str | BaseModel | Stream | AnthropicStream":
         result = self._client.chat.completions.create(**params.to_gemini())
+        # First try to get text content from the result
+        try:
+            result = result.choices[0].message.content
+            return result
+        except AttributeError:
+            pass
         if isinstance(result, BaseModel):
             return result
         elif isinstance(result, Stream):
             # Handle streaming response if needed
             return result
-        else:
-            return result.choices[0].message.content
+
 
 class GoogleClientAsync(GoogleClient):
     def _initialize_client(self):
@@ -80,12 +85,16 @@ class GoogleClientAsync(GoogleClient):
     async def query(
         self,
         params: Params,
-        ) -> "str | BaseModel | Stream | AnthropicStream":
+    ) -> "str | BaseModel | Stream | AnthropicStream":
         result = await self._client.chat.completions.create(**params.to_gemini())
+        # First try to get text content from the result
+        try:
+            result = result.choices[0].message.content
+            return result
+        except AttributeError:
+            pass
         if isinstance(result, BaseModel):
             return result
         elif isinstance(result, Stream):
             # Handle streaming response if needed
             return result
-        else:
-            return result.choices[0].message.content

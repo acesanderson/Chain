@@ -14,7 +14,9 @@ dir_path = Path(__file__).resolve().parent
 if TYPE_CHECKING:
     from rich.console import Console
     from openai import Stream  # For type hinting only, to avoid circular imports
-    from anthropic import Stream as AnthropicStream  # For type hinting only, to avoid circular imports
+    from anthropic import (
+        Stream as AnthropicStream,
+    )  # For type hinting only, to avoid circular imports
 
 
 class Model:
@@ -26,7 +28,6 @@ class Model:
     _console: Optional["Console"] = (
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
-
 
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
@@ -109,7 +110,6 @@ class Model:
             raise ValueError(f"Client {client_type} not found in clients")
         return client_object
 
-
     @progress_display
     def query(
         self,
@@ -117,10 +117,10 @@ class Model:
         parser: Parser | None = None,
         cache=False,
         temperature: Optional[float] = None,
-        stream: bool = False, 
-        verbose: bool = True, # Captured by decorator
-        index: int = 0, # Captured by decorator
-        total: int = 0, # Captured by decorator
+        stream: bool = False,
+        verbose: bool = True,  # Captured by decorator
+        index: int = 0,  # Captured by decorator
+        total: int = 0,  # Captured by decorator
     ) -> "BaseModel | str | Stream | AnthropicStream":
         """
         Execute a query against the language model with optional progress tracking.
@@ -154,16 +154,20 @@ class Model:
         """
         # Here's the magic -- kwargs goes right into our Params object.
         import inspect
+
         frame = inspect.currentframe()
         args, _, _, values = inspect.getargvalues(frame)
-        
+
         query_args = {k: values[k] for k in args if k != "self"}
         query_args["model"] = self.model
+        cache = query_args.pop("cache", False)
         params = Params(**query_args)
         # We need to handle the following:
-           # ADD THIS CACHE LOGIC:
-        if cache and hasattr(self, '_chain_cache') and self._chain_cache:
-            return check_cache_and_query(self, params, lambda: self._client.query(params))
+        # ADD THIS CACHE LOGIC:
+        if cache and hasattr(self, "_chain_cache") and self._chain_cache:
+            return check_cache_and_query(
+                self, params, lambda: self._client.query(params)
+            )
         else:
             return self._client.query(params)
 

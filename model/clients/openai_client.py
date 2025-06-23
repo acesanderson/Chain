@@ -12,7 +12,9 @@ import instructor, tiktoken
 
 if TYPE_CHECKING:
     from openai import Stream
-    from anthropic import Stream as AnthropicStream  # For type hinting only, to avoid circular imports
+    from anthropic import (
+        Stream as AnthropicStream,
+    )  # For type hinting only, to avoid circular imports
 
 
 class OpenAIClient(Client):
@@ -51,15 +53,20 @@ class OpenAIClientSync(OpenAIClient):
     def query(
         self,
         params: Params,
-        ) -> "str | BaseModel | Stream | AnthropicStream":
+    ) -> "str | BaseModel | Stream | AnthropicStream":
         result = self._client.chat.completions.create(**params.to_openai())
+        # First try to get text content from the result
+        try:
+            result = result.choices[0].message.content
+            return result
+        except AttributeError:
+            # If the result is a BaseModel or Stream, handle accordingly
+            pass
         if isinstance(result, BaseModel):
             return result
         elif isinstance(result, Stream):
             # Handle streaming response if needed
             return result
-        else:
-            return result.choices[0].message.content
 
 
 class OpenAIClientAsync(OpenAIClient):
@@ -73,10 +80,14 @@ class OpenAIClientAsync(OpenAIClient):
     async def query(
         self,
         params: Params,
-        ) -> "str | BaseModel | Stream | AnthropicStream":
+    ) -> "str | BaseModel | Stream | AnthropicStream":
         result = await self._client.chat.completions.create(**params.to_openai())
+        # First try to get text content from the result
+        try:
+            result = result.choices[0].message.content
+            return result
+        except AttributeError:
+            # If the result is a BaseModel or Stream, handle accordingly
+            pass
         if isinstance(result, BaseModel):
             return result
-        else:
-            return result.choices[0].message.content
-

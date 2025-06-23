@@ -13,30 +13,37 @@ class RetryConfig(BaseModel):
     """
     Configuration for retry logic in the instructor framework.
     """
+
     max_retries: int = 3
     timeout: Optional[float] = None
     exponential_backoff: bool = True
     retry_on_validation_error: bool = True
     circuit_breaker_threshold: int = 5
 
+
 class MockConfig(BaseModel):
     """
     Configuration for mocking responses in the instructor framework.
     """
+
     enabled: bool = False
     responses: dict[str, Any] = Field(default_factory=dict)
+
 
 class ClientParams(BaseModel):
     """
     Parameters that are specific to a client.
     """
+
     pass
+
 
 class OpenAIParams(ClientParams):
     """
     Parameters specific to OpenAI API spec-using clients.
     NOTE: This is a generic OpenAI client, not the official OpenAI API.
     """
+
     # Class vars
     provider: ClassVar[str] = "openai"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 2.0)
@@ -47,21 +54,25 @@ class OpenAIParams(ClientParams):
     stop: Optional[list[str]] = None
     safety_settings: Optional[dict[str, Any]] = None
     extra_params: dict[str, Any] = Field(default_factory=dict)
-    
+
+
 class GeminiParams(OpenAIParams):
     """
     Parameters specific to Gemini clients.
     Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
     """
+
     # Class vars
     provider: ClassVar[str] = "gemini"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
+
 
 class OllamaParams(OpenAIParams):
     """
     Parameters specific to Ollama clients.
     Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
     """
+
     # Class vars
     provider: ClassVar[str] = "ollama"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
@@ -70,66 +81,98 @@ class OllamaParams(OpenAIParams):
         """
         Parameters specific to Ollama clients.
         """
+
         temperature: Optional[float] = None
         top_k: Optional[int] = None
         top_p: Optional[float] = None
         repeat_penalty: Optional[float] = None
         stop: Optional[list[str]] = None
-    
-    client_params: Optional[OllamaClientParams] = Field(default=None, description="Parameters specific to Ollama clients.")
+
+    client_params: Optional[OllamaClientParams] = Field(
+        default=None, description="Parameters specific to Ollama clients."
+    )
+
 
 class AnthropicParams(ClientParams):
     """
     Parameters specific to Anthropic clients.
     """
+
     # Class vars
     provider: ClassVar[str] = "anthropic"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
 
-    max_tokens: Optional[int] = None  # Anthropic uses max_tokens, not max_tokens_to_sample
+    max_tokens: Optional[int] = (
+        None  # Anthropic uses max_tokens, not max_tokens_to_sample
+    )
     top_k: Optional[int] = None
     top_p: Optional[float] = None
     stop_sequences: Optional[list[str]] = None
     extra_params: dict[str, Any] = Field(default_factory=dict)
+
 
 class PerplexityParams(OpenAIParams):
     """
     Parameters specific to Perplexity clients.
     Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
     """
+
     # Class vars
     provider: ClassVar[str] = "perplexity"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 2.0)
 
+
 # Union type for all client-specific parameters
-ClientParamsTypes = OpenAIParams | OllamaParams | AnthropicParams | GeminiParams | PerplexityParams 
+ClientParamsTypes = (
+    OpenAIParams | OllamaParams | AnthropicParams | GeminiParams | PerplexityParams
+)
+
 
 # Main Params class
 class Params(BaseModel):
     """
     Parameters that are constructed by Model and are sent to Clients.
     """
+
     # Core parameters
     model: str = Field(..., description="The model identifier to use for inference.")
-    messages: list[Message] = Field(default_factory=list, description="List of messages to send to the model. Can include text, images, audio, etc.")
-   
+    messages: list[Message] = Field(
+        default_factory=list,
+        description="List of messages to send to the model. Can include text, images, audio, etc.",
+    )
+
     # Optional parameters
-    temperature: Optional[float] = Field(default=None, description="Temperature for sampling. If None, defaults to provider-specific value.")
+    temperature: Optional[float] = Field(
+        default=None,
+        description="Temperature for sampling. If None, defaults to provider-specific value.",
+    )
     stream: bool = False
     verbose: bool = True
-    
+
     # Post model init parameters
-    parser: Optional[Any] = Field(default=None, description="Parser to convert messages to a specific format. Not intended for direct use.")
-    query_input: str | Message | list[Message] | None = Field(default=None, description="Various possible input types that we coerce to a list of Messages. Not intended for direct use.")
-    provider: Optional[str] = Field(default=None, description="Provider of the model, populated post init. Not intended for direct use.")
-     
+    parser: Optional[Any] = Field(
+        default=None,
+        description="Parser to convert messages to a specific format. Not intended for direct use.",
+    )
+    query_input: str | Message | list[Message] | None = Field(
+        default=None,
+        description="Various possible input types that we coerce to a list of Messages. Not intended for direct use.",
+    )
+    provider: Optional[str] = Field(
+        default=None,
+        description="Provider of the model, populated post init. Not intended for direct use.",
+    )
+
     # Client parameters (embedded in dict for now)
-    client_params: Optional[ClientParams] = Field(default = None, description="Client-specific parameters. Can be OpenAIParams, OllamaParams, AnthropicParams, etc.")
-    
+    client_params: Optional[ClientParams] = Field(
+        default=None,
+        description="Client-specific parameters. Can be OpenAIParams, OllamaParams, AnthropicParams, etc.",
+    )
+
     # New features (available but not implemented)
     retry_config: RetryConfig = Field(default_factory=RetryConfig)
     mock_config: MockConfig = Field(default_factory=MockConfig)
-    
+
     def model_post_init(self, __context) -> None:
         """
         Steps:
@@ -158,7 +201,6 @@ class Params(BaseModel):
             raise TypeError("parser must be an instance of Parser")
         # 6. Validate client_params TBD
 
-
     def validate_temperature(self):
         """
         Validate temperature against provider-specific ranges.
@@ -170,11 +212,15 @@ class Params(BaseModel):
             if self.provider == client_param_type.provider:
                 temperature_range = client_param_type.temperature_range
         if not temperature_range:
-            raise ValueError(f"Temperature range not found for provider: {self.provider}")
+            raise ValueError(
+                f"Temperature range not found for provider: {self.provider}"
+            )
         if temperature_range[0] <= self.temperature <= temperature_range[1]:
-            return 
+            return
         else:
-            raise ValueError(f"Temperature {self.temperature} is out of range {temperature_range} for provider: {self.provider}")
+            raise ValueError(
+                f"Temperature {self.temperature} is out of range {temperature_range} for provider: {self.provider}"
+            )
 
     def _coerce_query_input(self):
         """
@@ -190,10 +236,14 @@ class Params(BaseModel):
             input_messages.append(message)
         elif isinstance(self.query_input, list):
             if not all(isinstance(item, Message) for item in self.query_input):
-                raise ValueError("All items in query_input list must be of type Message.")
+                raise ValueError(
+                    "All items in query_input list must be of type Message."
+                )
             input_messages = self.query_input
         else:
-            raise ValueError("query_input must be a Message, a string, or a list of Messages.")
+            raise ValueError(
+                "query_input must be a Message, a string, or a list of Messages."
+            )
         self.query_input = None
         if self.messages != []:
             input_messages = self.messages + input_messages
@@ -208,27 +258,25 @@ class Params(BaseModel):
         """
         from hashlib import sha256
         import json
-        
+
         # Use sort_keys for deterministic JSON ordering
         messages_str = json.dumps(self.convert_messages(), sort_keys=True)
-        
+
         # Include parser since it affects response format
         parser_str = self.parser.pydantic_model.__name__ if self.parser else "none"
-        
+
         # Handle None temperature gracefully
         temp_str = str(self.temperature) if self.temperature is not None else "none"
-        
-        params_str = "|".join([messages_str, self.model, temp_str, parser_str])
-        
-        return sha256(params_str.encode('utf-8')).hexdigest()
 
+        params_str = "|".join([messages_str, self.model, temp_str, parser_str])
+
+        return sha256(params_str.encode("utf-8")).hexdigest()
 
     def __str__(self) -> str:
         """
         Generate a string representation of the Params instance.
         """
         return f"Params(model={self.model}, messages={self.messages}, temperature={self.temperature}, provider={self.provider})"
-
 
     def __repr__(self) -> str:
         """
@@ -249,7 +297,7 @@ class Params(BaseModel):
         # If no messages at all, that's an error
         if not self.messages:
             raise ValueError("No messages to convert. Messages list cannot be empty.")
-            
+
         converted_messages = []
         for message in self.messages:
             if isinstance(message, ImageMessage):
@@ -263,7 +311,7 @@ class Params(BaseModel):
                 if not self.model == "gpt-4o-audio-preview":
                     raise ValueError(
                         "AudioMessage can only be used with the gpt-4o-audio-preview model."
-                        )
+                    )
                 converted_messages.append(message.to_openai().model_dump())
             elif isinstance(message, Message) and self.provider == "anthropic":
                 # For Anthropic, we need to convert the message to the appropriate format.
@@ -273,7 +321,7 @@ class Params(BaseModel):
                 if not isinstance(message, Message):
                     raise ValueError(f"Unsupported message type: {type(message)}")
                 converted_messages.append(message.model_dump())
-        
+
         return converted_messages
 
     def to_openai(self) -> dict:
@@ -291,48 +339,14 @@ class Params(BaseModel):
             base_params.update(client_dict)
 
         # Filter out None values and return
-        return {k: v for k, v in base_params.items() if v is not None or k == "response_model"}  # Actually filter None values EXCEPT for response_model, as Instructor expects it to be present
+        return {
+            k: v
+            for k, v in base_params.items()
+            if v is not None or k == "response_model"
+        }  # Actually filter None values EXCEPT for response_model, as Instructor expects it to be present
 
     def to_ollama(self) -> dict:
         return self.to_openai()
-
-    def to_anthropic(self) -> dict:
-        """Convert parameters to Anthropic format."""
-        converted_messages = self.convert_messages()
-        
-        # Extract system message and filter out system roles
-        system = ""
-        filtered_messages = []
-        
-        for message in converted_messages:
-            if message.get("role") == "system":
-                system = message.get("content", "")
-            else:
-                # Convert any remaining system roles to user (Anthropic quirk)
-                if message.get("role") == "system":
-                    message["role"] = "user"
-                filtered_messages.append(message)
-        
-        base_params = {
-            "model": self.model,
-            "messages": filtered_messages,
-            "response_model": self.parser.pydantic_model if self.parser else None,
-            "max_retries": 0,
-            "max_tokens": 8192,  # Required by Anthropic
-            "temperature": self.temperature,
-        }
-        
-        # Add system parameter if we have system content
-        if system:
-            base_params["system"] = system
-        
-        # Add client params if available
-        if self.client_params:
-            client_dict = self.client_params.model_dump(exclude_none=True)
-            base_params.update(client_dict)
-        
-        # Filter out None values (except response_model for instructor)
-        return {k: v for k, v in base_params.items() if v is not None or k == "response_model"}
 
     def to_anthropic(self) -> dict:
         """
@@ -344,49 +358,59 @@ class Params(BaseModel):
         """
         # Start with converted messages
         converted_messages = self.convert_messages()
-        
+
         # Extract system message if present
         system_content = ""
         filtered_messages = []
-        
+
         for message in converted_messages:
             if message.get("role") == "system":
                 system_content = message.get("content", "")
             else:
                 filtered_messages.append(message)
-        
+
         # Also check if any remaining messages have system role (Anthropic quirk)
         for message in filtered_messages:
             if message.get("role") == "system":
                 # Convert system role to user role (as per your AnthropicClient logic)
                 message["role"] = "user"
-        
+
         # Build base parameters
         base_params = {
             "model": self.model,
             "messages": filtered_messages,
             "max_retries": 0,  # As per your client implementation
-            "response_model": self.parser.pydantic_model if self.parser else None,  # Include response_model for instructor
-            "temperature": self.temperature if self.temperature is not None else 1.0,  # Default to 1.0 if not set
+            "response_model": (
+                self.parser.pydantic_model if self.parser else None
+            ),  # Include response_model for instructor
+            "temperature": (
+                self.temperature if self.temperature is not None else 1.0
+            ),  # Default to 1.0 if not set
         }
-        
+
         # Add system parameter if we have system content
         if system_content:
             base_params["system"] = system_content
-        
+
         # Set max_tokens based on model (as per your client logic)
         if self.model == "claude-3-5-sonnet-20240620":
             base_params["max_tokens"] = 8192
         else:
             base_params["max_tokens"] = 8192  # Default for other models
-        
+
         # Add temperature if specified and validate range
         if self.temperature is not None:
             if not (0 <= self.temperature <= 1):
-                raise ValueError("Temperature for Anthropic models needs to be between 0 and 1.")
+                raise ValueError(
+                    "Temperature for Anthropic models needs to be between 0 and 1."
+                )
             base_params["temperature"] = self.temperature
 
-        return {k: v for k, v in base_params.items() if v is not None or k == "response_model"}
+        return {
+            k: v
+            for k, v in base_params.items()
+            if v is not None or k == "response_model"
+        }
 
     def to_gemini(self) -> dict:
         return self.to_openai()
