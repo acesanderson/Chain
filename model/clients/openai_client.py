@@ -7,8 +7,12 @@ from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from openai import OpenAI, AsyncOpenAI, Stream
 from pydantic import BaseModel
-from typing import Optional
+from typing import TYPE_CHECKING
 import instructor, tiktoken
+
+if TYPE_CHECKING:
+    from openai import Stream
+    from anthropic import Stream as AnthropicStream  # For type hinting only, to avoid circular imports
 
 
 class OpenAIClient(Client):
@@ -47,57 +51,15 @@ class OpenAIClientSync(OpenAIClient):
     def query(
         self,
         params: Params,
-        ) -> str | BaseModel:
+        ) -> "str | BaseModel | Stream | AnthropicStream":
         result = self._client.chat.completions.create(**params.to_openai())
         if isinstance(result, BaseModel):
             return result
+        elif isinstance(result, Stream):
+            # Handle streaming response if needed
+            return result
         else:
             return result.choices[0].message.content
-
-    def stream(
-        self,
-        model: str,
-        input: "str | list",
-        parser: Parser | None = None,
-        temperature: Optional[float] = None,
-    ) -> Stream:
-        messages = []
-        if isinstance(input, str):
-            messages = [Message(role="user", content=input)]
-        elif isinstance(input, Message):
-            messages = [input]
-        elif isinstance(input, list):
-            messages = input
-        # Dev: we should have a list of messages at this point.
-        assert isinstance(messages, list)
-        assert len(messages) > 0, "Input messages cannot be empty."
-        # Convert messages to OpenAI format
-        converted_messages = []
-        for message in messages:
-            if isinstance(message, ImageMessage):
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, AudioMessage):
-                if not model == "gpt-4o-audio-preview":
-                    raise ValueError(
-                        "AudioMessage can only be used with the gpt-4o-audio-preview model."
-                    )
-                converted_messages.append(message.to_openai().model_dump())
-            if isinstance(message, Message):
-                converted_messages.append(message.model_dump())
-            else:
-                raise ValueError(f"Unsupported message type: {type(message)}")
-        # Build our params; pydantic_model will be None if we didn't request it.
-        params = {
-            "model": model,
-            "messages": converted_messages,
-            "response_model": parser.pydantic_model if parser else None,
-            "stream": True,
-        }
-        # Determine if model takes temperature (reasoning models -- starting with 'o' -- don't)
-        if not model.startswith("o"):
-            params.update({"temperature": temperature})
-        stream: Stream = self._client.chat.completions.create(**params)
-        return stream
 
 
 class OpenAIClientAsync(OpenAIClient):
@@ -111,7 +73,7 @@ class OpenAIClientAsync(OpenAIClient):
     async def query(
         self,
         params: Params,
-        ) -> str | BaseModel:
+        ) -> "str | BaseModel | Stream | AnthropicStream":
         result = await self._client.chat.completions.create(**params.to_openai())
         if isinstance(result, BaseModel):
             return result

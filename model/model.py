@@ -15,6 +15,8 @@ dir_path = Path(__file__).resolve().parent
 
 if TYPE_CHECKING:
     from rich.console import Console
+    from openai import Stream  # For type hinting only, to avoid circular imports
+    from anthropic import Stream as AnthropicStream  # For type hinting only, to avoid circular imports
 
 
 class Model:
@@ -117,10 +119,11 @@ class Model:
         parser: Parser | None = None,
         cache=True,
         temperature: Optional[float] = None,
+        stream: bool = False, 
         verbose: bool = True, # Captured by decorator
         index: int = 0, # Captured by decorator
         total: int = 0, # Captured by decorator
-    ) -> BaseModel | str:
+    ) -> "BaseModel | str | Stream | AnthropicStream":
         """
         Execute a query against the language model with optional progress tracking.
 
@@ -180,26 +183,3 @@ class Model:
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
         )
         return f"{self.__class__.__name__}({attributes})"
-
-    def stream(
-        self,
-        input: str | list,
-        verbose: bool = True,
-        parser: Parser | None = None,
-        temperature: Optional[float] = None,
-    ):
-        if verbose:
-            print(f"Model: {self.model}   Query: " + self.pretty(str(input)))
-        if Model._chain_cache:
-            cached_request = Model._chain_cache.cache_lookup(input, self.model)
-            if cached_request:
-                print("Cache hit!")
-                return cached_request
-        results = self._client.query(self.model, input, parser)
-        if Model._chain_cache:
-            cached_request = CachedRequest(
-                user_input=input, model=self.model, llm_output=results
-            )
-            Model._chain_cache.insert_cached_request(cached_request)
-        stream = self._client.stream(self.model, input, parser, temperature)
-        return stream

@@ -7,11 +7,11 @@ Should read content as string when invoked as such.
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 
 
 class Response(BaseModel):
-    content: str | BaseModel | list[BaseModel]
+    content: Any
     status: str
     prompt: str | None
     model: str

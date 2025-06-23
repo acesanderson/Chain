@@ -17,11 +17,11 @@ class ModelAsync(Model):
         model_list = ModelStore.models()
         if model in model_list["openai"]:
             return "openai", "OpenAIClientAsync"
-        elif model in model_list()["anthropic"]:
+        elif model in model_list["anthropic"]:
             return "anthropic", "AnthropicClientAsync"
-        elif model in model_list()["ollama"]:
+        elif model in model_list["ollama"]:
             return "ollama", "OllamaClientAsync"
-        elif model in model_list()["google"]:
+        elif model in model_list["google"]:
             return "google", "GoogleClientAsync"
         # elif model in model_list["groq"]:
         #     return "groq", "GroqClient"

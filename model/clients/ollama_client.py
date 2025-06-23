@@ -7,16 +7,12 @@ We define preferred defaults for context sizes in a separate json file.
 """
 
 from Chain.model.clients.client import Client
-from Chain.parser.parser import Parser
-from Chain.message.message import Message
-from Chain.message.audiomessage import AudioMessage
-from Chain.message.imagemessage import ImageMessage
+from Chain.model.params.params import Params
 from pydantic import BaseModel
 from openai import OpenAI, AsyncOpenAI, Stream
-from typing import Optional
 from pathlib import Path
-import instructor, ollama, json
 from collections import defaultdict
+import instructor, ollama, json
 
 
 dir_path = Path(__file__).resolve().parent
@@ -91,94 +87,16 @@ class OllamaClientSync(OllamaClient):
 
     def query(
         self,
-        model: str,
-        input: "str | list",
-        parser: Parser | None = None,
-        raw=False,
-        temperature: Optional[float] = None,
-    ) -> str | BaseModel | tuple[BaseModel, str]:
-        messages = []
-        if isinstance(input, str):
-            messages = [Message(role="user", content=input)]
-        if isinstance(input, Message):
-            messages = [input]
-        if isinstance(input, list):
-            messages = input
-        # Dev: we should have a list of message at this point
-        assert isinstance(messages, list)
-        # Convert messages to OpenAI format
-        converted_messages = []
-        for message in messages:
-            if isinstance(message, ImageMessage):
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, AudioMessage):
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, Message):
-                converted_messages.append(message.model_dump())
-            else:
-                raise ValueError(f"Unsupported message type: {type(message)}")
-        # Construct params
-        params = {
-            "model": model,
-            "messages": converted_messages,
-            "response_model": parser.pydantic_model if parser else None,
-            "extra_body": {"options": {"num_ctx": self._ollama_context_sizes[model]}},
-        }
-        if temperature:
-            params["temperature"] = temperature
-        # If you are passing pydantic models and also want the text response, you need to set raw=True.
-        if raw and parser:
-            obj, raw_response = self._client.chat.completions.create_with_completion(**params)
-            raw_text = raw_response.choices[0].message.content
-            return obj, raw_text
-        # Default behavior is to return only the pydantic model.
-        elif parser:
-            obj = self._client.chat.completions.create(**params)
-            return obj
-        # If you are not passing pydantic models, you will get the text response.
+        params: Params,
+        ) -> str | BaseModel | Stream:
+        result = self._client.chat.completions.create(**params.to_ollama())
+        if isinstance(result, BaseModel):
+            return result
+        if isinstance(result, Stream):
+            # Handle streaming response if needed
+            return result
         else:
-            response = self._client.chat.completions.create(**params)
-            return response.choices[0].message.content
-
-    def stream(
-        self,
-        model: str,
-        input: "str | list",
-        parser: Parser | None = None,
-        temperature: Optional[float] = None,
-    ) -> "str | BaseModel":
-        messages = []
-        if isinstance(input, str):
-            messages = [Message(role="user", content=input)]
-        if isinstance(input, Message):
-            messages = [input]
-        if isinstance(input, list):
-            messages = input
-        # Dev: we should have a list of message at this point
-        assert isinstance(messages, list)
-        # Convert messages to OpenAI format
-        converted_messages = []
-        for message in messages:
-            if isinstance(message, ImageMessage):
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, AudioMessage):
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, Message):
-                converted_messages.append(message.model_dump())
-            else:
-                raise ValueError(f"Unsupported message type: {type(message)}")
-        # Construct params
-        params = {
-            "model": model,
-            "messages": converted_messages,
-            "response_model": parser.pydantic_model if parser else None,
-            "stream": True
-        }
-        if temperature:
-            params["temperature"] = temperature
-        stream: Stream = self._client.chat.completions.create(**params)
-        return stream
-
+            return result.choices[0].message.content
 
 class OllamaClientAsync(OllamaClient):
     def _initialize_client(self):
@@ -193,51 +111,11 @@ class OllamaClientAsync(OllamaClient):
 
     async def query(
         self,
-        model: str,
-        input: "str | list",
-        parser: Parser | None = None,
-        raw=False,
-        temperature: Optional[float] = None,
-    ) -> str | BaseModel | tuple[BaseModel, str]:
-        messages = []
-        if isinstance(input, str):
-            messages = [Message(role="user", content=input)]
-        if isinstance(input, Message):
-            messages = [input]
-        if isinstance(input, list):
-            messages = input
-        # Dev: we should have a list of message at this point
-        assert isinstance(messages, list)
-        # Convert messages to OpenAI format
-        converted_messages = []
-        for message in messages:
-            if isinstance(message, ImageMessage):
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, AudioMessage):
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, Message):
-                converted_messages.append(message.model_dump())
-            else:
-                raise ValueError(f"Unsupported message type: {type(message)}")
-        # Construct params
-        params = {
-            "model": model,
-            "messages": converted_messages,
-            "response_model": parser.pydantic_model if parser else None,
-            "extra_body": {"options": {"num_ctx": self._ollama_context_sizes[model]}},
-        }
-        if temperature:
-            params["temperature"] = temperature
-        if raw and parser:
-            obj, raw_response = (
-                await self._client.chat.completions.create_with_completion(**params))
-            raw_text = raw_response.choices[0].message.content
-            return obj, raw_text
-        # Default behavior is to return only the pydantic model.
-        elif parser:
-            obj = await self._client.chat.completions.create(**params)
-            return obj
-        # If you are not passing pydantic models, you will get the text response.
+        params: Params,
+        ) -> str | BaseModel:
+        result = await self._client.chat.completions.create(**params.to_ollama())
+        if isinstance(result, BaseModel):
+            return result
         else:
-            response = await self._client.chat.completions.create(**params)
-            return response.choices[0].message.content
+            return result.choices[0].message.content
+

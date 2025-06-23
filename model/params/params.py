@@ -87,7 +87,11 @@ class AnthropicParams(ClientParams):
     provider: ClassVar[str] = "anthropic"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
 
-    max_tokens_to_sample: Optional[int] = None
+    max_tokens: Optional[int] = None  # Anthropic uses max_tokens, not max_tokens_to_sample
+    top_k: Optional[int] = None
+    top_p: Optional[float] = None
+    stop_sequences: Optional[list[str]] = None
+    extra_params: dict[str, Any] = Field(default_factory=dict)
 
 class PerplexityParams(OpenAIParams):
     """
@@ -294,7 +298,96 @@ class Params(BaseModel):
         return self.to_openai()
 
     def to_anthropic(self) -> dict:
-        pass
+        """Convert parameters to Anthropic format."""
+        converted_messages = self.convert_messages()
+        
+        # Extract system message and filter out system roles
+        system = ""
+        filtered_messages = []
+        
+        for message in converted_messages:
+            if message.get("role") == "system":
+                system = message.get("content", "")
+            else:
+                # Convert any remaining system roles to user (Anthropic quirk)
+                if message.get("role") == "system":
+                    message["role"] = "user"
+                filtered_messages.append(message)
+        
+        base_params = {
+            "model": self.model,
+            "messages": filtered_messages,
+            "response_model": self.parser.pydantic_model if self.parser else None,
+            "max_retries": 0,
+            "max_tokens": 8192,  # Required by Anthropic
+            "temperature": self.temperature,
+        }
+        
+        # Add system parameter if we have system content
+        if system:
+            base_params["system"] = system
+        
+        # Add client params if available
+        if self.client_params:
+            client_dict = self.client_params.model_dump(exclude_none=True)
+            base_params.update(client_dict)
+        
+        # Filter out None values (except response_model for instructor)
+        return {k: v for k, v in base_params.items() if v is not None or k == "response_model"}
+
+    def to_anthropic(self) -> dict:
+        """
+        Convert parameters to Anthropic format.
+        Key differences from OpenAI:
+        1. System messages become a separate 'system' parameter
+        2. max_tokens is required
+        3. No response_model in the API call params
+        """
+        # Start with converted messages
+        converted_messages = self.convert_messages()
+        
+        # Extract system message if present
+        system_content = ""
+        filtered_messages = []
+        
+        for message in converted_messages:
+            if message.get("role") == "system":
+                system_content = message.get("content", "")
+            else:
+                filtered_messages.append(message)
+        
+        # Also check if any remaining messages have system role (Anthropic quirk)
+        for message in filtered_messages:
+            if message.get("role") == "system":
+                # Convert system role to user role (as per your AnthropicClient logic)
+                message["role"] = "user"
+        
+        # Build base parameters
+        base_params = {
+            "model": self.model,
+            "messages": filtered_messages,
+            "max_retries": 0,  # As per your client implementation
+            "response_model": self.parser.pydantic_model if self.parser else None,  # Include response_model for instructor
+            "temperature": self.temperature if self.temperature is not None else 1.0,  # Default to 1.0 if not set
+        }
+        
+        # Add system parameter if we have system content
+        if system_content:
+            base_params["system"] = system_content
+        
+        # Set max_tokens based on model (as per your client logic)
+        if self.model == "claude-3-5-sonnet-20240620":
+            base_params["max_tokens"] = 8192
+        else:
+            base_params["max_tokens"] = 8192  # Default for other models
+        
+        # Add temperature if specified and validate range
+        if self.temperature is not None:
+            if not (0 <= self.temperature <= 1):
+                raise ValueError("Temperature for Anthropic models needs to be between 0 and 1.")
+            base_params["temperature"] = self.temperature
+
+        return {k: v for k, v in base_params.items() if v is not None or k == "response_model"}
 
     def to_gemini(self) -> dict:
         return self.to_openai()

@@ -105,8 +105,6 @@ class Chain:
         else:
             prompt = None
         # Route a stream request (these don't return Response objects)
-        if stream:
-            return self.run_stream(prompt=prompt, messages=messages, verbose=verbose)
         # Route input; if string, if message
         if messages:
             result = self.run_messages(
@@ -116,15 +114,16 @@ class Chain:
                 cache=cache,
                 index=index,
                 total=total,
+                stream = stream,
             )
         elif prompt:
             result = self.run_completion(
                 prompt=prompt,
                 verbose=verbose,
-                stream=stream,
                 cache=cache,
                 index=index,
                 total=total,
+                stream = stream,
             )
         else:
             raise ValueError("No prompt or messages passed to Chain.run.")
@@ -138,6 +137,7 @@ class Chain:
         cache=True,
         index: int = 0,
         total: int = 0,
+        stream: bool = False,
     ):
         """
         Special version of Chain.run that takes a messages object.
@@ -183,6 +183,7 @@ class Chain:
         )
         return response
 
+    # In chain/chain.py - update run_completion method
     def run_completion(
         self,
         prompt: str,
@@ -192,56 +193,104 @@ class Chain:
         index: int = 0,
         total: int = 0,
     ):
-        """
-        Standard version of Chain.run which returns a string (i.e. a completion).
-        Input should be a dict with named variables that match the prompt.
-        """
+        """Updated to properly handle streaming responses"""
         time_start = time.time()
         user_message = Message(role="user", content=prompt)
-        # If we have class-level logging
+        
         if Chain._message_store:
             Chain._message_store.add(user_message)
-        if self.parser:
-            result = self.model.query(
+        
+        if stream:
+            # For streaming, return the stream object directly
+            if self.parser:
+                # Streaming with structured output is complex - disable for now
+                raise ValueError("Streaming is not supported with parsers yet")
+            
+            stream_response = self.model.query(
                 prompt,
                 verbose=verbose,
-                parser=self.parser,
                 cache=cache,
-                index=index,
-                total=total,
+                stream=True
             )
+            return stream_response  # Return raw stream object
         else:
-            result = self.model.query(prompt, verbose=verbose, cache=cache)
-        time_end = time.time()
-        duration = time_end - time_start
-        # Create a new messages object, to be passed to Response object.
-        assistant_message = Message(role="assistant", content=result)
-        # If we have class-level logging
-        if Chain._message_store:
-            Chain._message_store.add(assistant_message)
-        new_messages_object = [user_message, assistant_message]
-        response = Response(
-            content=result,
-            status="success",
-            prompt=prompt,
-            model=self.model.model,
-            duration=duration,
-            messages=new_messages_object,
-        )
-        return response
+            # Non-streaming path (existing logic)
+            if self.parser:
+                result = self.model.query(
+                    prompt,
+                    verbose=verbose,
+                    parser=self.parser,
+                    cache=cache,
+                    index=index,
+                    total=total,
+                )
+            else:
+                result = self.model.query(prompt, verbose=verbose, cache=cache)
+            
+            time_end = time.time()
+            duration = time_end - time_start
+            
+            assistant_message = Message(role="assistant", content=result)
+            if Chain._message_store:
+                Chain._message_store.add(assistant_message)
+            
+            new_messages_object = [user_message, assistant_message]
+            response = Response(
+                content=result,
+                status="success",
+                prompt=prompt,
+                model=self.model.model,
+                duration=duration,
+                messages=new_messages_object,
+            )
+            return response
 
-    def run_stream(
-        self, prompt: str, messages: list[Message] | None = None, verbose=True
-    ):
-        if messages:
-            prompt = messages.append(Message(role="user", content=prompt))
-        return self.model.stream(prompt, verbose, parser)
 
-    def __repr__(self) -> str:
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ", ".join(
-            [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
-        )
-        return f"{self.__class__.__name__}({attributes})"
+    #
+    # def run_completion(
+    #     self,
+    #     prompt: str,
+    #     verbose=True,
+    #     stream=False,
+    #     cache=True,
+    #     index: int = 0,
+    #     total: int = 0,
+    # ):
+    #     """
+    #     Standard version of Chain.run which returns a string (i.e. a completion).
+    #     Input should be a dict with named variables that match the prompt.
+    #     """
+    #     time_start = time.time()
+    #     user_message = Message(role="user", content=prompt)
+    #     # If we have class-level logging
+    #     if Chain._message_store:
+    #         Chain._message_store.add(user_message)
+    #     if self.parser:
+    #         result = self.model.query(
+    #             prompt,
+    #             verbose=verbose,
+    #             parser=self.parser,
+    #             cache=cache,
+    #             index=index,
+    #             total=total,
+    #             stream=stream,
+    #         )
+    #     else:
+    #         result = self.model.query(prompt, verbose=verbose, cache=cache)
+    #     time_end = time.time()
+    #     duration = time_end - time_start
+    #     # Create a new messages object, to be passed to Response object.
+    #     assistant_message = Message(role="assistant", content=result)
+    #     # If we have class-level logging
+    #     if Chain._message_store:
+    #         Chain._message_store.add(assistant_message)
+    #     new_messages_object = [user_message, assistant_message]
+    #     response = Response(
+    #         content=result,
+    #         status="success",
+    #         prompt=prompt,
+    #         model=self.model.model,
+    #         duration=duration,
+    #         messages=new_messages_object,
+    #     )
+    #     return response
