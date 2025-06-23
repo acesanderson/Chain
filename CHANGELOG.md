@@ -1,10 +1,4 @@
-What to do prior to announcing version 3:
-- 
-
-
-
-==potential release notes==
-
+---
 # Version 3.0
 ## Major New Features
 ### 1. Progress Display System (Entirely New)
@@ -43,7 +37,7 @@ What to do prior to announcing version 3:
 - All providers: Temperature validation, better error handling
 
 ### 4. Advanced Caching System
-- ChainCache: Persistent caching with database backend
+- **ChainCache**: Persistent caching with a database backend
 - Cache Integration: Automatic cache lookup/storage in all query operations
 - Pydantic Object Caching: Proper serialization/deserialization of structured outputs
 
@@ -71,6 +65,13 @@ What to do prior to announcing version 3:
 - Rich Documentation: Extensive docstrings and type hints
 - Testing Framework: Comprehensive test suite with fixtures
 
+### 9. Params Class (Major Refactor)
+- Centralized Parameter Management: Consolidates all model and client-specific parameters into a single `Params` Pydantic class.
+- Unified API: Simplifies `Model.query` and `ModelAsync.query_async` signatures by accepting a `Params` object.
+- Enhanced Validation: Provides robust validation for parameters like `temperature` based on provider-specific ranges.
+- Cache Key Generation: Implements a deterministic method for generating cache keys from `Params` objects, ensuring reliable caching.
+
+---
 ## TBD
 ### 1. TBD: Workflow Composition System
 - ChainML: JSON-based DSL for defining LLM workflows as DAGs
