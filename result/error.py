@@ -25,6 +25,15 @@ class ChainError:
     """Complete error information"""
     info: ErrorInfo
     detail: Optional[ErrorDetail] = None
+
+    def __str__(self) -> str:
+        """
+        Print this like a normal error message + stack trace if available.
+        """
+        base_message = f"[{self.info.timestamp}] {self.info.category.upper()} - {self.info.code}: {self.info.message}"
+        if self.detail and self.detail.stack_trace:
+            return f"{base_message}\nStack Trace:\n{self.detail.stack_trace}"
+        return base_message
     
     @classmethod
     def from_exception(cls, exc: Exception, code: str, category: str, **context) -> 'ChainError':

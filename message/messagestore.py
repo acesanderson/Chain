@@ -185,6 +185,20 @@ class MessageStore:
             except FileNotFoundError:
                 pass
 
+    def query_failed(self):
+        """
+        Deletes the last message IF:
+        - it's a user message
+        - you have failed to get a response from a query
+        (ensures that user is always followed by assistant and vice versa)
+        """
+        if self.messages and self.messages[-1].role == "user":
+            self.messages.pop()
+            if self.logging:
+                self.write_to_log("Query failed, removing last user message.")
+            if self.persistent:
+                self.save()
+
     def view_history(self):
         """
         Pretty prints the history.

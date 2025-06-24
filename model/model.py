@@ -7,6 +7,7 @@ from Chain.model.params.params import Params
 from Chain.model.models.models import ModelStore
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
+from Chain.result.error import ChainError
 from pydantic import ValidationError, BaseModel
 from typing import Optional
 from pathlib import Path
@@ -40,12 +41,19 @@ class Model:
     @property
     def console(self):
         """
-        Returns the effective console (hierarchy: instance -> Chain/AsyncChain class -> None)
+        Returns the effective console (hierarchy: instance -> Model class -> Chain/AsyncChain class -> None)
         """
         if self._console:
             return self._console
 
         import sys
+
+        # Check for Model._console
+        if "Chain.model.model" in sys.modules:
+            Model = sys.modules["Chain.model.model"].Model
+            model_console = getattr(Model, "_console", None)
+            if model_console:
+                return model_console
 
         # Check for Chain._console
         if "Chain.chain.chain" in sys.modules:
@@ -196,21 +204,23 @@ class Model:
             return response  # Return Response (part of ChainResult)
 
         except ValidationError as e:
-            from Chain.result.error import ChainError
-            return ChainError.from_exception(
+            chainerror = ChainError.from_exception(
                 e,
                 code="validation_error",
                 category="client",
                 request_params=params.model_dump() if params else {}
             )
+            print(chainerror)
+            return chainerror
         except Exception as e:
-            from Chain.result.error import ChainError
-            return ChainError.from_exception(
+            chainerror = ChainError.from_exception(
                 e,
                 code="query_error",
                 category="client",
                 request_params=params.model_dump() if params else {}
             )
+            print(chainerror)
+            return chainerror
 
     def tokenize(self, text: str) -> int:
         """

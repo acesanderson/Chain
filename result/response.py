@@ -131,6 +131,17 @@ class Response(BaseModel):
             return self.messages[-1].content
         return None
 
+
+    @property
+    def message(self) -> Message:
+        """
+        Return last message (good for messagestore handling).
+        """
+        if self.messages and isinstance(self.messages[-1], Message):
+            return self.messages[-1]
+        raise ValueError("No messages available in the response.")
+
+
     @property
     def content(self) -> Any:
         """

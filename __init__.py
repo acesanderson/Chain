@@ -6,6 +6,8 @@ from Chain.model.model_async import ModelAsync
 from Chain.model.models.models import ModelStore
 from Chain.model.params.params import Params, ClientParamsTypes, OllamaParams, OpenAIParams, AnthropicParams, PerplexityParams, GoogleParams
 from Chain.result.response import Response
+from Chain.result.error import ChainError
+from Chain.result.result import ChainResult
 from Chain.parser.parser import Parser
 from Chain.message.message import Message, create_system_message
 from Chain.message.messages import Messages
@@ -27,6 +29,8 @@ __all__ = [
     "ModelAsync",
     "Parser",
     "Response",
+    "ChainError",
+    "ChainResult",
     "Message",
     "ImageMessage",
     "MessageStore",
