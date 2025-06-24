@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Any, ClassVar, TYPE_CHECKING
+from pydantic import BaseModel, Field, ValidationError
+from typing import Optional, Any, ClassVar, override
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
+import json
 
 
 # Sub classes for specialized params
@@ -34,8 +35,7 @@ class ClientParams(BaseModel):
     """
     Parameters that are specific to a client.
     """
-
-    pass
+    provider: ClassVar[str]
 
 
 class OpenAIParams(ClientParams):
@@ -49,7 +49,7 @@ class OpenAIParams(ClientParams):
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 2.0)
 
     # Excluded from serialization in API calls
-    model: str = Field(..., description="The model identifier to use for inference.", exclude=True)
+    model: str = Field(default="", description="The model identifier to use for inference.", exclude=True)
 
     # Core parameters
     max_tokens: Optional[int] = None
@@ -57,7 +57,6 @@ class OpenAIParams(ClientParams):
     presence_penalty: Optional[float] = None
     stop: Optional[list[str]] = None
     safety_settings: Optional[dict[str, Any]] = None
-    extra_params: dict[str, Any] = Field(default_factory=dict)
 
 
 class GeminiParams(OpenAIParams):
@@ -81,51 +80,35 @@ class OllamaParams(OpenAIParams):
     provider: ClassVar[str] = "ollama"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
 
-    # Core parameters
-    num_ctx: Optional[int] = None  # Number of context tokens
+    # Core parameters -- note for Instructor we will need to embed these in "extra_body":{"options": {}}
+    num_ctx: Optional[int] = None
     temperature: Optional[float] = None
     top_k: Optional[int] = None
     top_p: Optional[float] = None
     repeat_penalty: Optional[float] = None
     stop: Optional[list[str]] = None
 
-    # Methods
-    def model_post_init(self, __context) -> None:
+    @override
+    def model_dump(self, *args, **kwargs):
         """
-        Steps:
-        - Call super method to initialize OpenAIParams
-        - Get the number of context tokens for the Ollama model
+        Override model_dump to embed dicts as needed for our Instructor/OpenAI Spec/Ollama compatibility.
+        Why is this needed? Because Ollama expects "options" to be nested under "extra_body" in the API call.
         """
-        super().model_post_init(__context)
-        # Get the number of context tokens for the Ollama model
-        if not self.num_ctx:
-            # If num_ctx is not set, try to get it from the model store
-            if ModelStore.is_supported(self.model):
-                self.num_ctx = ModelStore.get_num_ctx(self.model)
-            else:
-                # If model is not supported, set num_ctx to None
-                self.num_ctx = None
-        self.num_ctx = self._get_num_ctx()
+        # Call the parent method to get the base dict
+        base_dict = super().model_dump(*args, **kwargs)
 
-    def _get_num_ctx(self) -> Optional[int]:
+        # Ollama expects options to be nested under "extra_body"
+        extra_body = {"options": base_dict}
+        return {"extra_body": extra_body}
+
+    @override
+    def model_dump_json(self, *args, **kwargs):
         """
-        Get the number of context tokens for the Ollama model.
-        This is a placeholder method; actual implementation may vary.
+        Override model_dump_json to ensure OllamaParams is serialized correctly.
         """
-        from pathlib import Path
-        import json
-        dir_path = Path(__file__).parent
-        ollama_context_sizes_file = dir_path.parent / "clients" / "ollama_context_sizes.json"
-        if ollama_context_sizes_file.exists():
-            with open(ollama_context_sizes_file, "r") as f:
-                context_sizes = json.load(f)
-            # Return the context size for the current model if it exists
-            return context_sizes.get(self.model, None)
-
-
-        # Ollama does not provide a direct way to get context size, so we return None
-        return None
-
+        # Use the custom model_dump method to get the dict
+        base_dict = self.model_dump(*args, **kwargs)
+        return json.dumps(base_dict)
 
 class AnthropicParams(ClientParams):
     """
@@ -136,6 +119,7 @@ class AnthropicParams(ClientParams):
     provider: ClassVar[str] = "anthropic"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
 
+    # Core parameters
     max_tokens: Optional[int] = (
         None  # Anthropic uses max_tokens, not max_tokens_to_sample
     )
@@ -144,6 +128,8 @@ class AnthropicParams(ClientParams):
     stop_sequences: Optional[list[str]] = None
     extra_params: dict[str, Any] = Field(default_factory=dict)
 
+    # Excluded from serialization in API calls
+    model: str = Field(default="", description="The model identifier to use for inference.", exclude=True)
 
 class PerplexityParams(OpenAIParams):
     """
@@ -210,17 +196,26 @@ class Params(BaseModel):
     def model_post_init(self, __context) -> None:
         """
         Steps:
+        - validate that we have EITHER messages or query_input
         - coerce query_input to a list of Messages
         - validate model
         - set provider
         - validate temperature (provider-specific ranges)
+        - validate Parser object in self.parser
+        - validate ClientParams against provider
+        - set client_params based on provider if not already set
         """
-        # 1. Coerce query_input to a list of Messages
+        # 1. Validate that we have EITHER messages or query_input
+        if not self.messages and not self.query_input:
+            raise ValidationError(
+                "Either messages or query_input must be provided. Both cannot be empty."
+            )
+        # 2. Coerce query_input to a list of Messages
         self._coerce_query_input()
-        # 2. Validate model
+        # 3. Validate model
         if not ModelStore.is_supported(self.model):
             raise ValueError(f"Model '{self.model}' is not supported.")
-        # 3. Set provider
+        # 4. Set provider
         if self.provider is None:
             for provider in ModelStore.models().keys():
                 if self.model in ModelStore.models()[provider]:
@@ -228,12 +223,27 @@ class Params(BaseModel):
                     break
         if self.provider is None:
             raise ValueError(f"Provider not identified for model: {self.model}")
-        # 4. Validate temperature
+        # 5. Validate temperature
         self.validate_temperature()
-        # 5. Validate Parser object in self.parser
+        # 6. Validate Parser object in self.parser
         if self.parser is not None and not isinstance(self.parser, Parser):
             raise TypeError("parser must be an instance of Parser")
-        # 6. Validate client_params TBD
+        # 7. Validate ClientParams against provider.
+        if self.client_params:
+            if self.client_params.provider != self.provider:
+                raise ValidationError(
+                    f"ClientParams provider '{self.client_params.provider}' does not match Params provider '{self.provider}'."
+                )
+        # 8. Set client_params based on provider if not already set
+        if self.client_params is None:
+            for client_param_type in ClientParamsTypes.__args__:
+                if self.provider == client_param_type.provider:
+                    self.client_params = client_param_type()
+                    break
+        if self.client_params is None:
+            raise ValueError(
+                f"ClientParams not found for provider: {self.provider}. Please set client_params explicitly."
+            )
 
     def validate_temperature(self):
         """
@@ -322,7 +332,7 @@ class Params(BaseModel):
             f"client_params={self.client_params!r}, parser={self.parser!r})"
         )
 
-    # Convert to dict -- clients use this to send to the API
+    # Serialization methods for different providers
     def convert_messages(self) -> list[dict]:
         """
         Convert messages to a list of dictionaries.
@@ -358,7 +368,12 @@ class Params(BaseModel):
 
         return converted_messages
 
-    def to_openai(self) -> dict:
+    # Each serialization method first operates on client_params, then constructs base parameters.
+    def _to_openai_spec(self) -> dict:
+        assert isinstance(self.client_params, OpenAIParams), f"OpenAIParams (and subclasses) expected for OpenAI client, not {type(self.client_params)}. This is a bug in the code."
+        """
+        We use OpenAI spec with OpenAI, Gemini, Ollama, and Perplexity clients.
+        """
         base_params = {
             "model": self.model,
             "messages": self.convert_messages(),
@@ -379,8 +394,22 @@ class Params(BaseModel):
             if v is not None or k == "response_model"
         }  # Actually filter None values EXCEPT for response_model, as Instructor expects it to be present
 
+    def to_openai(self) -> dict:
+        assert type(self.client_params) is OpenAIParams, f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+        return self._to_openai_spec()
+
     def to_ollama(self) -> dict:
-        return self.to_openai()
+        """
+        We should set num_ctx so we have maximal context window.
+        Recall that Ollama with Instructor/OpenAI spec expects options to be nested under extra_body, so we have overriden model_dump.
+        """
+        assert isinstance(self.client_params, OllamaParams), f"OllamaParams expected for Ollama client, not {type(self.client_params)}."
+        # Set num_ctx to the maximum context window for the model.
+        num_ctx = ModelStore.get_num_ctx(self.model)
+        if num_ctx is None:
+            raise ValueError(f"Model '{self.model}' does not have a defined context window.")
+        self.client_params.num_ctx = num_ctx
+        return self._to_openai_spec()
 
     def to_anthropic(self) -> dict:
         """
@@ -390,6 +419,7 @@ class Params(BaseModel):
         2. max_tokens is required
         3. No response_model in the API call params
         """
+        assert isinstance(self.client_params, AnthropicParams), f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
         # Start with converted messages
         converted_messages = self.convert_messages()
 
@@ -426,12 +456,6 @@ class Params(BaseModel):
         if system_content:
             base_params["system"] = system_content
 
-        # Set max_tokens based on model (as per your client logic)
-        if self.model == "claude-3-5-sonnet-20240620":
-            base_params["max_tokens"] = 8192
-        else:
-            base_params["max_tokens"] = 8192  # Default for other models
-
         # Add temperature if specified and validate range
         if self.temperature is not None:
             if not (0 <= self.temperature <= 1):
@@ -447,7 +471,9 @@ class Params(BaseModel):
         }
 
     def to_gemini(self) -> dict:
-        return self.to_openai()
+        assert isinstance(self.client_params, GeminiParams), f"GeminiParams expected for Gemini client, not {type(self.client_params)}."
+        return self._to_openai_spec()
 
     def to_perplexity(self) -> dict:
-        return self.to_openai()
+        assert isinstance(self.client_params, PerplexityParams), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
+        return self._to_openai_spec()

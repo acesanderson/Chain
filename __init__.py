@@ -4,7 +4,7 @@ from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
 from Chain.model.model_async import ModelAsync
 from Chain.model.models.models import ModelStore
-from Chain.model.params.params import Params
+from Chain.model.params.params import Params, ClientParamsTypes, OllamaParams, OpenAIParams, AnthropicParams, PerplexityParams, GeminiParams
 from Chain.response.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message, Messages, create_system_message
@@ -31,6 +31,12 @@ __all__ = [
     "MessageStore",
     "ModelStore",
     "Params",
+    "ClientParamsTypes",
+    "OllamaParams",
+    "OpenAIParams",
+    "AnthropicParams",
+    "PerplexityParams",
+    "GeminiParams",
     "create_system_message",
     "Messages",
     "ChainCache",

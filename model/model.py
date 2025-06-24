@@ -118,9 +118,13 @@ class Model:
         cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,
-        verbose: bool = True,  # Captured by decorator
-        index: int = 0,  # Captured by decorator
-        total: int = 0,  # Captured by decorator
+        # For progress reporting decorator
+        verbose: bool = True,
+        index: int = 0,
+        total: int = 0,
+        # Options for debugging
+        params: Optional[Params] = None,
+        return_params: bool = False,
     ) -> "BaseModel | str | Stream | AnthropicStream":
         """
         Execute a query against the language model with optional progress tracking.
@@ -132,7 +136,10 @@ class Model:
             verbose: Whether to display progress information (default: True)
             index: Current item number for batch progress display (requires total)
             total: Total number of items for batch progress display (requires index)
-            **kwargs: Additional model-specific parameters
+            temperature: Optional temperature setting for the model (default: None)
+            stream: Whether to stream the response (default: False)
+            params: Optional Params object to override default parameters
+            return_params: If True, returns the Params object instead of the response
 
         Returns:
             str: The model's response, optionally parsed if parser provided
@@ -152,18 +159,27 @@ class Model:
             # Suppress progress
             response = model.query("What is 2+2?", verbose=False)
         """
-        # Here's the magic -- kwargs goes right into our Params object.
-        import inspect
+        # Construct Params object if not provided (majority of cases)
+        if not params:
+            # Here's the magic -- kwargs goes right into our Params object.
+            import inspect
 
-        frame = inspect.currentframe()
-        args, _, _, values = inspect.getargvalues(frame)
+            frame = inspect.currentframe()
+            args, _, _, values = inspect.getargvalues(frame)
 
-        query_args = {k: values[k] for k in args if k != "self"}
-        query_args["model"] = self.model
-        cache = query_args.pop("cache", False)
-        params = Params(**query_args)
+            query_args = {k: values[k] for k in args if k != "self"}
+            query_args["model"] = self.model
+            cache = query_args.pop("cache", False)
+            params = Params(**query_args)
+        # We should have a Params object now, either provided or constructed.
+        assert isinstance(params, Params), (
+            f"params must be an instance of Params or None, got {type(params)}"
+        )
+        # For debug, return params if requested
+        if return_params:
+            return params
         # Caching
-        if cache and hasattr(self, "_chain_cache") and self._chain_cache:
+        if cache and self._chain_cache:
             return check_cache_and_query(
                 self, params, lambda: self._client.query(params)
             )
