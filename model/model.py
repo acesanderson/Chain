@@ -5,7 +5,7 @@ from Chain.progress.wrappers import progress_display
 from Chain.model.params.params import Params
 from Chain.model.models.models import ModelStore
 from pydantic import BaseModel
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, TYPE_CHECKING, Literal
 from pathlib import Path
 import importlib
 
@@ -28,6 +28,7 @@ class Model:
     _console: Optional["Console"] = (
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
+    _debug: bool = False  # If True, you can see contents of requests and responses
 
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
@@ -172,12 +173,15 @@ class Model:
             cache = query_args.pop("cache", False)
             params = Params(**query_args)
         # We should have a Params object now, either provided or constructed.
-        assert isinstance(params, Params), (
-            f"params must be an instance of Params or None, got {type(params)}"
-        )
+        assert isinstance(
+            params, Params
+        ), f"params must be an instance of Params or None, got {type(params)}"
         # For debug, return params if requested
         if return_params:
             return params
+        # If self._debug == True, print the params
+        if self._debug == True:
+            print(params.model_dump_json())
         # Caching
         if cache and self._chain_cache:
             return check_cache_and_query(
