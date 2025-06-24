@@ -5,7 +5,7 @@ from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
-import json
+import importlib, json
 
 
 # Sub classes for specialized params
@@ -294,6 +294,9 @@ class Params(BaseModel):
         else:
             self.messages = input_messages
 
+    
+
+
     def generate_cache_key(self) -> str:
         """
         Generate a reliable cache key for the Params instance.
@@ -314,6 +317,93 @@ class Params(BaseModel):
         params_str = "|".join([messages_str, self.model, temp_str, parser_str])
 
         return sha256(params_str.encode("utf-8")).hexdigest()
+
+
+    def to_cache_dict(self) -> dict[str, Any]:
+        """
+        Serialize Params to cache-friendly dictionary with proper client_params handling.
+        """
+        # Use Pydantic's built-in serialization
+        params_dict = self.model_dump()
+        
+        # Add type information for reconstruction
+        params_dict["_params_class"] = f"{self.__class__.__module__}.{self.__class__.__name__}"
+        
+        # Handle client_params serialization separately to preserve type
+        if self.client_params:
+            client_params_dict = self.client_params.model_dump()
+            client_params_dict["_client_params_class"] = f"{self.client_params.__class__.__module__}.{self.client_params.__class__.__name__}"
+            params_dict["client_params"] = client_params_dict
+        
+        return params_dict
+
+    @classmethod
+    def from_cache_dict(cls, data: dict[str, Any]) -> "Params":
+        """
+        Deserialize Params from cache dictionary with proper client_params reconstruction.
+        """
+        # Make a copy to avoid mutating the original data
+        params_data = data.copy()
+        
+        # Extract class information
+        params_class_path = params_data.pop("_params_class", "Chain.model.params.params.Params")
+        
+        # Handle client_params deserialization first
+        if "client_params" in params_data and params_data["client_params"]:
+            client_params_data = params_data["client_params"].copy()
+            client_params_class_path = client_params_data.pop("_client_params_class", None)
+            
+            if client_params_class_path:
+                try:
+                    # Reconstruct the specific client_params class
+                    client_params_class = cls._import_class(client_params_class_path)
+                    
+                    # Reconstruct the client_params object
+                    params_data["client_params"] = client_params_class.model_validate(client_params_data)
+                except (ImportError, AttributeError, ValueError) as e:
+                    # If reconstruction fails, set to None to let Params handle it in model_post_init
+                    import warnings
+                    warnings.warn(
+                        f"Failed to reconstruct client_params from '{client_params_class_path}': {e}. "
+                        f"Will create new client_params based on provider.",
+                        UserWarning
+                    )
+                    params_data["client_params"] = None
+        
+        # Dynamically import and reconstruct Params
+        try:
+            params_class = cls._import_class(params_class_path)
+            return params_class.model_validate(params_data)
+        except (ImportError, AttributeError, ValueError) as e:
+            # Fallback to base Params class
+            import warnings
+            warnings.warn(
+                f"Failed to reconstruct Params from '{params_class_path}': {e}. "
+                f"Falling back to base Params class.",
+                UserWarning
+            )
+            return cls.model_validate(params_data)
+
+    @staticmethod
+    def _import_class(class_path: str):
+        """
+        Dynamically import a class from its full module path.
+        
+        Args:
+            class_path: Full class path like "Chain.model.params.params.Params"
+            
+        Returns:
+            The imported class
+            
+        Raises:
+            ImportError: If module cannot be imported
+            AttributeError: If class cannot be found in module
+        """
+        module_path, class_name = class_path.rsplit(".", 1)
+        module = importlib.import_module(module_path)
+        return getattr(module, class_name)
+
+
 
     def __str__(self) -> str:
         """

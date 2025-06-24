@@ -10,13 +10,13 @@ from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from Chain.message.convert_image import convert_image, convert_image_file
 from pathlib import Path
+from typing import Dict, Any
 import re
 
 # Map PIL formats to MIME types
 format_to_mime = {
     ".jpeg": "image/jpeg",
     ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
     ".png": "image/png",
     ".gif": "image/gif",
     ".webp": "image/webp",
@@ -30,7 +30,7 @@ def is_base64_simple(s):
 
 def extension_to_mimetype(file_path: Path) -> str:
     """
-    Given a Path object, return the mimetype. 
+    Given a Path object, return the mimetype.
     """
     extension = file_path.suffix.lower()
     try:
@@ -40,25 +40,6 @@ def extension_to_mimetype(file_path: Path) -> str:
         raise ValueError(
             f"Unsupported image format: {extension}. Supported formats are: {', '.join(format_to_mime.keys())}"
         )
-
-
-# Anthropic schema
-"""
-"content": [
-    {
-        "type": "image", 
-        "source": {
-            "type": "base64",
-            "media_type": "image/jpeg",
-            "data": image_base64
-        }
-    },
-    {
-        "type": "text",
-        "text": "What's in this image?"
-    }
-]
-"""
 
 
 # Anthropic-specific message classes
@@ -81,40 +62,19 @@ class AnthropicImageContent(BaseModel):
 class AnthropicImageMessage(Message):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
-
-        role: str
-        content: list[ImageContent | TextContent]
     """
-
     role: str
     content: list[AnthropicImageContent | AnthropicTextContent]  # type: ignore
 
 
 # OpenAI-specific message classes
-"""
-OpenAI expects this structure:
-{
-    "content": [
-        {"type": "text", "text": prompt},
-        {
-            "type": "image_url", 
-            "image_url": {
-                "url": "data:image/png;base64,{b64_image}"
-            }
-        }
-    ]
-}
-"""
-
-
 class OpenAITextContent(BaseModel):
-    type: str = "text"  # Changed from "input_text"
+    type: str = "text"
     text: str = Field(description="The text content of the message, i.e. the prompt.")
 
 
 class OpenAIImageUrl(BaseModel):
     """Nested object for OpenAI image URL structure"""
-
     url: str = Field(description="The data URL with base64 image")
 
 
@@ -122,7 +82,6 @@ class OpenAIImageContent(BaseModel):
     """
     OpenAI requires image_url to be an object, not a string
     """
-
     type: str = "image_url"
     image_url: OpenAIImageUrl = Field(description="The image URL object")
 
@@ -130,28 +89,21 @@ class OpenAIImageContent(BaseModel):
 class OpenAIImageMessage(Message):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
-
-        role: str
-        content: list[OpenAIImageContent | OpenAITextContent]
     """
-
     role: str
     content: list[OpenAIImageContent | OpenAITextContent]  # type: ignore
 
 
-# Our base ImageMessage class, with a factory method to convert to OpenAI or Anthropic format.
+# Our base ImageMessage class with serialization support
 class ImageMessage(Message):
     """
-    ImageMessage should have a single ImageContent and a single TextContent object.
-
-        role: str
-        text_content: str
-        image_content: str
-        mime_type: str
-
-    NOTE: you can also instantiate it with just a file_name and the text_content; conversion will happen under the hood.
-
-    You can splat it to an OpenAI or Anthropic message; with the to_openai() and to_anthropic() methods.
+    ImageMessage with serialization/deserialization support.
+    
+    You can instantiate it with either:
+    1. text_content + image_content + mime_type
+    2. text_content + file_path (conversion happens automatically)
+    
+    You can convert it to provider formats with to_openai() and to_anthropic() methods.
     """
 
     content: list[BaseModel | str] | None = Field(default=None)
@@ -169,6 +121,14 @@ class ImageMessage(Message):
 
     def model_post_init(self, __context) -> None:
         """Called after model initialization to construct content field."""
+        # Skip post_init if this is a cache restoration (empty file_path and existing content)
+        if not self.file_path or self.file_path == "":
+            if self.image_content and self.mime_type:
+                # This is cache restoration - content already exists
+                if not hasattr(self, 'content') or not self.content:
+                    self.content = [self.image_content, self.text_content]
+                return
+        
         # If user adds image_content and mime_type, convert them to PNG, downsample, and update base64 string.
         if self.image_content and self.mime_type:
             # Convert the image_content to a base64-encoded PNG if it's not already in that format.
@@ -204,8 +164,42 @@ class ImageMessage(Message):
         if self.image_content == "" or not self.mime_type or not self.content:
             raise ValidationError("Incorrect initialization for some reason.")
 
+    def to_cache_dict(self) -> Dict[str, Any]:
+        """
+        Serialize ImageMessage to cache-friendly dictionary.
+        """
+        return {
+            "message_type": "ImageMessage",
+            "role": self.role.value if hasattr(self.role, 'value') else self.role,
+            "text_content": self.text_content,
+            "file_path": str(self.file_path),
+            "image_content": self.image_content,
+            "mime_type": self.mime_type
+        }
+
+    @classmethod
+    def from_cache_dict(cls, data: Dict[str, Any]) -> "ImageMessage":
+        """
+        Deserialize ImageMessage from cache dictionary.
+        Temporarily removes file_path to avoid validation conflict.
+        """
+        # Create instance with minimal data first
+        instance = cls.model_construct(
+            role=data["role"],
+            text_content=data["text_content"],
+            file_path="",  # Empty to avoid conflict
+            image_content=data["image_content"],
+            mime_type=data["mime_type"],
+        )
+        
+        # Manually set the remaining fields after construction
+        instance.content = [data["image_content"], data["text_content"]]
+        instance.file_path = data["file_path"]  # Set the real file path
+        
+        return instance
+
     def __repr__(self):
-        return f"ImageMessage(role={self.role}, text_content={self.text_content}, image_content={self.image_content:<.10}..., mime_type={self.mime_type})"
+        return f"ImageMessage(role={self.role}, text_content={self.text_content}, image_content={self.image_content[:10]}..., mime_type={self.mime_type})"
 
     def display(self):
         """
@@ -262,4 +256,3 @@ class ImageMessage(Message):
             role=self.role,
             content=[text_content, image_content],  # Note: text first, then image
         )
-

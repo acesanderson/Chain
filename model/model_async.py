@@ -1,5 +1,5 @@
 from Chain.model.model import Model
-from Chain.cache.cache import check_cache_and_query_async
+# from Chain.cache.cache import check_cache_and_query_async
 from Chain.model.models.models import ModelStore
 from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
@@ -79,9 +79,9 @@ class ModelAsync(Model):
         # We should now have a params object, either provided or constructed
         assert params and isinstance(params, Params), f"params should be a Params object, not {type(params)}"
         # Cache
-        if cache and self._chain_cache:
-            async def execute_query():
-                return await self._client.query(params)
-            return await check_cache_and_query_async(self, params, execute_query)
-        else:
-            return await self._client.query(params)
+        # if cache and self._chain_cache:
+        #     async def execute_query():
+        #         return await self._client.query(params)
+        #     return await check_cache_and_query_async(self, params, execute_query)
+        # else:
+        #     return await self._client.query(params)

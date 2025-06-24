@@ -1,13 +1,13 @@
-from Chain.cache.cache import ChainCache, check_cache_and_query
+from Chain.cache.cache import ChainCache, check_cache, update_cache
 from Chain.message.message import Message
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.model.params.params import Params
 from Chain.model.models.models import ModelStore
 from Chain.result.response import Response
-from pydantic import BaseModel
-from typing import Optional, TYPE_CHECKING, Literal
+from typing import Optional, TYPE_CHECKING
 from pathlib import Path
+from time import time
 import importlib
 
 dir_path = Path(__file__).resolve().parent
@@ -127,7 +127,7 @@ class Model:
         # Options for debugging
         params: Optional[Params] = None,
         return_params: bool = False,
-    ) -> "BaseModel | str | Stream | AnthropicStream":
+        ) -> "Response | Params | Stream | AnthropicStream":
         """
         Execute a query against the language model with optional progress tracking.
 
@@ -179,17 +179,51 @@ class Model:
         ), f"params must be an instance of Params or None, got {type(params)}"
         # For debug, return params if requested
         if return_params:
-            return params
+                return params
+            
         # If self._debug == True, print the params
         if self._debug == True:
             print(params.model_dump_json())
-        # Caching
-        if cache and self._chain_cache:
-            return check_cache_and_query(
-                self, params, lambda: self._client.query(params)
+        
+        # Check cache first
+        if cache:
+            cached_result = check_cache(self, params)
+            if cached_result is not None:
+                return cached_result
+        
+        # Execute the query
+        start_time = time()
+        result = self._client.query(params)
+        stop_time = time()
+
+        if isinstance(result, "Stream") or isinstance(result, "AnthropicStream"):
+            # If the result is a stream, we return it directly
+            if stream:
+                return result
+            else:
+                raise ValueError(
+                    "Streaming responses are not supported in this method. "
+                    "Set stream=True to receive streamed responses."
+                )
+        if isinstance(result, Response):
+            response = result
+        # Construct Response object
+        elif isinstance(result, str):
+            response = Response(
+                params=params,
+                messages=[Message(role="assistant", content=result)],
+                duration=stop_time - start_time,
             )
         else:
-            return self._client.query(params)
+            raise TypeError(
+                f"Unexpected result type: {type(result)}. Expected Response or str."
+            )
+        
+        # Update cache after successful query
+        if cache:
+            update_cache(self, params, result)
+        
+        return response
 
     def tokenize(self, text: str) -> int:
         """
