@@ -3,6 +3,8 @@ from Chain.chain.asyncchain import AsyncChain
 from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
 from Chain.model.model_async import ModelAsync
+from Chain.model.models.models import ModelStore
+from Chain.model.params.params import Params
 from Chain.response.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message, Messages, create_system_message
@@ -27,6 +29,8 @@ __all__ = [
     "Message",
     "ImageMessage",
     "MessageStore",
+    "ModelStore",
+    "Params",
     "create_system_message",
     "Messages",
     "ChainCache",

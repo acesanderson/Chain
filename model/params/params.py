@@ -48,6 +48,10 @@ class OpenAIParams(ClientParams):
     provider: ClassVar[str] = "openai"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 2.0)
 
+    # Excluded from serialization in API calls
+    model: str = Field(..., description="The model identifier to use for inference.", exclude=True)
+
+    # Core parameters
     max_tokens: Optional[int] = None
     frequency_penalty: Optional[float] = None
     presence_penalty: Optional[float] = None
@@ -73,24 +77,54 @@ class OllamaParams(OpenAIParams):
     Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
     """
 
-    # Class vars
+    # Class vars (excluded by default)
     provider: ClassVar[str] = "ollama"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
 
-    class OllamaClientParams(BaseModel):
-        """
-        Parameters specific to Ollama clients.
-        """
+    # Core parameters
+    num_ctx: Optional[int] = None  # Number of context tokens
+    temperature: Optional[float] = None
+    top_k: Optional[int] = None
+    top_p: Optional[float] = None
+    repeat_penalty: Optional[float] = None
+    stop: Optional[list[str]] = None
 
-        temperature: Optional[float] = None
-        top_k: Optional[int] = None
-        top_p: Optional[float] = None
-        repeat_penalty: Optional[float] = None
-        stop: Optional[list[str]] = None
+    # Methods
+    def model_post_init(self, __context) -> None:
+        """
+        Steps:
+        - Call super method to initialize OpenAIParams
+        - Get the number of context tokens for the Ollama model
+        """
+        super().model_post_init(__context)
+        # Get the number of context tokens for the Ollama model
+        if not self.num_ctx:
+            # If num_ctx is not set, try to get it from the model store
+            if ModelStore.is_supported(self.model):
+                self.num_ctx = ModelStore.get_num_ctx(self.model)
+            else:
+                # If model is not supported, set num_ctx to None
+                self.num_ctx = None
+        self.num_ctx = self._get_num_ctx()
 
-    client_params: Optional[OllamaClientParams] = Field(
-        default=None, description="Parameters specific to Ollama clients."
-    )
+    def _get_num_ctx(self) -> Optional[int]:
+        """
+        Get the number of context tokens for the Ollama model.
+        This is a placeholder method; actual implementation may vary.
+        """
+        from pathlib import Path
+        import json
+        dir_path = Path(__file__).parent
+        ollama_context_sizes_file = dir_path.parent / "clients" / "ollama_context_sizes.json"
+        if ollama_context_sizes_file.exists():
+            with open(ollama_context_sizes_file, "r") as f:
+                context_sizes = json.load(f)
+            # Return the context size for the current model if it exists
+            return context_sizes.get(self.model, None)
+
+
+        # Ollama does not provide a direct way to get context size, so we return None
+        return None
 
 
 class AnthropicParams(ClientParams):
