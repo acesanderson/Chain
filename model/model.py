@@ -115,7 +115,7 @@ class Model:
         self,
         query_input: str | list | Message | None = None,
         parser: Parser | None = None,
-        cache=False,
+        cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,
         verbose: bool = True,  # Captured by decorator
@@ -162,8 +162,7 @@ class Model:
         query_args["model"] = self.model
         cache = query_args.pop("cache", False)
         params = Params(**query_args)
-        # We need to handle the following:
-        # ADD THIS CACHE LOGIC:
+        # Caching
         if cache and hasattr(self, "_chain_cache") and self._chain_cache:
             return check_cache_and_query(
                 self, params, lambda: self._client.query(params)

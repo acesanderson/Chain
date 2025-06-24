@@ -54,7 +54,7 @@ class OllamaClient(Client):
         We run is every time ollama is initialized.
         """
         # Lazy load ollama module
-        ollama_models = [m.model for m in ollama.list()["models"]]
+        ollama_models = [m["model"] for m in ollama.list()["models"]]
         with open(dir_path / "models.json", "r") as f:
             model_list = json.load(f)
         model_list["ollama"] = ollama_models
@@ -88,7 +88,7 @@ class OllamaClientSync(OllamaClient):
     def query(
         self,
         params: Params,
-        ) -> str | BaseModel | Stream:
+    ) -> str | BaseModel | Stream:
         result = self._client.chat.completions.create(**params.to_ollama())
         # Try to retrieve the text first
         try:
@@ -101,6 +101,7 @@ class OllamaClientSync(OllamaClient):
         if isinstance(result, Stream):
             # Handle streaming response if needed
             return result
+
 
 class OllamaClientAsync(OllamaClient):
     def _initialize_client(self):
@@ -116,7 +117,7 @@ class OllamaClientAsync(OllamaClient):
     async def query(
         self,
         params: Params,
-        ) -> str | BaseModel:
+    ) -> str | BaseModel:
         result = await self._client.chat.completions.create(**params.to_ollama())
         # Try to retrieve the text first
         try:
@@ -126,4 +127,3 @@ class OllamaClientAsync(OllamaClient):
             pass
         if isinstance(result, BaseModel):
             return result
-
