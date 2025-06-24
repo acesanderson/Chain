@@ -164,8 +164,6 @@ class Chain:
             )
         else:
             result = self.model.query(messages, verbose=verbose, cache=cache)
-        time_end = time.time()
-        duration = time_end - time_start
         # Convert result to a string
         assistant_message = Message(role="assistant", content=result)
         # If we have class-level logging
@@ -173,15 +171,7 @@ class Chain:
             Chain._message_store.add(assistant_message)
         messages.append(assistant_message)
         # Return a response object
-        response = Response(
-            content=result,
-            status="success",
-            prompt=prompt,
-            model=self.model.model,
-            duration=duration,
-            messages=messages,
-        )
-        return response
+        return messages
 
     # In chain/chain.py - update run_completion method
     def run_completion(

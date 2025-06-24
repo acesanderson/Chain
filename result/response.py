@@ -7,18 +7,35 @@ from Chain.model.params.params import Params
 from pydantic import BaseModel
 from typing import Optional, Any
 
-class NewResponse(BaseModel):
+class Response(BaseModel):
     messages: list[Message]
     params: Params
+    duration: Optional[float]
 
+    @property
+    def prompt(self) -> str | None:
+        """
+        This is the last user message.
+        """
+        if self.messages and isinstance(self.messages[-1], Message):
+            return self.messages[-1].content
+        return None
 
-class Response(BaseModel):
-    content: Any
-    status: str
-    prompt: str | None
-    model: str
-    duration: float | None
-    messages: Optional[list[Message | ImageMessage]]
+    @property
+    def content(self) -> Any:
+        """
+        This is the last assistant message content.
+        """
+        if self.messages and isinstance(self.messages[-1], Message):
+            return self.messages[-1].content
+        return None
+
+    @property
+    def model(self) -> str:
+        """
+        This is the model used for the response.
+        """
+        return self.params.model
 
     def __repr__(self):
         attributes = ", ".join(
@@ -32,12 +49,7 @@ class Response(BaseModel):
         Allow json objects (dict) to be pretty printed.
         Not sure what this does if we have pydantic objects.
         """
-        if isinstance(self.content, BaseModel):
-            return str(self.content)
-        elif isinstance(self.content, list):
-            return str(self.content)
-        else:
-            return self.content
+        return str(self.content) if self.content is not None else ""
 
     def __len__(self):
         """

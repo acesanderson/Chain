@@ -4,7 +4,7 @@ Great for ollama calls on a powerful remote computer.
 """
 
 from Chain.api.server.ChainRequest import ChainRequest
-from Chain.response.response import Response
+from Chain.result.response import Response
 
 # from Chain.tests.test_ChainServer import example_requests
 from Chain.model.clients.client import Client

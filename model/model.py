@@ -4,6 +4,7 @@ from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.model.params.params import Params
 from Chain.model.models.models import ModelStore
+from Chain.result.response import Response
 from pydantic import BaseModel
 from typing import Optional, TYPE_CHECKING, Literal
 from pathlib import Path

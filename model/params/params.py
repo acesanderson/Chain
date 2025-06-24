@@ -120,13 +120,12 @@ class AnthropicParams(ClientParams):
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
 
     # Core parameters
-    max_tokens: Optional[int] = (
-        None  # Anthropic uses max_tokens, not max_tokens_to_sample
-    )
+    max_tokens: int = (
+        4000  
+        ) # TBD: three defaults: 256, 1024, 4000, depending on use case
     top_k: Optional[int] = None
     top_p: Optional[float] = None
     stop_sequences: Optional[list[str]] = None
-    extra_params: dict[str, Any] = Field(default_factory=dict)
 
     # Excluded from serialization in API calls
     model: str = Field(default="", description="The model identifier to use for inference.", exclude=True)
@@ -463,6 +462,11 @@ class Params(BaseModel):
                     "Temperature for Anthropic models needs to be between 0 and 1."
                 )
             base_params["temperature"] = self.temperature
+
+        # Add client_params to base_params
+        if self.client_params:
+            client_dict = self.client_params.model_dump(exclude_none=True)
+            base_params.update(client_dict)
 
         return {
             k: v
