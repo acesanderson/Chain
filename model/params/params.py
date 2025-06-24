@@ -59,14 +59,14 @@ class OpenAIParams(ClientParams):
     safety_settings: Optional[dict[str, Any]] = None
 
 
-class GeminiParams(OpenAIParams):
+class GoogleParams(OpenAIParams):
     """
     Parameters specific to Gemini clients.
     Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
     """
 
     # Class vars
-    provider: ClassVar[str] = "gemini"
+    provider: ClassVar[str] = "google"
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
 
 
@@ -144,7 +144,7 @@ class PerplexityParams(OpenAIParams):
 
 # Union type for all client-specific parameters
 ClientParamsTypes = (
-    OpenAIParams | OllamaParams | AnthropicParams | GeminiParams | PerplexityParams
+    OpenAIParams | OllamaParams | AnthropicParams | GoogleParams | PerplexityParams
 )
 
 
@@ -470,8 +470,8 @@ class Params(BaseModel):
             if v is not None or k == "response_model"
         }
 
-    def to_gemini(self) -> dict:
-        assert isinstance(self.client_params, GeminiParams), f"GeminiParams expected for Gemini client, not {type(self.client_params)}."
+    def to_google(self) -> dict:
+        assert isinstance(self.client_params, GoogleParams), f"GeminiParams expected for Gemini client, not {type(self.client_params)}."
         return self._to_openai_spec()
 
     def to_perplexity(self) -> dict:

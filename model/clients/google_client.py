@@ -54,7 +54,7 @@ class GoogleClientSync(GoogleClient):
         self,
         params: Params,
     ) -> "str | BaseModel | Stream | AnthropicStream":
-        result = self._client.chat.completions.create(**params.to_gemini())
+        result = self._client.chat.completions.create(**params.to_google())
         # First try to get text content from the result
         try:
             result = result.choices[0].message.content
