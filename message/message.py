@@ -1,5 +1,7 @@
 """
-Very lightweight pydantic class, used to validate messages.
+Message is the default message type recognized as industry standard (role + content).
+Our Message class is inherited from specialized types like AudioMessage, ImageMessage, etc.
+We define list[Message] as Messages in a parallel file, this class can handle the serialization / deserialization needed for message historys, api calls, and caching.
 """
 
 from pydantic import BaseModel
@@ -37,14 +39,6 @@ class Message(BaseModel):
         Allows for dictionary-style access to the object.
         """
         return getattr(self, key)
-
-
-class Messages(BaseModel):
-    """
-    Wrapper for a list of Message objects.
-    """
-
-    messages: list[Message]
 
 
 # Some helpful functions
