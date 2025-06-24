@@ -1,23 +1,22 @@
 from Chain.cache.cache import ChainCache, check_cache, update_cache
 from Chain.message.message import Message
+from Chain.message.messages import Messages
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.model.params.params import Params
 from Chain.model.models.models import ModelStore
+from Chain.result.result import ChainResult
 from Chain.result.response import Response
-from typing import Optional, TYPE_CHECKING
+from pydantic import ValidationError, BaseModel
+from typing import Optional
 from pathlib import Path
 from time import time
 import importlib
+from openai import Stream
+from anthropic import Stream as AnthropicStream
+from rich.console import Console
 
 dir_path = Path(__file__).resolve().parent
-
-if TYPE_CHECKING:
-    from rich.console import Console
-    from openai import Stream  # For type hinting only, to avoid circular imports
-    from anthropic import (
-        Stream as AnthropicStream,
-    )  # For type hinting only, to avoid circular imports
 
 
 class Model:
@@ -127,7 +126,7 @@ class Model:
         # Options for debugging
         params: Optional[Params] = None,
         return_params: bool = False,
-        ) -> "ChainResult | Params | Stream | AnthropicStream":
+        ) -> ChainResult | Params | Stream | AnthropicStream:
         
         try:
             # Construct Params object if not provided (majority of cases)
@@ -163,7 +162,7 @@ class Model:
             stop_time = time()
 
             # Handle streaming responses
-            if isinstance(result, "Stream") or isinstance(result, "AnthropicStream"):
+            if isinstance(result, Stream) or isinstance(result, AnthropicStream):
                 if stream:
                     return result  # Return stream directly
                 else:
@@ -175,9 +174,7 @@ class Model:
             # Construct Response object
             if isinstance(result, Response):
                 response = result
-            elif isinstance(result, str):
-                # Create Messages object instead of raw list
-                from Chain.message.messages import Messages
+            elif isinstance(result, str) or isinstance(result, BaseModel):
                 user_message = Message(role="user", content=params.query_input or "")
                 assistant_message = Message(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])

@@ -228,19 +228,11 @@ class Messages(BaseModel):
 
     def __repr__(self) -> str:
         """String representation for debugging."""
-        return f"Messages(messages={self.messages!r})"
+        return str(self.messages)
 
     def __str__(self) -> str:
         """
         String representation showing message count and types.
         """
-        if not self.messages:
-            return "Messages(empty)"
+        return self.__repr__()
 
-        counts = {}
-        for msg in self.messages:
-            role = msg.role.value if hasattr(msg.role, 'value') else str(msg.role)
-            counts[role] = counts.get(role, 0) + 1
-
-        count_str = ", ".join([f"{role}: {count}" for role, count in counts.items()])
-        return f"Messages({len(self.messages)} total - {count_str})"

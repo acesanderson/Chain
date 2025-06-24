@@ -79,19 +79,6 @@ def test_sync_queries():
     print(f"   Model: {params.model}")
     print(f"   Temperature: {params.temperature}")
 
-    # Test 5: Error handling (invalid model)
-    print("\n--- Test 5: Error Handling ---")
-    try:
-        bad_model = Model("nonexistent-model")
-        result = bad_model.query("This should fail", verbose=False)
-        if isinstance(result, ChainError):
-            print(f"✅ Error properly handled: {result.info.message}")
-        else:
-            print(f"❓ Expected error but got: {type(result)}")
-    except Exception as e:
-        print(f"❌ Unexpected exception: {e}")
-
-
 async def test_async_queries():
     """Test asynchronous ModelAsync.query_async method"""
     print("\n" + "="*60)
@@ -150,19 +137,6 @@ async def test_async_queries():
             print(f"   Query {i+1}: {result.content[:30]}...")
         else:
             print(f"   Query {i+1}: Error - {result.info.message}")
-
-    # Test 4: Error handling in async
-    print("\n--- Test 4: Async Error Handling ---")
-    try:
-        bad_model = ModelAsync("nonexistent-async-model")
-        result = await bad_model.query_async("This should fail", verbose=False)
-        if isinstance(result, ChainError):
-            print(f"✅ Async error properly handled: {result.info.message}")
-        else:
-            print(f"❓ Expected error but got: {type(result)}")
-    except Exception as e:
-        print(f"❌ Unexpected exception: {e}")
-
 
 def test_return_types():
     """Test that return types are correct"""

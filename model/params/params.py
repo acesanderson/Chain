@@ -318,23 +318,33 @@ class Params(BaseModel):
 
         return sha256(params_str.encode("utf-8")).hexdigest()
 
-
     def to_cache_dict(self) -> dict[str, Any]:
         """
         Serialize Params to cache-friendly dictionary with proper client_params handling.
         """
         # Use Pydantic's built-in serialization
         params_dict = self.model_dump()
-        
+
         # Add type information for reconstruction
         params_dict["_params_class"] = f"{self.__class__.__module__}.{self.__class__.__name__}"
-        
+
         # Handle client_params serialization separately to preserve type
         if self.client_params:
             client_params_dict = self.client_params.model_dump()
             client_params_dict["_client_params_class"] = f"{self.client_params.__class__.__module__}.{self.client_params.__class__.__name__}"
             params_dict["client_params"] = client_params_dict
-        
+
+        # ✅ FIX: Handle Parser serialization separately
+        if self.parser:
+            # Serialize the Parser object properly
+            params_dict["parser"] = {
+                "_parser_class": f"{self.parser.__class__.__module__}.{self.parser.__class__.__name__}",
+                "pydantic_model_class": f"{self.parser.pydantic_model.__module__}.{self.parser.pydantic_model.__name__}",
+                "original_spec_class": f"{self.parser.original_spec.__module__}.{self.parser.original_spec.__name__}" if hasattr(self.parser, 'original_spec') else None
+            }
+        else:
+            params_dict["parser"] = None
+
         return params_dict
 
     @classmethod
@@ -344,20 +354,20 @@ class Params(BaseModel):
         """
         # Make a copy to avoid mutating the original data
         params_data = data.copy()
-        
+
         # Extract class information
         params_class_path = params_data.pop("_params_class", "Chain.model.params.params.Params")
-        
+
         # Handle client_params deserialization first
         if "client_params" in params_data and params_data["client_params"]:
             client_params_data = params_data["client_params"].copy()
             client_params_class_path = client_params_data.pop("_client_params_class", None)
-            
+
             if client_params_class_path:
                 try:
                     # Reconstruct the specific client_params class
                     client_params_class = cls._import_class(client_params_class_path)
-                    
+
                     # Reconstruct the client_params object
                     params_data["client_params"] = client_params_class.model_validate(client_params_data)
                 except (ImportError, AttributeError, ValueError) as e:
@@ -369,7 +379,33 @@ class Params(BaseModel):
                         UserWarning
                     )
                     params_data["client_params"] = None
-        
+
+        # ✅ FIX: Handle Parser deserialization separately
+        if "parser" in params_data and params_data["parser"]:
+            parser_data = params_data["parser"]
+            if isinstance(parser_data, dict) and "_parser_class" in parser_data:
+                try:
+                    # Import the Parser class
+                    parser_class = cls._import_class(parser_data["_parser_class"])
+                    
+                    # Import the pydantic model class
+                    pydantic_model_class = cls._import_class(parser_data["pydantic_model_class"])
+                    
+                    # Reconstruct the Parser object
+                    params_data["parser"] = parser_class(pydantic_model_class)
+                except (ImportError, AttributeError, ValueError) as e:
+                    # If reconstruction fails, set to None
+                    import warnings
+                    warnings.warn(
+                        f"Failed to reconstruct parser: {e}. "
+                        f"Setting parser to None.",
+                        UserWarning
+                    )
+                    params_data["parser"] = None
+            else:
+                # Legacy format or invalid data
+                params_data["parser"] = None
+
         # Dynamically import and reconstruct Params
         try:
             params_class = cls._import_class(params_class_path)

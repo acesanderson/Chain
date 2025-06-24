@@ -3,8 +3,14 @@ from Chain.model.models.models import ModelStore
 from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
+from Chain.message.message import Message
+from Chain.result.result import ChainResult
+from Chain.result.response import Response
+from Chain.result.error import ChainError
+from Chain.cache.cache import check_cache, update_cache
 import importlib
 from typing import Optional
+from time import time
 from pydantic import ValidationError
 
 
@@ -56,7 +62,7 @@ class ModelAsync(Model):
         cache=False,
         print_response=False,
         params: Optional[Params] = None
-    ) -> "ChainResult":
+    ) -> ChainResult:
         
         try:
             if params == None:
