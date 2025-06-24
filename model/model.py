@@ -127,103 +127,93 @@ class Model:
         # Options for debugging
         params: Optional[Params] = None,
         return_params: bool = False,
-        ) -> "Response | Params | Stream | AnthropicStream":
-        """
-        Execute a query against the language model with optional progress tracking.
+        ) -> "ChainResult | Params | Stream | AnthropicStream":
+        
+        try:
+            # Construct Params object if not provided (majority of cases)
+            if not params:
+                import inspect
+                frame = inspect.currentframe()
+                args, _, _, values = inspect.getargvalues(frame)
 
-        Args:
-            input: The query text or list of messages to send to the model
-            parser: Optional parser to structure the response
-            cache: Whether to use response caching (default: True)
-            verbose: Whether to display progress information (default: True)
-            index: Current item number for batch progress display (requires total)
-            total: Total number of items for batch progress display (requires index)
-            temperature: Optional temperature setting for the model (default: None)
-            stream: Whether to stream the response (default: False)
-            params: Optional Params object to override default parameters
-            return_params: If True, returns the Params object instead of the response
-
-        Returns:
-            str: The model's response, optionally parsed if parser provided
-
-        Raises:
-            ValueError: If only one of index/total is provided
-
-        Examples:
-            # Basic usage
-            response = model.query("What is 2+2?")
-
-            # Batch processing with progress
-            for i, item in enumerate(items):
-                response = model.query(item, index=i+1, total=len(items))
-                # Shows: ⠋ gpt-4o | [1/100] Processing item...
-
-            # Suppress progress
-            response = model.query("What is 2+2?", verbose=False)
-        """
-        # Construct Params object if not provided (majority of cases)
-        if not params:
-            # Here's the magic -- kwargs goes right into our Params object.
-            import inspect
-
-            frame = inspect.currentframe()
-            args, _, _, values = inspect.getargvalues(frame)
-
-            query_args = {k: values[k] for k in args if k != "self"}
-            query_args["model"] = self.model
-            cache = query_args.pop("cache", False)
-            params = Params(**query_args)
-        # We should have a Params object now, either provided or constructed.
-        assert isinstance(
-            params, Params
-        ), f"params must be an instance of Params or None, got {type(params)}"
-        # For debug, return params if requested
-        if return_params:
-                return params
+                query_args = {k: values[k] for k in args if k != "self"}
+                query_args["model"] = self.model
+                cache = query_args.pop("cache", False)
+                params = Params(**query_args)
             
-        # If self._debug == True, print the params
-        if self._debug == True:
-            print(params.model_dump_json())
-        
-        # Check cache first
-        if cache:
-            cached_result = check_cache(self, params)
-            if cached_result is not None:
-                return cached_result
-        
-        # Execute the query
-        start_time = time()
-        result = self._client.query(params)
-        stop_time = time()
+            assert isinstance(params, Params), f"params must be an instance of Params or None, got {type(params)}"
+            
+            # For debug, return params if requested
+            if return_params:
+                return params
 
-        if isinstance(result, "Stream") or isinstance(result, "AnthropicStream"):
-            # If the result is a stream, we return it directly
-            if stream:
-                return result
-            else:
-                raise ValueError(
-                    "Streaming responses are not supported in this method. "
-                    "Set stream=True to receive streamed responses."
+            # If self._debug == True, print the params
+            if self._debug == True:
+                print(params.model_dump_json())
+
+            # Check cache first
+            if cache and self._chain_cache:
+                cached_result = check_cache(self, params)
+                if cached_result is not None:
+                    return cached_result  # This should be a Response (part of ChainResult)
+
+            # Execute the query
+            start_time = time()
+            result = self._client.query(params)
+            stop_time = time()
+
+            # Handle streaming responses
+            if isinstance(result, "Stream") or isinstance(result, "AnthropicStream"):
+                if stream:
+                    return result  # Return stream directly
+                else:
+                    raise ValueError(
+                        "Streaming responses are not supported in this method. "
+                        "Set stream=True to receive streamed responses."
+                    )
+            
+            # Construct Response object
+            if isinstance(result, Response):
+                response = result
+            elif isinstance(result, str):
+                # Create Messages object instead of raw list
+                from Chain.message.messages import Messages
+                user_message = Message(role="user", content=params.query_input or "")
+                assistant_message = Message(role="assistant", content=result)
+                messages = Messages([user_message, assistant_message])
+                
+                response = Response(
+                    messages=messages,
+                    params=params,
+                    duration=stop_time - start_time,
                 )
-        if isinstance(result, Response):
-            response = result
-        # Construct Response object
-        elif isinstance(result, str):
-            response = Response(
-                params=params,
-                messages=[Message(role="assistant", content=result)],
-                duration=stop_time - start_time,
+            else:
+                raise TypeError(
+                    f"Unexpected result type: {type(result)}. Expected Response or str."
+                )
+
+            # Update cache after successful query
+            if cache and self._chain_cache:
+                update_cache(self, params, response)
+
+            return response  # Return Response (part of ChainResult)
+
+        except ValidationError as e:
+            from Chain.result.error import ChainError
+            return ChainError.from_exception(
+                e,
+                code="validation_error",
+                category="client",
+                request_params=params.model_dump() if params else {}
             )
-        else:
-            raise TypeError(
-                f"Unexpected result type: {type(result)}. Expected Response or str."
+        except Exception as e:
+            from Chain.result.error import ChainError
+            return ChainError.from_exception(
+                e,
+                code="query_error",
+                category="client",
+                request_params=params.model_dump() if params else {}
             )
-        
-        # Update cache after successful query
-        if cache:
-            update_cache(self, params, result)
-        
-        return response
 
     def tokenize(self, text: str) -> int:
         """

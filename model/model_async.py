@@ -1,12 +1,11 @@
 from Chain.model.model import Model
-# from Chain.cache.cache import check_cache_and_query_async
 from Chain.model.models.models import ModelStore
 from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
 import importlib
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import ValidationError
 
 
 class ModelAsync(Model):
@@ -57,31 +56,77 @@ class ModelAsync(Model):
         cache=False,
         print_response=False,
         params: Optional[Params] = None
-    ) -> BaseModel | str:
-        """
-        Asynchronously executes a query against the language model with optional
-        progress tracking.
+    ) -> "ChainResult":
+        
+        try:
+            if params == None:
+                import inspect
+                frame = inspect.currentframe()
+                args, _, _, values = inspect.getargvalues(frame)
 
-        This method handles asynchronous interaction with the underlying LLM
-        client, applying caching and parsing as configured. It's designed to
-        be awaited in an async context, often used within `AsyncChain` for
-        concurrent processing.
-        """
-        if params == None:
-            # Here's the magic -- kwargs goes right into our Params object.
-            import inspect
-            frame = inspect.currentframe()
-            args, _, _, values = inspect.getargvalues(frame)
+                query_args = {k: values[k] for k in args if k != "self"}
+                query_args["model"] = self.model
+                params = Params(**query_args)
             
-            query_args = {k: values[k] for k in args if k != "self"}
-            query_args["model"] = self.model
-            params = Params(**query_args)
-        # We should now have a params object, either provided or constructed
-        assert params and isinstance(params, Params), f"params should be a Params object, not {type(params)}"
-        # Cache
-        # if cache and self._chain_cache:
-        #     async def execute_query():
-        #         return await self._client.query(params)
-        #     return await check_cache_and_query_async(self, params, execute_query)
-        # else:
-        #     return await self._client.query(params)
+            assert params and isinstance(params, Params), f"params should be a Params object, not {type(params)}"
+            
+            # Check cache first
+            if cache and self._chain_cache:
+                cached_result = check_cache(self, params)
+                if cached_result is not None:
+                    return cached_result  # This should be a Response
+
+            # Execute the query
+            start_time = time()
+            result = await self._client.query(params)
+            stop_time = time()
+            
+            # Create Response object
+            if isinstance(result, Response):
+                response = result
+            elif isinstance(result, str):
+                from Chain.message.messages import Messages
+                user_message = Message(role="user", content=params.query_input or "")
+                assistant_message = Message(role="assistant", content=result)
+                messages = Messages([user_message, assistant_message])
+                
+                response = Response(
+                    messages=messages,
+                    params=params,
+                    duration=stop_time - start_time,
+                )
+            else:
+                # Handle other result types (BaseModel, etc.)
+                from Chain.message.messages import Messages
+                user_message = Message(role="user", content=params.query_input or "")
+                assistant_message = Message(role="assistant", content=result)
+                messages = Messages([user_message, assistant_message])
+                
+                response = Response(
+                    messages=messages,
+                    params=params,
+                    duration=stop_time - start_time,
+                )
+
+            # Update cache after successful query
+            if cache and self._chain_cache:
+                update_cache(self, params, response)
+
+            return response  # Always return Response (part of ChainResult)
+
+        except ValidationError as e:
+            from Chain.result.error import ChainError
+            return ChainError.from_exception(
+                e,
+                code="validation_error",
+                category="client",
+                request_params=params.model_dump() if params else {}
+            )
+        except Exception as e:
+            from Chain.result.error import ChainError
+            return ChainError.from_exception(
+                e,
+                code="async_query_error",
+                category="client",
+                request_params=params.model_dump() if params else {}
+            )
