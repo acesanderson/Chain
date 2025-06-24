@@ -1,5 +1,3 @@
-# Enhanced Chain/progress/handlers.py
-
 from datetime import datetime
 import time
 

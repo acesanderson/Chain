@@ -1,5 +1,5 @@
-import time, sys, inspect
 from functools import wraps
+import time, sys, inspect
 
 
 def extract_query_preview(input_data, max_length=30):

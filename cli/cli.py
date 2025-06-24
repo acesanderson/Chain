@@ -13,13 +13,11 @@ Usage:
 """
 
 from Chain import MessageStore, Model, Prompt, Chain
-import argparse
 from rich.console import Console
 from utils import print_markdown
 from inspect import signature
 from typing import Callable
-import sys
-
+import sys, argparse
 
 def arg(abbreviation):
     """

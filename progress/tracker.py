@@ -1,8 +1,8 @@
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Protocol
-import time
 from datetime import datetime
+import time
 
 class ProgressEvent(BaseModel):
     pass

@@ -1,10 +1,9 @@
 from Chain.chain.chain import Chain, Prompt
 from Chain.model.model_async import ModelAsync
-from Chain.response.response import Response
+from Chain.result.response import Response
 from Chain.message.message import Message
 from Chain.parser.parser import Parser
 import asyncio, time
-from datetime import datetime
 from typing import Optional
 
 

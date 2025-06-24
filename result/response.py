@@ -1,13 +1,15 @@
 """
-Simple class for responses.
-A string isn't enough for debugging purposes; you want to be able to see the prompt, for example.
-Should read content as string when invoked as such.
+A successful Result.
 """
 
 from Chain.message.message import Message
-from Chain.message.imagemessage import ImageMessage
+from Chain.model.params.params import Params
 from pydantic import BaseModel
 from typing import Optional, Any
+
+class NewResponse(BaseModel):
+    messages: list[Message]
+    params: Params
 
 
 class Response(BaseModel):

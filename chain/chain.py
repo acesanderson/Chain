@@ -9,7 +9,7 @@ import time  # for timing our query calls (saved in Response object)
 # The rest of our package.
 from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
-from Chain.response.response import Response
+from Chain.result.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
@@ -244,53 +244,3 @@ class Chain:
                 messages=new_messages_object,
             )
             return response
-
-
-    #
-    # def run_completion(
-    #     self,
-    #     prompt: str,
-    #     verbose=True,
-    #     stream=False,
-    #     cache=True,
-    #     index: int = 0,
-    #     total: int = 0,
-    # ):
-    #     """
-    #     Standard version of Chain.run which returns a string (i.e. a completion).
-    #     Input should be a dict with named variables that match the prompt.
-    #     """
-    #     time_start = time.time()
-    #     user_message = Message(role="user", content=prompt)
-    #     # If we have class-level logging
-    #     if Chain._message_store:
-    #         Chain._message_store.add(user_message)
-    #     if self.parser:
-    #         result = self.model.query(
-    #             prompt,
-    #             verbose=verbose,
-    #             parser=self.parser,
-    #             cache=cache,
-    #             index=index,
-    #             total=total,
-    #             stream=stream,
-    #         )
-    #     else:
-    #         result = self.model.query(prompt, verbose=verbose, cache=cache)
-    #     time_end = time.time()
-    #     duration = time_end - time_start
-    #     # Create a new messages object, to be passed to Response object.
-    #     assistant_message = Message(role="assistant", content=result)
-    #     # If we have class-level logging
-    #     if Chain._message_store:
-    #         Chain._message_store.add(assistant_message)
-    #     new_messages_object = [user_message, assistant_message]
-    #     response = Response(
-    #         content=result,
-    #         status="success",
-    #         prompt=prompt,
-    #         model=self.model.model,
-    #         duration=duration,
-    #         messages=new_messages_object,
-    #     )
-    #     return response
