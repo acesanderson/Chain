@@ -5,6 +5,7 @@ from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
 import importlib
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -55,6 +56,7 @@ class ModelAsync(Model):
         raw=False,
         cache=False,
         print_response=False,
+        params: Optional[Params] = None
     ) -> BaseModel | str:
         """
         Asynchronously executes a query against the language model with optional
@@ -65,17 +67,19 @@ class ModelAsync(Model):
         be awaited in an async context, often used within `AsyncChain` for
         concurrent processing.
         """
-        # Here's the magic -- kwargs goes right into our Params object.
-        import inspect
-        frame = inspect.currentframe()
-        args, _, _, values = inspect.getargvalues(frame)
-        
-        query_args = {k: values[k] for k in args if k != "self"}
-        query_args["model"] = self.model
-        params = Params(**query_args)
-        # Cache implementation
-         # ADD THIS CACHE LOGIC:
-        if cache and hasattr(self, '_chain_cache') and self._chain_cache:
+        if params == None:
+            # Here's the magic -- kwargs goes right into our Params object.
+            import inspect
+            frame = inspect.currentframe()
+            args, _, _, values = inspect.getargvalues(frame)
+            
+            query_args = {k: values[k] for k in args if k != "self"}
+            query_args["model"] = self.model
+            params = Params(**query_args)
+        # We should now have a params object, either provided or constructed
+        assert params and isinstance(params, Params), f"params should be a Params object, not {type(params)}"
+        # Cache
+        if cache and self._chain_cache:
             async def execute_query():
                 return await self._client.query(params)
             return await check_cache_and_query_async(self, params, execute_query)
