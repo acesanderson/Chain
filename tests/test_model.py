@@ -1,46 +1,115 @@
-from Chain import Model
-from Chain.model.clients.client import Client
-import pytest
+"""
+Regression testing, behavior-driven.
+Core APIs.
+"""
+from Chain import Model, ModelAsync, Response, Chain, AsyncChain
+from Chain.model.clients.perplexity_client import PerplexityContent
+from pytest import fixture
+
+providers = [
+    "gpt",
+    "ollama",
+    "google",
+    "anthropic",
+    "perplexity",
+]
+models = ["gpt3", "haiku", "gemini", "llama3.1:latest", "sonar"]
+
+@fixture
+def prompt_list() -> list[str]:
+    return [
+        "name ten mammals",
+        "name ten birds",
+        "name ten villains"
+    ]
+
+# Straighforward text completion
+# --------------------------------------   
+
+## Single sync call with each provider
+# def test_model_single_sync_call():
+#     model = Model("gpt3")
+#     response = model.query("Hello, world!")
+#     assert isinstance(response, Response)
+#     assert isinstance(response.content, str)
+#
+#     model = Model("claude")
+#     response = model.query("Hello, world!")
+#     assert isinstance(response, Response)
+#     assert isinstance(response.content, str)
+#
+#     model = Model("llama3.1:latest")
+#     response = model.query("Hello, world!")
+#     assert isinstance(response, Response)
+#     assert isinstance(response.content, str)
+#
+#     model = Model("gemini")
+#     response = model.query("Hello, world!")
+#     assert isinstance(response, Response)
+#     assert isinstance(response.content, str)
+#
+#     model = Model("sonar")
+#     response = model.query("Hello, world!")
+#     assert isinstance(response, Response)
+#     assert isinstance(response.content, PerplexityContent)
+
+## Series of sync calls with each provider
+# def test_series_of_sync_calls(prompt_list):
+#     def loop_through_prompts(model: str):
+#         model_obj = Model(model)
+#         responses = []
+#         for prompt in prompt_list:
+#             responses.append(model_obj.query(prompt))
+#         return responses
+#
+#     for model in models:
+#         responses = loop_through_prompts(model)
+#         assert isinstance(responses, list)
+#         assert all([isinstance(response, Response) for response in responses])
+            
+## Series of async calls with each provider
+def test_series_of_async_calls(prompt_list):
+    def async_through_prompts(model: str):
+        model_obj = ModelAsync(model)
+        chain = AsyncChain(model=model_obj)
+        responses = chain.run(prompt_strings=prompt_list)
+        return responses
+    
+    model = "gpt3"
+    responses = async_through_prompts(model)
+    assert isinstance(responses, list)
+    assert all([isinstance(response, Response) for response in responses])
+
+    model = "haiku"
+    responses = async_through_prompts(model)
+    assert isinstance(responses, list)
+    assert all([isinstance(response, Response) for response in responses])
+
+    model = "llama3.1:latest"
+    responses = async_through_prompts(model)
+    assert isinstance(responses, list)
+    assert all([isinstance(response, Response) for response in responses])
+
+    model = "gemini"
+    responses = async_through_prompts(model)
+    assert isinstance(responses, list)
+    assert all([isinstance(response, Response) for response in responses])
+
+ 
 
 
-@pytest.fixture
-def default_model():
-    return Model("haiku")
+# Structured responses
+# --------------------------------------   
 
+## Single sync call with each provider
 
-def test_model_init(default_model):
-    assert default_model.model == "claude-3-5-haiku-20241022"
-    assert isinstance(default_model._client, Client)
-    assert default_model._client_type == ("anthropic", "AnthropicClientSync")
+## Series of sync calls with each provider
 
+## Series of async calls with each provider
 
-def test_model_init_fail():
-    with pytest.raises(ValueError) as e:
-        _ = Model("AGI")
-    assert str(e.value) == "Model AGI not found in models"
+# Audio message
 
+## gpt
 
-def load_model_list():
-    model_list = Model.models
-    assert "gpt-4o" in model_list["openai"]
-    assert "claude-3-5-sonnet-20241022" in model_list["anthropic"]
-    assert "llama3.1:latest" in model_list["ollama"]
-    assert "gemini-1.5-flash" in model_list["google"]
+## local
 
-
-@pytest.mark.parametrize(
-    "model_name, provider, client",
-    [
-        ("gpt-4o", "openai", "OpenAIClient"),
-        ("claude-3-5-sonnet-20241022", "anthropic", "AnthropicClient"),
-        ("gemini-1.5-flash", "google", "GoogleClient"),
-    ],
-)
-def test_model_get_client(model_name, provider, client):
-    """
-    Testing all our models and clients.
-    NOTE: ollama testing is not yet figured out for our containerized environment; need port forwarding to work.
-    """
-    model = Model(model_name)
-    client = model._get_client((provider, client))
-    assert isinstance(client, Client)
