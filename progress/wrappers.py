@@ -51,12 +51,30 @@ def sync_wrapper(
         result = func(model_instance, *args, **kwargs)
         duration = time.time() - start_time
 
-        # Update same line with completion
-        if hasattr(handler, "show_complete"):
-            handler.show_complete(model_name, display_preview, duration)
+        # Check if result is an error
+        from Chain.result.error import ChainError
+        if isinstance(result, ChainError):
+            if hasattr(handler, "show_failed"):
+                handler.show_failed(model_name, display_preview, str(result.info.message))
+            else:
+                handler.emit_failed(model_name, display_preview, str(result.info.message))
         else:
-            handler.emit_complete(model_name, display_preview, duration)
-        return result
+            # Check for cache hit (very fast response)
+            is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
+            
+            if is_cache_hit:
+                if hasattr(handler, "show_cached"):
+                    handler.show_cached(model_name, display_preview, duration)
+                else:
+                    handler.emit_cached(model_name, display_preview, duration)
+            else:
+                # Normal success case
+                if hasattr(handler, "show_complete"):
+                    handler.show_complete(model_name, display_preview, duration)
+                else:
+                    handler.emit_complete(model_name, display_preview, duration)
+       
+        return result 
     except KeyboardInterrupt:
         if hasattr(handler, "show_canceled"):
             handler.show_canceled(model_name, display_preview)
@@ -77,24 +95,46 @@ def sync_wrapper(
 async def async_wrapper(model_instance, func, handler, query_preview, *args, **kwargs):
     """Asynchronous wrapper for progress display with in-place updates and clean cancellation"""
     model_name = model_instance.model
+    display_preview = (
+        f"[{index}/{total}] {query_preview}" if index is not None else query_preview
+    )
 
     # Show starting state
     if hasattr(handler, "show_spinner"):
-        handler.show_spinner(model_name, query_preview)
+        handler.show_spinner(model_name, display_preview)
     else:
-        handler.emit_started(model_name, query_preview)
+        handler.emit_started(model_name, display_preview)
 
     start_time = time.time()
     try:
-        result = await func(model_instance, *args, **kwargs)
+        result = func(model_instance, *args, **kwargs)
         duration = time.time() - start_time
 
-        # Update same line with completion
-        if hasattr(handler, "show_complete"):
-            handler.show_complete(model_name, query_preview, duration)
+        # Check if result is an error
+        from Chain.result.error import ChainError
+        if isinstance(result, ChainError):
+            if hasattr(handler, "show_failed"):
+                handler.show_failed(model_name, display_preview, str(result.info.message))
+            else:
+                handler.emit_failed(model_name, display_preview, str(result.info.message))
         else:
-            handler.emit_complete(model_name, query_preview, duration)
+            # Check for cache hit (very fast response)
+            is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
+            
+            if is_cache_hit:
+                if hasattr(handler, "show_cached"):
+                    handler.show_cached(model_name, display_preview, duration)
+                else:
+                    handler.emit_cached(model_name, display_preview, duration)
+            else:
+                # Normal success case
+                if hasattr(handler, "show_complete"):
+                    handler.show_complete(model_name, display_preview, duration)
+                else:
+                    handler.emit_complete(model_name, display_preview, duration)
+        
         return result
+
     except KeyboardInterrupt:
         if hasattr(handler, "show_canceled"):
             handler.show_canceled(model_name, query_preview)

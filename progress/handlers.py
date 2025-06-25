@@ -41,6 +41,21 @@ class RichProgressHandler:
             f"⚠ {model_name} | {query_preview} | Canceled", style="yellow"
         )
 
+    def show_cached(self, model_name, query_preview, duration):
+        """Show cache hit with lightning symbol"""
+        if self.concurrent_mode:
+            return  # Suppress individual operations during concurrent mode
+
+        self.console.print(
+            f"⚡ {model_name} | {query_preview} | Cached ({duration:.1f}s)", 
+            style="cyan"
+        )
+
+    def emit_cached(self, model_name, query_preview, duration):
+        """Fallback method for backwards compatibility"""
+        self.show_cached(model_name, query_preview, duration)
+
+
     def show_failed(self, model_name, query_preview, error):
         """Update same line with error, keeping context"""
         if self.concurrent_mode:
@@ -124,6 +139,19 @@ class PlainProgressHandler:
             
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] [{model_name}] Canceled")
+
+    def show_cached(self, model_name, query_preview, duration):
+        """Show cache hit in plain text"""
+        if self.concurrent_mode:
+            return
+
+        timestamp = datetime.now().strftime("%H:%M:%S")
+        print(f"[{timestamp}] [{model_name}] Cache hit: {query_preview}")
+
+    def emit_cached(self, model_name, query_preview, duration):
+        """Fallback method for backwards compatibility"""
+        self.show_cached(model_name, query_preview, duration)
+
 
     def show_failed(self, model_name, query_preview, error):
         """Show failure on new line"""

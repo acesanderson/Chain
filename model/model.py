@@ -161,9 +161,14 @@ class Model:
             # Check cache first
             if cache and self._chain_cache:
                 cached_result = check_cache(self, params)
-                if cached_result is not None:
+                if isinstance(cached_result, ChainResult):
                     return cached_result  # This should be a Response (part of ChainResult)
-
+                elif cached_result == None:
+                    pass
+                elif cached_result and not isinstance(cached_result, ChainResult):
+                    raise ValueError(
+                        f"Cache returned a non-ChainResult type: {type(cached_result)}. Ensure the cache is properly configured."
+                    )
             # Execute the query
             start_time = time()
             result = self._client.query(params)
