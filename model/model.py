@@ -134,12 +134,13 @@ class Model:
         # Options for debugging
         params: Optional[Params] = None,
         return_params: bool = False,
-        ) -> ChainResult | Params | Stream | AnthropicStream:
-        
+    ) -> ChainResult | Params | Stream | AnthropicStream:
+
         try:
             # Construct Params object if not provided (majority of cases)
             if not params:
                 import inspect
+
                 frame = inspect.currentframe()
                 args, _, _, values = inspect.getargvalues(frame)
 
@@ -147,9 +148,11 @@ class Model:
                 query_args["model"] = self.model
                 cache = query_args.pop("cache", False)
                 params = Params(**query_args)
-            
-            assert isinstance(params, Params), f"params must be an instance of Params or None, got {type(params)}"
-            
+
+            assert isinstance(
+                params, Params
+            ), f"params must be an instance of Params or None, got {type(params)}"
+
             # For debug, return params if requested
             if return_params:
                 return params
@@ -162,7 +165,9 @@ class Model:
             if cache and self._chain_cache:
                 cached_result = check_cache(self, params)
                 if isinstance(cached_result, ChainResult):
-                    return cached_result  # This should be a Response (part of ChainResult)
+                    return (
+                        cached_result  # This should be a Response (part of ChainResult)
+                    )
                 elif cached_result == None:
                     pass
                 elif cached_result and not isinstance(cached_result, ChainResult):
@@ -183,7 +188,7 @@ class Model:
                         "Streaming responses are not supported in this method. "
                         "Set stream=True to receive streamed responses."
                     )
-            
+
             # Construct Response object
             if isinstance(result, Response):
                 response = result
@@ -191,7 +196,7 @@ class Model:
                 user_message = Message(role="user", content=params.query_input or "")
                 assistant_message = Message(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
-                
+
                 response = Response(
                     messages=messages,
                     params=params,
@@ -213,7 +218,7 @@ class Model:
                 e,
                 code="validation_error",
                 category="client",
-                request_params=params.model_dump() if params else {}
+                request_params=params.model_dump() if params else {},
             )
             print(chainerror)
             return chainerror
@@ -222,7 +227,7 @@ class Model:
                 e,
                 code="query_error",
                 category="client",
-                request_params=params.model_dump() if params else {}
+                request_params=params.model_dump() if params else {},
             )
             print(chainerror)
             return chainerror

@@ -4,7 +4,7 @@ Use this when switching environments, ssh tunnels, or when new models are added.
 Need to figure out where to automatically implement this in my Chain package to avoid manual updates but also preserve lazy loading.
 """
 
-from Chain.model.model import Model
+from Chain.model.model import Model, ModelStore
 from rich import console
 
 console = console.Console(width=80)
@@ -15,7 +15,7 @@ def main():
     m = Model("llama3.1:latest")
     m._client.update_ollama_models()
     console.print(
-        f"[green]Model list updated: [/green][yellow]{Model.models()['ollama']}[/yellow]"
+        f"[green]Model list updated: [/green][yellow]{ModelStore.models()['ollama']}[/yellow]"
     )
 
 

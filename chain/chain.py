@@ -114,7 +114,7 @@ class Chain:
                 cache=cache,
                 index=index,
                 total=total,
-                stream = stream,
+                stream=stream,
             )
         elif prompt:
             result = self.run_completion(
@@ -123,7 +123,7 @@ class Chain:
                 cache=cache,
                 index=index,
                 total=total,
-                stream = stream,
+                stream=stream,
             )
         else:
             raise ValueError("No prompt or messages passed to Chain.run.")
@@ -186,21 +186,18 @@ class Chain:
         """Updated to properly handle streaming responses"""
         time_start = time.time()
         user_message = Message(role="user", content=prompt)
-        
+
         if Chain._message_store:
             Chain._message_store.add(user_message)
-        
+
         if stream:
             # For streaming, return the stream object directly
             if self.parser:
                 # Streaming with structured output is complex - disable for now
                 raise ValueError("Streaming is not supported with parsers yet")
-            
+
             stream_response = self.model.query(
-                prompt,
-                verbose=verbose,
-                cache=cache,
-                stream=True
+                prompt, verbose=verbose, cache=cache, stream=True
             )
             return stream_response  # Return raw stream object
         else:
@@ -216,21 +213,12 @@ class Chain:
                 )
             else:
                 result = self.model.query(prompt, verbose=verbose, cache=cache)
-            
+
             time_end = time.time()
             duration = time_end - time_start
-            
+
             assistant_message = Message(role="assistant", content=result)
             if Chain._message_store:
                 Chain._message_store.add(assistant_message)
-            
-            new_messages_object = [user_message, assistant_message]
-            response = Response(
-                content=result,
-                status="success",
-                prompt=prompt,
-                model=self.model.model,
-                duration=duration,
-                messages=new_messages_object,
-            )
-            return response
+
+            return result
