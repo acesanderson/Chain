@@ -4,8 +4,6 @@ A chain needs to have at least a prompt and a model.
 Chains are immutable, treat them like tuples.
 """
 
-import time  # for timing our query calls (saved in Response object)
-
 # The rest of our package.
 from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
@@ -15,11 +13,16 @@ from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.logging.logging_config import configure_logging, logging
 from typing import TYPE_CHECKING, Optional
 
 # Our TYPE_CHECKING imports, these ONLY load for IDEs, so you can still lazy load in production.
 if TYPE_CHECKING:
     from rich.console import Console
+
+logger = configure_logging(
+    level=logging.INFO,
+)
 
 
 class Chain:
@@ -152,7 +155,6 @@ class Chain:
         if Chain._message_store:
             Chain._message_store.add(messages)
         # Run our query
-        time_start = time.time()
         if self.parser:
             result = self.model.query(
                 messages,
@@ -184,7 +186,6 @@ class Chain:
         total: int = 0,
     ):
         """Updated to properly handle streaming responses"""
-        time_start = time.time()
         user_message = Message(role="user", content=prompt)
 
         if Chain._message_store:
@@ -213,9 +214,6 @@ class Chain:
                 )
             else:
                 result = self.model.query(prompt, verbose=verbose, cache=cache)
-
-            time_end = time.time()
-            duration = time_end - time_start
 
             assistant_message = Message(role="assistant", content=result)
             if Chain._message_store:

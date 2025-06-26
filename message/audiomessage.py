@@ -1,9 +1,12 @@
 from Chain.message.message import Message
 from Chain.message.imagemessage import OpenAITextContent
+from Chain.logging.logging_config import get_logger
 from pydantic import BaseModel, Field
 from typing import Literal, Dict, Any
 from pathlib import Path
 import base64, re
+
+logger = get_logger(__name__)
 
 
 def is_base64_simple(s):
@@ -18,6 +21,7 @@ class OpenAIInputAudio(BaseModel):
     We are using Gemini through the OpenAI SDK, so we need to define the input audio format.
     Gemini usually supports a range of audio filetypes, but when used with OpenAI SDK, it's only mp3 and wav.
     """
+
     data: str = Field(description="The base64-encoded audio data.")
     format: Literal["mp3", "wav", ""] = Field(
         description="The format of the audio data, must be 'mp3' or 'wav'."
@@ -29,6 +33,7 @@ class OpenAIAudioContent(BaseModel):
     Gemini AudioContent should have a single AudioContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
     """
+
     input_audio: OpenAIInputAudio = Field(
         description="The input audio data, must be a base64-encoded string with format 'mp3' or 'wav'."
     )
@@ -42,6 +47,7 @@ class OpenAIAudioMessage(Message):
     Gemini AudioMessage should have a single AudioContent and a single TextContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
     """
+
     content: list[OpenAIAudioContent | OpenAITextContent]  # type: ignore
 
 
@@ -54,7 +60,7 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
     # Text content is inherited from Message base class as 'content'
     # We'll override it with a more specific structure
     content: str | list[BaseModel] | None = Field(default=None)
-    
+
     # AudioMessage-specific fields
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
@@ -85,20 +91,20 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
             self.audio_file = Path(self.audio_file)
         if not self.audio_file.exists():
             raise FileNotFoundError(f"Audio file {self.audio_file} does not exist.")
-        
+
         # Convert the audio file to base64 string
         self.audio_content = self._convert_audio_to_base64(self.audio_file)
         if not is_base64_simple(self.audio_content):
             raise ValueError("Audio content is not a valid base64 string.")
-        
+
         # Infer the audio format from the file extension if not provided
         if self.format == "":
             if self.audio_file.suffix.lower()[1:] in ["mp3", "wav"]:
                 self.format = self.audio_file.suffix.lower()[1:]
-        
+
         # Set up the content field to match Message interface
         self.content = [self.audio_content, self.text_content]
-        
+
         # Change audio_file to str so it can be used in OpenAI API
         self.audio_file = str(self.audio_file)
 
@@ -115,11 +121,11 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
         """
         return {
             "message_type": "AudioMessage",
-            "role": self.role.value if hasattr(self.role, 'value') else self.role,
+            "role": self.role.value if hasattr(self.role, "value") else self.role,
             "text_content": self.text_content,
             "audio_file": str(self.audio_file),
             "format": self.format,
-            "audio_content": self.audio_content
+            "audio_content": self.audio_content,
         }
 
     @classmethod
@@ -134,7 +140,7 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
             text_content=data["text_content"],
             audio_file="",  # Empty to avoid file check
             format=data["format"],
-            audio_content=data["audio_content"]
+            audio_content=data["audio_content"],
         )
 
         # Manually set the remaining fields after construction
@@ -166,4 +172,3 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
 
         audio = AudioSegment.from_file(self.audio_file, format=self.format)
         play(audio)
-

@@ -4,11 +4,15 @@ Our Message class is inherited from specialized types like AudioMessage, ImageMe
 We define list[Message] as Messages in a parallel file, this class can handle the serialization / deserialization needed for message historys, api calls, and caching.
 """
 
-from pydantic import BaseModel
 from Chain.prompt.prompt import Prompt
+from Chain.logging.logging_config import get_logger
 from enum import Enum
+from pydantic import BaseModel
 from typing import Any
 import importlib, json, warnings
+
+logger = get_logger(__name__)
+
 
 class Role(Enum):
     """
@@ -37,43 +41,35 @@ class Message(BaseModel):
             "message_type": self.__class__.__name__,
             "role": self.role.value if isinstance(self.role, Role) else self.role,
         }
-        
+
         # Handle different content types
         if isinstance(self.content, str):
-            serialized["content"] = {
-                "type": "string",
-                "data": self.content
-            }
+            serialized["content"] = {"type": "string", "data": self.content}
         elif isinstance(self.content, BaseModel):
             serialized["content"] = {
                 "type": "pydantic_model",
                 "model_class": f"{self.content.__class__.__module__}.{self.content.__class__.__name__}",
-                "data": self.content.model_dump()
+                "data": self.content.model_dump(),
             }
         elif isinstance(self.content, list):
-            serialized["content"] = {
-                "type": "pydantic_list",
-                "data": []
-            }
+            serialized["content"] = {"type": "pydantic_list", "data": []}
             for item in self.content:
                 if isinstance(item, BaseModel):
-                    serialized["content"]["data"].append({
-                        "model_class": f"{item.__class__.__module__}.{item.__class__.__name__}",
-                        "data": item.model_dump()
-                    })
+                    serialized["content"]["data"].append(
+                        {
+                            "model_class": f"{item.__class__.__module__}.{item.__class__.__name__}",
+                            "data": item.model_dump(),
+                        }
+                    )
                 else:
                     # Fallback for non-BaseModel items
-                    serialized["content"]["data"].append({
-                        "model_class": "str",
-                        "data": str(item)
-                    })
+                    serialized["content"]["data"].append(
+                        {"model_class": "str", "data": str(item)}
+                    )
         else:
             # Fallback for unknown types
-            serialized["content"] = {
-                "type": "string",
-                "data": str(self.content)
-            }
-            
+            serialized["content"] = {"type": "string", "data": str(self.content)}
+
         return serialized
 
     @classmethod
@@ -83,14 +79,16 @@ class Message(BaseModel):
         """
         role = data["role"]
         content_info = data["content"]
-        
+
         # Reconstruct content based on type
         if content_info["type"] == "string":
             content = content_info["data"]
         elif content_info["type"] == "pydantic_model":
             # Dynamically import and reconstruct the Pydantic model
             model_class_path = content_info["model_class"]
-            content = cls._reconstruct_pydantic_model(model_class_path, content_info["data"])
+            content = cls._reconstruct_pydantic_model(
+                model_class_path, content_info["data"]
+            )
         elif content_info["type"] == "pydantic_list":
             content = []
             for item in content_info["data"]:
@@ -98,18 +96,19 @@ class Message(BaseModel):
                     content.append(item["data"])
                 else:
                     reconstructed = cls._reconstruct_pydantic_model(
-                        item["model_class"], 
-                        item["data"]
+                        item["model_class"], item["data"]
                     )
                     content.append(reconstructed)
         else:
             # Fallback
             content = content_info["data"]
-            
+
         return cls(role=role, content=content)
 
     @staticmethod
-    def _reconstruct_pydantic_model(model_class_path: str, data: dict[str, Any]) -> BaseModel | str:
+    def _reconstruct_pydantic_model(
+        model_class_path: str, data: dict[str, Any]
+    ) -> BaseModel | str:
         """
         Dynamically import and reconstruct a Pydantic model from its class path and data.
         If reconstruction fails (class changed/moved/deleted), returns JSON string with warning.
@@ -117,11 +116,11 @@ class Message(BaseModel):
         try:
             # Split module and class name
             module_path, class_name = model_class_path.rsplit(".", 1)
-            
+
             # Import the module and get the class
             module = importlib.import_module(module_path)
             model_class = getattr(module, class_name)
-            
+
             # Reconstruct the model
             return model_class.model_validate(data)
         except ImportError as e:
@@ -133,7 +132,7 @@ class Message(BaseModel):
                 f"Falling back to JSON string representation. "
                 f"Error: {e}",
                 UserWarning,
-                stacklevel=3
+                stacklevel=3,
             )
             return json_str
         except AttributeError as e:
@@ -145,7 +144,7 @@ class Message(BaseModel):
                 f"Falling back to JSON string representation. "
                 f"Error: {e}",
                 UserWarning,
-                stacklevel=3
+                stacklevel=3,
             )
             return json_str
         except (ValueError, TypeError) as e:
@@ -157,7 +156,7 @@ class Message(BaseModel):
                 f"Falling back to JSON string representation. "
                 f"Error: {e}",
                 UserWarning,
-                stacklevel=3
+                stacklevel=3,
             )
             return json_str
 
@@ -172,6 +171,7 @@ class Message(BaseModel):
         Allows for dictionary-style access to the object.
         """
         return getattr(self, key)
+
 
 # Some helpful functions
 def create_system_message(

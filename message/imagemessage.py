@@ -9,9 +9,12 @@ We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthro
 from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from Chain.message.convert_image import convert_image, convert_image_file
+from Chain.logging.logging_config import get_logger
 from pathlib import Path
 from typing import Dict, Any
 import re
+
+logger = get_logger(__name__)
 
 # Map PIL formats to MIME types
 format_to_mime = {
@@ -22,11 +25,13 @@ format_to_mime = {
     ".webp": "image/webp",
 }
 
+
 def is_base64_simple(s):
     """
     Simple validation for base64 strings.
     """
     return bool(re.match(r"^[A-Za-z0-9+/]*={0,2}$", s)) and len(s) % 4 == 0
+
 
 def extension_to_mimetype(file_path: Path) -> str:
     """
@@ -63,6 +68,7 @@ class AnthropicImageMessage(Message):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
     """
+
     role: str
     content: list[AnthropicImageContent | AnthropicTextContent]  # type: ignore
 
@@ -75,6 +81,7 @@ class OpenAITextContent(BaseModel):
 
 class OpenAIImageUrl(BaseModel):
     """Nested object for OpenAI image URL structure"""
+
     url: str = Field(description="The data URL with base64 image")
 
 
@@ -82,6 +89,7 @@ class OpenAIImageContent(BaseModel):
     """
     OpenAI requires image_url to be an object, not a string
     """
+
     type: str = "image_url"
     image_url: OpenAIImageUrl = Field(description="The image URL object")
 
@@ -90,6 +98,7 @@ class OpenAIImageMessage(Message):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
     """
+
     role: str
     content: list[OpenAIImageContent | OpenAITextContent]  # type: ignore
 
@@ -98,11 +107,11 @@ class OpenAIImageMessage(Message):
 class ImageMessage(Message):
     """
     ImageMessage with serialization/deserialization support.
-    
+
     You can instantiate it with either:
     1. text_content + image_content + mime_type
     2. text_content + file_path (conversion happens automatically)
-    
+
     You can convert it to provider formats with to_openai() and to_anthropic() methods.
     """
 
@@ -125,10 +134,10 @@ class ImageMessage(Message):
         if not self.file_path or self.file_path == "":
             if self.image_content and self.mime_type:
                 # This is cache restoration - content already exists
-                if not hasattr(self, 'content') or not self.content:
+                if not hasattr(self, "content") or not self.content:
                     self.content = [self.image_content, self.text_content]
                 return
-        
+
         # If user adds image_content and mime_type, convert them to PNG, downsample, and update base64 string.
         if self.image_content and self.mime_type:
             # Convert the image_content to a base64-encoded PNG if it's not already in that format.
@@ -170,11 +179,11 @@ class ImageMessage(Message):
         """
         return {
             "message_type": "ImageMessage",
-            "role": self.role.value if hasattr(self.role, 'value') else self.role,
+            "role": self.role.value if hasattr(self.role, "value") else self.role,
             "text_content": self.text_content,
             "file_path": str(self.file_path),
             "image_content": self.image_content,
-            "mime_type": self.mime_type
+            "mime_type": self.mime_type,
         }
 
     @classmethod
@@ -191,11 +200,11 @@ class ImageMessage(Message):
             image_content=data["image_content"],
             mime_type=data["mime_type"],
         )
-        
+
         # Manually set the remaining fields after construction
         instance.content = [data["image_content"], data["text_content"]]
         instance.file_path = data["file_path"]  # Set the real file path
-        
+
         return instance
 
     def __repr__(self):

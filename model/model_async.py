@@ -6,12 +6,14 @@ from Chain.progress.wrappers import progress_display
 from Chain.message.message import Message
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
-from Chain.result.error import ChainError
 from Chain.cache.cache import check_cache, update_cache
+from Chain.logging.logging_config import get_logger
 import importlib
 from typing import Optional
 from time import time
 from pydantic import ValidationError
+
+logger = get_logger(__name__)
 
 
 class ModelAsync(Model):
@@ -61,21 +63,24 @@ class ModelAsync(Model):
         raw=False,
         cache=False,
         print_response=False,
-        params: Optional[Params] = None
+        params: Optional[Params] = None,
     ) -> ChainResult:
-        
+
         try:
             if params == None:
                 import inspect
+
                 frame = inspect.currentframe()
                 args, _, _, values = inspect.getargvalues(frame)
 
                 query_args = {k: values[k] for k in args if k != "self"}
                 query_args["model"] = self.model
                 params = Params(**query_args)
-            
-            assert params and isinstance(params, Params), f"params should be a Params object, not {type(params)}"
-            
+
+            assert params and isinstance(
+                params, Params
+            ), f"params should be a Params object, not {type(params)}"
+
             # Check cache first
             if cache and self._chain_cache:
                 cached_result = check_cache(self, params)
@@ -86,16 +91,17 @@ class ModelAsync(Model):
             start_time = time()
             result = await self._client.query(params)
             stop_time = time()
-            
+
             # Create Response object
             if isinstance(result, Response):
                 response = result
             elif isinstance(result, str):
                 from Chain.message.messages import Messages
+
                 user_message = Message(role="user", content=params.query_input or "")
                 assistant_message = Message(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
-                
+
                 response = Response(
                     messages=messages,
                     params=params,
@@ -104,10 +110,11 @@ class ModelAsync(Model):
             else:
                 # Handle other result types (BaseModel, etc.)
                 from Chain.message.messages import Messages
+
                 user_message = Message(role="user", content=params.query_input or "")
                 assistant_message = Message(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
-                
+
                 response = Response(
                     messages=messages,
                     params=params,
@@ -122,17 +129,19 @@ class ModelAsync(Model):
 
         except ValidationError as e:
             from Chain.result.error import ChainError
+
             return ChainError.from_exception(
                 e,
                 code="validation_error",
                 category="client",
-                request_params=params.model_dump() if params else {}
+                request_params=params.model_dump() if params else {},
             )
         except Exception as e:
             from Chain.result.error import ChainError
+
             return ChainError.from_exception(
                 e,
                 code="async_query_error",
                 category="client",
-                request_params=params.model_dump() if params else {}
+                request_params=params.model_dump() if params else {},
             )

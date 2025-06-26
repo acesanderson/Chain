@@ -3,12 +3,12 @@ Chain caching system using JSON serialization instead of cloudpickle.
 Provides transparent caching for Chain responses with automatic serialization/deserialization.
 """
 
-import json
-import sqlite3
-import hashlib
+from Chain.logging.logging_config import get_logger
 from typing import Optional, Any
-from datetime import datetime
 from pathlib import Path
+import json, sqlite3
+
+logger = get_logger(__name__)
 
 
 class ChainCache:

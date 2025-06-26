@@ -28,6 +28,7 @@ from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
+from Chain.logging.logging_config import get_logger
 from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException
@@ -38,6 +39,7 @@ import inspect
 from pathlib import Path
 import readline  # Enables completion in the console
 
+logger = get_logger(__name__)
 _ = readline.get_current_history_length()
 
 

@@ -4,9 +4,11 @@ Use this when switching environments, ssh tunnels, or when new models are added.
 Need to figure out where to automatically implement this in my Chain package to avoid manual updates but also preserve lazy loading.
 """
 
+from Chain.logging.logging_config import get_logger
 from Chain.model.model import Model, ModelStore
 from rich import console
 
+logger = get_logger(__name__)
 console = console.Console(width=80)
 
 

@@ -1,8 +1,11 @@
 from Chain.model.model import Model
 from Chain.prompt.prompt import Prompt
 from Chain.chain.chain import Chain
+from Chain.logging.logging_config import get_logger
 from typing import Callable
 import inspect, re
+
+logger = get_logger(__name__)
 
 # Constants
 param_string_pattern = re.compile("{{(.+)}}")

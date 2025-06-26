@@ -9,22 +9,25 @@ With MessageStore, you can:
 - get a message from the history
 - automatically convert pydantic objects to readable strings
 
-Under the hood, a messagestore is a list that may contain either Response or Message objects,
-or a mix of both, but the interaction with them is as a list of messages unless otherwise specified.
+Under the hood, a messagestore is a Messages object, serialized as TinyDB if persistent.
 
 "History" vs. "Log":
-    - The history is a hardcode list of messages in pickle format.
+    - The history is a hardcode list of messages in TinyDB (jsonl) format.
     - The log is a file that is automatically updated with the messages, and is formatted for human readability.
     - History is invoked by the user.
     - Log is automatically updated with the messages and therefore a flag for several methods.
 """
 
 from Chain.message.message import Message
+from Chain.message.messages import Messages
+from Chain.logging.logging_config import get_logger
 from rich.console import Console
 from rich.rule import Rule
+from pathlib import Path
 from pydantic import BaseModel
 import os, pickle
-from pathlib import Path
+
+logger = get_logger(__name__)
 
 
 class MessageStore:
@@ -44,10 +47,10 @@ class MessageStore:
         """
         # Use existing console or create a new one
         if not console:
-            self.console = Console(width=100)
+            self.console = Console()
         else:
             self.console = console
-        self.messages: list[Message | None] = []  # The list of messages
+        self.messages: Messages
         # Config history and log if requested
         if history_file:
             self.history_file = history_file

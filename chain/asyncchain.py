@@ -1,9 +1,14 @@
 from Chain.chain.chain import Chain, Prompt
 from Chain.model.model_async import ModelAsync
 from Chain.result.response import Response
+from Chain.logging.logging_config import configure_logging, logging
 from Chain.parser.parser import Parser
-import asyncio, time
 from typing import Optional
+import asyncio, time
+
+logger = configure_logging(
+    level=logging.INFO,
+)
 
 
 class AsyncChain(Chain):
@@ -107,9 +112,11 @@ class AsyncChain(Chain):
                 )
 
         responses = asyncio.run(_run_async())
-        
+
         assert isinstance(responses, list), "Responses should be a list"
-        assert all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
+        assert all(
+            [isinstance(r, Response) for r in responses]
+        ), "All results should be Response objects"
 
         return responses
 
@@ -129,7 +136,7 @@ class AsyncChain(Chain):
             console = self.model.console or self.__class__._console
             from Chain.progress.tracker import ConcurrentTracker
             from Chain.progress.wrappers import create_concurrent_progress_tracker
-            
+
             tracker = create_concurrent_progress_tracker(console, len(prompt_strings))
             tracker.emit_concurrent_start()
 
@@ -160,10 +167,11 @@ class AsyncChain(Chain):
                         verbose=verbose,
                         print_response=print_response,
                     )
-            
+
             # Wrap with concurrent tracking if available
             if tracker:
                 from Chain.progress.wrappers import concurrent_wrapper
+
                 return await concurrent_wrapper(do_work(), tracker)
             else:
                 return await do_work()
@@ -177,7 +185,7 @@ class AsyncChain(Chain):
                 tracker,
                 cache,
                 verbose=False,  # Always suppress individual progress
-                print_response=print_response
+                print_response=print_response,
             )
             for prompt_string in prompt_strings
         ]
@@ -186,14 +194,15 @@ class AsyncChain(Chain):
         responses = await asyncio.gather(*coroutines, return_exceptions=True)
 
         assert isinstance(responses, list), "Responses should be a list"
-        assert all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
+        assert all(
+            [isinstance(r, Response) for r in responses]
+        ), "All results should be Response objects"
 
         # Complete concurrent tracking
         if tracker:
             tracker.emit_concurrent_complete()
 
         return responses
-
 
     async def _run_input_variables(
         self,
@@ -214,8 +223,10 @@ class AsyncChain(Chain):
             console = self.model.console or self.__class__._console
             from Chain.progress.tracker import ConcurrentTracker
             from Chain.progress.wrappers import create_concurrent_progress_tracker
-            
-            tracker = create_concurrent_progress_tracker(console, len(input_variables_list))
+
+            tracker = create_concurrent_progress_tracker(
+                console, len(input_variables_list)
+            )
             tracker.emit_concurrent_start()
 
         async def process_with_semaphore_and_tracking(
@@ -245,10 +256,11 @@ class AsyncChain(Chain):
                         verbose=verbose,
                         print_response=print_response,
                     )
-            
+
             # Wrap with concurrent tracking if available
             if tracker:
                 from Chain.progress.wrappers import concurrent_wrapper
+
                 return await concurrent_wrapper(do_work(), tracker)
             else:
                 return await do_work()
@@ -274,6 +286,10 @@ class AsyncChain(Chain):
         if tracker:
             tracker.emit_concurrent_complete()
 
-        assert all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
-        assert isinstance(responses, list) and all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
+        assert all(
+            [isinstance(r, Response) for r in responses]
+        ), "All results should be Response objects"
+        assert isinstance(responses, list) and all(
+            [isinstance(r, Response) for r in responses]
+        ), "All results should be Response objects"
         return responses

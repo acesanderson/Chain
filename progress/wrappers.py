@@ -1,5 +1,8 @@
+from Chain.logging.logging_config import get_logger
 from functools import wraps
 import time, sys, inspect
+
+logger = get_logger(__name__)
 
 
 def extract_query_preview(input_data, max_length=30):
@@ -53,15 +56,20 @@ def sync_wrapper(
 
         # Check if result is an error
         from Chain.result.error import ChainError
+
         if isinstance(result, ChainError):
             if hasattr(handler, "show_failed"):
-                handler.show_failed(model_name, display_preview, str(result.info.message))
+                handler.show_failed(
+                    model_name, display_preview, str(result.info.message)
+                )
             else:
-                handler.emit_failed(model_name, display_preview, str(result.info.message))
+                handler.emit_failed(
+                    model_name, display_preview, str(result.info.message)
+                )
         else:
             # Check for cache hit (very fast response)
             is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
-            
+
             if is_cache_hit:
                 if hasattr(handler, "show_cached"):
                     handler.show_cached(model_name, display_preview, duration)
@@ -73,8 +81,8 @@ def sync_wrapper(
                     handler.show_complete(model_name, display_preview, duration)
                 else:
                     handler.emit_complete(model_name, display_preview, duration)
-       
-        return result 
+
+        return result
     except KeyboardInterrupt:
         if hasattr(handler, "show_canceled"):
             handler.show_canceled(model_name, display_preview)
@@ -112,15 +120,20 @@ async def async_wrapper(model_instance, func, handler, query_preview, *args, **k
 
         # Check if result is an error
         from Chain.result.error import ChainError
+
         if isinstance(result, ChainError):
             if hasattr(handler, "show_failed"):
-                handler.show_failed(model_name, display_preview, str(result.info.message))
+                handler.show_failed(
+                    model_name, display_preview, str(result.info.message)
+                )
             else:
-                handler.emit_failed(model_name, display_preview, str(result.info.message))
+                handler.emit_failed(
+                    model_name, display_preview, str(result.info.message)
+                )
         else:
             # Check for cache hit (very fast response)
             is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
-            
+
             if is_cache_hit:
                 if hasattr(handler, "show_cached"):
                     handler.show_cached(model_name, display_preview, duration)
@@ -132,7 +145,7 @@ async def async_wrapper(model_instance, func, handler, query_preview, *args, **k
                     handler.show_complete(model_name, display_preview, duration)
                 else:
                     handler.emit_complete(model_name, display_preview, duration)
-        
+
         return result
 
     except KeyboardInterrupt:

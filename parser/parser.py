@@ -5,6 +5,9 @@ We have to get a little fancy to allow list[BaseModel] as an option -- for some 
 
 from typing import Union, Type
 from pydantic import BaseModel
+from Chain.logging.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 
 class Parser:

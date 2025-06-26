@@ -8,6 +8,7 @@ from Chain.model.models.models import ModelStore
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
 from Chain.result.error import ChainError
+from Chain.logging.logging_config import get_logger
 from pydantic import ValidationError, BaseModel
 from typing import Optional
 from pathlib import Path
@@ -18,6 +19,7 @@ from anthropic import Stream as AnthropicStream
 from rich.console import Console
 
 dir_path = Path(__file__).resolve().parent
+logger = get_logger(__name__)
 
 
 class Model:

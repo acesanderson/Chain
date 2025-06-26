@@ -13,11 +13,15 @@ Usage:
 """
 
 from Chain import MessageStore, Model, Prompt, Chain
+from Chain.logging.logging_config import get_logger
 from rich.console import Console
 from utils import print_markdown
 from inspect import signature
 from typing import Callable
 import sys, argparse
+
+logger = get_logger(__name__)
+
 
 def arg(abbreviation):
     """

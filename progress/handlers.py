@@ -1,5 +1,8 @@
+from Chain.logging.logging_config import get_logger
 from datetime import datetime
 import time
+
+logger = get_logger(__name__)
 
 
 class RichProgressHandler:
@@ -15,7 +18,7 @@ class RichProgressHandler:
         """Show Rich spinner with live status"""
         if self.concurrent_mode:
             return  # Suppress individual operations during concurrent mode
-        
+
         self.console.print(
             f"⠋ {model_name} | {query_preview}",
             end="\r",
@@ -27,7 +30,7 @@ class RichProgressHandler:
         """Update same line with green checkmark, keeping context"""
         if self.concurrent_mode:
             return  # Suppress individual operations during concurrent mode
-            
+
         self.console.print(
             f"✓ {model_name} | {query_preview} | ({duration:.1f}s)", style="green"
         )
@@ -36,7 +39,7 @@ class RichProgressHandler:
         """Update same line with warning, keeping context"""
         if self.concurrent_mode:
             return
-            
+
         self.console.print(
             f"⚠ {model_name} | {query_preview} | Canceled", style="yellow"
         )
@@ -47,20 +50,19 @@ class RichProgressHandler:
             return  # Suppress individual operations during concurrent mode
 
         self.console.print(
-            f"⚡ {model_name} | {query_preview} | Cached ({duration:.1f}s)", 
-            style="cyan"
+            f"⚡ {model_name} | {query_preview} | Cached ({duration:.1f}s)",
+            style="cyan",
         )
 
     def emit_cached(self, model_name, query_preview, duration):
         """Fallback method for backwards compatibility"""
         self.show_cached(model_name, query_preview, duration)
 
-
     def show_failed(self, model_name, query_preview, error):
         """Update same line with error, keeping context"""
         if self.concurrent_mode:
             return
-            
+
         self.console.print(
             f"✗ {model_name} | {query_preview} | Failed: {error}", style="red"
         )
@@ -70,30 +72,38 @@ class RichProgressHandler:
         """Handle start of concurrent operations"""
         self.concurrent_mode = True
         self.concurrent_line_printed = False
-        self.console.print(f"⠋ Running {total} concurrent requests...", end="\r", highlight=False)
+        self.console.print(
+            f"⠋ Running {total} concurrent requests...", end="\r", highlight=False
+        )
 
-    def update_concurrent_progress(self, completed: int, total: int, running: int, failed: int, elapsed: float):
+    def update_concurrent_progress(
+        self, completed: int, total: int, running: int, failed: int, elapsed: float
+    ):
         """Update live concurrent progress"""
         if not self.concurrent_mode:
             return
-            
+
         # Only show progress updates every 0.5 seconds to avoid spam
         current_time = time.time()
-        if not hasattr(self, '_last_update') or current_time - self._last_update > 0.5:
+        if not hasattr(self, "_last_update") or current_time - self._last_update > 0.5:
             self._last_update = current_time
-            
+
             progress_text = f"⠋ Progress: {completed}/{total} complete | {running} running | {failed} failed | {elapsed:.1f}s elapsed"
             self.console.print(progress_text, end="\r", highlight=False)
 
     def handle_concurrent_complete(self, successful: int, total: int, duration: float):
         """Handle completion of all concurrent operations"""
         self.concurrent_mode = False
-        
+
         if successful == total:
-            self.console.print(f"[green]✓[/green] All requests complete: {successful}/{total} successful in {duration:.1f}s")
+            self.console.print(
+                f"[green]✓[/green] All requests complete: {successful}/{total} successful in {duration:.1f}s"
+            )
         else:
             failed = total - successful
-            self.console.print(f"[yellow]✓[/yellow] All requests complete: {successful}/{total} successful, {failed} failed in {duration:.1f}s")
+            self.console.print(
+                f"[yellow]✓[/yellow] All requests complete: {successful}/{total} successful, {failed} failed in {duration:.1f}s"
+            )
 
     # Fallback methods for backwards compatibility
     def emit_started(self, model_name, query_preview):
@@ -120,7 +130,7 @@ class PlainProgressHandler:
         """Show starting state (plain text - no spinner)"""
         if self.concurrent_mode:
             return  # Suppress individual operations during concurrent mode
-            
+
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] [{model_name}] Starting: {query_preview}")
 
@@ -128,7 +138,7 @@ class PlainProgressHandler:
         """Show completion on new line"""
         if self.concurrent_mode:
             return
-            
+
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] [{model_name}] Complete: ({duration:.1f}s)")
 
@@ -136,7 +146,7 @@ class PlainProgressHandler:
         """Show cancellation on new line"""
         if self.concurrent_mode:
             return
-            
+
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] [{model_name}] Canceled")
 
@@ -152,12 +162,11 @@ class PlainProgressHandler:
         """Fallback method for backwards compatibility"""
         self.show_cached(model_name, query_preview, duration)
 
-
     def show_failed(self, model_name, query_preview, error):
         """Show failure on new line"""
         if self.concurrent_mode:
             return
-            
+
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] [{model_name}] Failed: {error}")
 
@@ -168,7 +177,9 @@ class PlainProgressHandler:
         timestamp = datetime.now().strftime("%H:%M:%S")
         print(f"[{timestamp}] Starting: {total} concurrent requests")
 
-    def update_concurrent_progress(self, completed: int, total: int, running: int, failed: int, elapsed: float):
+    def update_concurrent_progress(
+        self, completed: int, total: int, running: int, failed: int, elapsed: float
+    ):
         """Plain console doesn't show live updates - too noisy"""
         pass  # Plain console shows only start/end messages
 
@@ -176,14 +187,18 @@ class PlainProgressHandler:
         """Handle completion of all concurrent operations"""
         self.concurrent_mode = False
         timestamp = datetime.now().strftime("%H:%M:%S")
-        
+
         if successful == total:
-            print(f"[{timestamp}] All requests complete: {successful}/{total} successful in {duration:.1f}s")
+            print(
+                f"[{timestamp}] All requests complete: {successful}/{total} successful in {duration:.1f}s"
+            )
         else:
             failed = total - successful
-            print(f"[{timestamp}] All requests complete: {successful}/{total} successful, {failed} failed in {duration:.1f}s")
+            print(
+                f"[{timestamp}] All requests complete: {successful}/{total} successful, {failed} failed in {duration:.1f}s"
+            )
 
-    # Fallback methods for backwards compatibility  
+    # Fallback methods for backwards compatibility
     def emit_started(self, model_name, query_preview):
         self.show_spinner(model_name, query_preview)
 

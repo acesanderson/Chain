@@ -1,6 +1,10 @@
 from typing import Any, Iterator, Optional
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
+from Chain.logging.logging_config import get_logger
+
+logger = get_logger(__name__)
+
 
 class Messages(BaseModel):
     """
@@ -8,8 +12,11 @@ class Messages(BaseModel):
     Behaves like a list through dunder methods while being fully Pydantic-compatible.
     Supports Message, ImageMessage, and AudioMessage objects (all inherit from Message).
     """
-    
-    messages: list[Message] = Field(default_factory=list, description="List of Message objects (including ImageMessage and AudioMessage)")
+
+    messages: list[Message] = Field(
+        default_factory=list,
+        description="List of Message objects (including ImageMessage and AudioMessage)",
+    )
 
     def __init__(self, messages: list[Message] = None, **kwargs):
         """
@@ -48,7 +55,9 @@ class Messages(BaseModel):
         """Remove all messages."""
         self.messages.clear()
 
-    def index(self, message: Message, start: int = 0, stop: Optional[int] = None) -> int:
+    def index(
+        self, message: Message, start: int = 0, stop: Optional[int] = None
+    ) -> int:
         """Return the index of the first occurrence of message."""
         if stop is None:
             return self.messages.index(message, start)
@@ -66,7 +75,7 @@ class Messages(BaseModel):
         """Sort the messages in place."""
         self.messages.sort(key=key, reverse=reverse)
 
-    def copy(self) -> 'Messages':
+    def copy(self) -> "Messages":
         """Return a shallow copy of the Messages object."""
         return Messages(self.messages.copy())
 
@@ -114,7 +123,7 @@ class Messages(BaseModel):
             return self.messages == other
         return False
 
-    def __add__(self, other) -> 'Messages':
+    def __add__(self, other) -> "Messages":
         """Concatenate with another Messages object or list."""
         if isinstance(other, Messages):
             return Messages(self.messages + other.messages)
@@ -122,7 +131,7 @@ class Messages(BaseModel):
             return Messages(self.messages + other)
         return NotImplemented
 
-    def __iadd__(self, other) -> 'Messages':
+    def __iadd__(self, other) -> "Messages":
         """In-place concatenation with another Messages object or list."""
         if isinstance(other, Messages):
             self.messages.extend(other.messages)
@@ -132,13 +141,13 @@ class Messages(BaseModel):
             return NotImplemented
         return self
 
-    def __mul__(self, other: int) -> 'Messages':
+    def __mul__(self, other: int) -> "Messages":
         """Repeat messages n times."""
         if isinstance(other, int):
             return Messages(self.messages * other)
         return NotImplemented
 
-    def __imul__(self, other: int) -> 'Messages':
+    def __imul__(self, other: int) -> "Messages":
         """In-place repeat messages n times."""
         if isinstance(other, int):
             self.messages *= other
@@ -151,9 +160,7 @@ class Messages(BaseModel):
         """
         Serialize Messages to cache-friendly dictionary.
         """
-        return {
-            "messages": [msg.to_cache_dict() for msg in self.messages]
-        }
+        return {"messages": [msg.to_cache_dict() for msg in self.messages]}
 
     @classmethod
     def from_cache_dict(cls, data: dict[str, Any]) -> "Messages":
@@ -169,14 +176,17 @@ class Messages(BaseModel):
             if message_type == "ImageMessage":
                 # Import here to avoid circular imports
                 from Chain.message.imagemessage import ImageMessage
+
                 messages_list.append(ImageMessage.from_cache_dict(msg_data))
             elif message_type == "AudioMessage":
                 # Import here to avoid circular imports
                 from Chain.message.audiomessage import AudioMessage
+
                 messages_list.append(AudioMessage.from_cache_dict(msg_data))
             else:
                 # Standard Message
                 from Chain.message.message import Message
+
                 messages_list.append(Message.from_cache_dict(msg_data))
 
         return cls(messages=messages_list)
@@ -191,6 +201,7 @@ class Messages(BaseModel):
             content: Message content
         """
         from Chain.message.message import Message
+
         self.append(Message(role=role, content=content))
 
     def last(self) -> Optional[Message]:
@@ -235,4 +246,3 @@ class Messages(BaseModel):
         String representation showing message count and types.
         """
         return self.__repr__()
-

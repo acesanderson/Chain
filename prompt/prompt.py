@@ -3,6 +3,9 @@ Prompt class -- coordinates templates, input variables, and rendering.
 """
 
 from jinja2 import Environment, StrictUndefined, meta
+from Chain.logging.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 # Define jinja2 environment that we will use across all prompts.
 env = Environment(
