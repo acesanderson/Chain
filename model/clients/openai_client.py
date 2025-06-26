@@ -1,20 +1,9 @@
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
 from Chain.model.params.params import Params
-from Chain.parser.parser import Parser
-from Chain.message.message import Message
-from Chain.message.imagemessage import ImageMessage
-from Chain.message.audiomessage import AudioMessage
 from openai import OpenAI, AsyncOpenAI, Stream
 from pydantic import BaseModel
-from typing import TYPE_CHECKING
 import instructor, tiktoken
-
-if TYPE_CHECKING:
-    from openai import Stream
-    from anthropic import (
-        Stream as AnthropicStream,
-    )  # For type hinting only, to avoid circular imports
 
 
 class OpenAIClient(Client):
@@ -53,7 +42,7 @@ class OpenAIClientSync(OpenAIClient):
     def query(
         self,
         params: Params,
-    ) -> "str | BaseModel | Stream | AnthropicStream":
+        ) -> str | BaseModel | Stream | None:
         result = self._client.chat.completions.create(**params.to_openai())
         # First try to get text content from the result
         try:
@@ -80,7 +69,7 @@ class OpenAIClientAsync(OpenAIClient):
     async def query(
         self,
         params: Params,
-    ) -> "str | BaseModel | Stream | AnthropicStream":
+        ) -> str | BaseModel | None:
         result = await self._client.chat.completions.create(**params.to_openai())
         # First try to get text content from the result
         try:

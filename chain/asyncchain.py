@@ -1,7 +1,6 @@
 from Chain.chain.chain import Chain, Prompt
 from Chain.model.model_async import ModelAsync
 from Chain.result.response import Response
-from Chain.message.message import Message
 from Chain.parser.parser import Parser
 import asyncio, time
 from typing import Optional
@@ -107,8 +106,10 @@ class AsyncChain(Chain):
                     input_variables_list, semaphore, cache, verbose, print_response
                 )
 
-        results = asyncio.run(_run_async())
-        responses = self.convert_results_to_responses(results)
+        responses = asyncio.run(_run_async())
+        
+        assert isinstance(responses, list), "Responses should be a list"
+        assert all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
 
         return responses
 
@@ -182,15 +183,16 @@ class AsyncChain(Chain):
         ]
 
         # Run all operations concurrently
-        start_time = time.time()
-        results = await asyncio.gather(*coroutines, return_exceptions=True)
-        duration = time.time() - start_time
+        responses = await asyncio.gather(*coroutines, return_exceptions=True)
+
+        assert isinstance(responses, list), "Responses should be a list"
+        assert all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
 
         # Complete concurrent tracking
         if tracker:
             tracker.emit_concurrent_complete()
 
-        return results
+        return responses
 
 
     async def _run_input_variables(
@@ -266,39 +268,12 @@ class AsyncChain(Chain):
         ]
 
         # Run all operations concurrently
-        start_time = time.time()
-        results = await asyncio.gather(*coroutines, return_exceptions=True)
-        duration = time.time() - start_time
+        responses = await asyncio.gather(*coroutines, return_exceptions=True)
 
         # Complete concurrent tracking
         if tracker:
             tracker.emit_concurrent_complete()
 
-        return results
-
-    def convert_results_to_responses(self, results: list) -> list[Response]:
-        """Convert results to Response objects, handling exceptions properly"""
-        responses = []
-        for result in results:
-            if isinstance(result, Exception):
-                # Handle failed requests
-                response = Response(
-                    content=f"Error: {str(result)}",
-                    status="failed", 
-                    prompt=None,
-                    model=self.model.model,
-                    duration=None,
-                    messages=[Message(role="assistant", content=f"Error: {str(result)}")],
-                )
-            else:
-                # Handle successful requests
-                response = Response(
-                    content=result,
-                    status="success",
-                    prompt=None,
-                    model=self.model.model, 
-                    duration=None,
-                    messages=[Message(role="assistant", content=str(result))],
-                )
-            responses.append(response)
+        assert all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
+        assert isinstance(responses, list) and all([isinstance(r, Response) for r in responses]), "All results should be Response objects"
         return responses

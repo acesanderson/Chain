@@ -9,7 +9,7 @@ For this reason, we define a Pydantic class as our framework is fine with BaseMo
 from Chain.model.clients.client import Client
 from Chain.model.clients.load_env import load_env
 from Chain.model.params.params import Params
-from openai import OpenAI
+from openai import OpenAI, AsyncOpenAI, Stream
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional
 from pydantic import BaseModel
@@ -72,6 +72,36 @@ class PerplexityClientSync(PerplexityClient):
         params: Params,
         ) -> str | BaseModel:
         result = self._client.chat.completions.create(**params.to_perplexity())
+        if isinstance(result, ChatCompletion):
+            # Construct a PerplexityContent object from the response
+            citations = result.search_results
+            assert isinstance(citations, list) and all([isinstance(citation, dict) for citation in citations]), "Citations should be a list of dicts"
+            citations = [PerplexityCitation(**citation) for citation in citations]
+            content = PerplexityContent(
+                text=result.choices[0].message.content,
+                citations=citations
+            )
+            return content
+        if isinstance(result, BaseModel):
+            return result
+        else:
+            raise ValueError("Unexpected result type: {}".format(type(result)))
+
+class PerplexityClientAsync(PerplexityClient):
+    def _initialize_client(self):
+        """
+        We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.
+        """
+        perplexity_client = AsyncOpenAI(
+            api_key=self._get_api_key(), base_url="https://api.perplexity.ai"
+        )
+        return instructor.from_perplexity(perplexity_client)
+
+    async def query(
+        self,
+        params: Params,
+        ) -> str | BaseModel | Stream:
+        result = await self._client.chat.completions.create(**params.to_perplexity())
         if isinstance(result, ChatCompletion):
             # Construct a PerplexityContent object from the response
             citations = result.search_results

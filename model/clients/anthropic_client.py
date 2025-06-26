@@ -82,7 +82,7 @@ class AnthropicClientAsync(AnthropicClient):
     async def query(
         self,
         params: Params,
-    ) -> str | BaseModel | Stream:
+        ) -> str | BaseModel | Stream | None:
         result = await self._client.chat.completions.create(**params.to_anthropic())
         # First try to get text content from the result
         try:

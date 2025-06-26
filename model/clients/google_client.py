@@ -53,7 +53,7 @@ class GoogleClientSync(GoogleClient):
     def query(
         self,
         params: Params,
-    ) -> "str | BaseModel | Stream | AnthropicStream":
+        ) -> str | BaseModel | Stream | None:
         result = self._client.chat.completions.create(**params.to_google())
         # First try to get text content from the result
         try:
@@ -85,8 +85,8 @@ class GoogleClientAsync(GoogleClient):
     async def query(
         self,
         params: Params,
-    ) -> "str | BaseModel | Stream | AnthropicStream":
-        result = await self._client.chat.completions.create(**params.to_gemini())
+        ) -> str | BaseModel | None:
+        result = await self._client.chat.completions.create(**params.to_google())
         # First try to get text content from the result
         try:
             result = result.choices[0].message.content

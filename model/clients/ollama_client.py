@@ -88,7 +88,7 @@ class OllamaClientSync(OllamaClient):
     def query(
         self,
         params: Params,
-    ) -> str | BaseModel | Stream:
+    ) -> str | BaseModel | Stream | None:
         result = self._client.chat.completions.create(**params.to_ollama())
         # Try to retrieve the text first
         try:
@@ -117,7 +117,7 @@ class OllamaClientAsync(OllamaClient):
     async def query(
         self,
         params: Params,
-    ) -> str | BaseModel:
+    ) -> str | BaseModel | None:
         result = await self._client.chat.completions.create(**params.to_ollama())
         # Try to retrieve the text first
         try:

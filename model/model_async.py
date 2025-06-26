@@ -30,8 +30,8 @@ class ModelAsync(Model):
             return "ollama", "OllamaClientAsync"
         elif model in model_list["google"]:
             return "google", "GoogleClientAsync"
-        # elif model in model_list["groq"]:
-        #     return "groq", "GroqClient"
+        elif model in model_list["perplexity"]:
+            return "perplexity", "PerplexityClientAsync"
         else:
             raise ValueError(f"Model {model} not found in models")
 
