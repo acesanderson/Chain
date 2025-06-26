@@ -1,3 +1,23 @@
+# Set global logging settings
+import logging
+
+def set_log_level(level):
+    """Set logging level for entire Chain package"""
+    logging.getLogger('Chain').setLevel(level)
+    
+    # Also set for common third-party libraries
+    logging.getLogger('googleapiclient').setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+    logging.getLogger('requests').setLevel(logging.WARNING)
+
+# Convenience functions
+def disable_logging():
+    set_log_level(logging.CRITICAL)
+
+def enable_debug_logging():
+    set_log_level(logging.DEBUG)
+
+# Imports
 from Chain.chain.chain import Chain
 from Chain.chain.asyncchain import AsyncChain
 from Chain.prompt.prompt import Prompt
@@ -52,4 +72,6 @@ __all__ = [
     "ChainCLI",
     "arg",
     "llm",
+    "disable_logging",
+    "enable_debug_logging",
 ]
