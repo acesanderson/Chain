@@ -21,7 +21,8 @@ if TYPE_CHECKING:
     from rich.console import Console
 
 logger = configure_logging(
-    level=logging.INFO,
+    # level=logging.INFO,
+    level=logging.NOTSET,
 )
 
 
