@@ -10,6 +10,7 @@ from Chain.model.model import Model
 from Chain.result.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message
+from Chain.message.messages import Messages
 from Chain.message.messagestore import MessageStore
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
@@ -22,7 +23,9 @@ if TYPE_CHECKING:
 
 logger = configure_logging(
     # level=logging.INFO,
-    level=logging.NOTSET,
+    # level=logging.NOTSET,
+    # level=logging.DEBUG,
+    level=logging.CRITICAL,
 )
 
 
@@ -54,7 +57,7 @@ class Chain:
     def run(
         self,
         input_variables: dict | None = None,
-        messages: list[Message] | None = [],
+        messages: Messages | list[Message] | None = [],
         verbose: bool = True,
         stream: bool = False,
         cache: bool = True,
@@ -103,14 +106,18 @@ class Chain:
         """
         # Render our prompt with the input_variables if variables are passed. Should throw a jinja error if it doesn't match.
         if input_variables and self.prompt:
+            logger.info("Rendering prompt with input variables: %s", input_variables)
             prompt = self.prompt.render(input_variables=input_variables)
         elif self.prompt:
+            logger.info("Using prompt without input variables.")
             prompt = self.prompt.prompt_string
         else:
+            logger.info("No prompt provided, using None.")
             prompt = None
         # Route a stream request (these don't return Response objects)
         # Route input; if string, if message
         if messages:
+            logger.info("Running with messages.")
             result = self.run_messages(
                 prompt=prompt,
                 messages=messages,
@@ -121,6 +128,7 @@ class Chain:
                 stream=stream,
             )
         elif prompt:
+            logger.info("Running with prompt.")
             result = self.run_completion(
                 prompt=prompt,
                 verbose=verbose,
@@ -149,14 +157,17 @@ class Chain:
         Input should be a dict with named variables that match the prompt.
         """
         if prompt:
+            logger.info("Using prompt to create a user message.")
             # Add new query to messages list
             message = Message(role="user", content=prompt)
             messages.append(message)
         # If we have class-level logging
         if Chain._message_store:
+            logger.info("Adding messages to message store.")
             Chain._message_store.add(messages)
         # Run our query
         if self.parser:
+            logger.info("Using parser for structured output.")
             result = self.model.query(
                 messages,
                 verbose=verbose,
@@ -166,14 +177,17 @@ class Chain:
                 total=total,
             )
         else:
+            logger.info("Running model query without parser.")
             result = self.model.query(messages, verbose=verbose, cache=cache)
-        # Convert result to a string
+        # Convert result to a Message object
         assistant_message = Message(role="assistant", content=result)
         # If we have class-level logging
         if Chain._message_store:
+            logger.info("Adding assistant message to message store.")
             Chain._message_store.add(assistant_message)
         messages.append(assistant_message)
         # Return a response object
+        logger.info("Returning messages from run_messages.")
         return messages
 
     # In chain/chain.py - update run_completion method
@@ -186,13 +200,15 @@ class Chain:
         index: int = 0,
         total: int = 0,
     ):
-        """Updated to properly handle streaming responses"""
+        logger.info("Running completion with prompt: %s", prompt)
         user_message = Message(role="user", content=prompt)
 
         if Chain._message_store:
+            logger.info("Adding user message to message store.")
             Chain._message_store.add(user_message)
 
         if stream:
+            logger.info("Streaming response requested.")
             # For streaming, return the stream object directly
             if self.parser:
                 # Streaming with structured output is complex - disable for now
@@ -201,10 +217,13 @@ class Chain:
             stream_response = self.model.query(
                 prompt, verbose=verbose, cache=cache, stream=True
             )
+            logger.info("Returning streaming response.")
             return stream_response  # Return raw stream object
         else:
             # Non-streaming path (existing logic)
+            logger.info("Non-streaming response requested.")
             if self.parser:
+                logger.info("Using parser for structured output.")
                 result = self.model.query(
                     prompt,
                     verbose=verbose,
@@ -214,10 +233,13 @@ class Chain:
                     total=total,
                 )
             else:
+                logger.info("Running model query without parser.")
                 result = self.model.query(prompt, verbose=verbose, cache=cache)
 
             assistant_message = Message(role="assistant", content=result)
             if Chain._message_store:
+                logger.info("Adding assistant message to message store.")
                 Chain._message_store.add(assistant_message)
 
+            logger.info("Returning response object.")
             return result

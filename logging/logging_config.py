@@ -3,6 +3,8 @@ import logging, sys
 # Global logger dictionary to ensure we return the same logger instance for each module
 _loggers = {}
 
+# In logging_config.py
+_configured = False
 
 def get_logger(name=None, level=None):
     """
@@ -20,7 +22,7 @@ def get_logger(name=None, level=None):
 
     # Default to the root logger if no name is provided
     if name is None:
-        name = "audio_pipeline"
+        name = "ChainLogger"
 
     if name in _loggers:
         logger = _loggers[name]
@@ -40,7 +42,6 @@ def get_logger(name=None, level=None):
 
     return logger
 
-
 def configure_logging(
     level=logging.INFO,
     console=True,
@@ -55,6 +56,13 @@ def configure_logging(
         trace_mode: If True, add detailed debugging info with line numbers
         console: If True, log to console (via stderr)
     """
+    # Ensure this function is only called once
+    global _configured
+    if _configured:
+        return get_logger("Chain")  # Return existing logger
+    
+    _configured = True
+
     # Create a log formatter with trace information if requested
     log_format = (
         "%(asctime)s [%(levelname)s] %(name)s:%(lineno)d (%(funcName)s) - %(message)s"
@@ -77,7 +85,7 @@ def configure_logging(
         root_logger.addHandler(console_handler)
 
     # Create the main application logger
-    logger = get_logger("audio_pipeline")
+    logger = get_logger("ChainLogger")
     logger.info(
         "Audio pipeline logging configured with level: %s, trace_mode: True",
         logging.getLevelName(level),
