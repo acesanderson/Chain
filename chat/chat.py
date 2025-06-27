@@ -27,6 +27,7 @@ from Chain.chain.chain import Chain
 from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore
 from Chain.message.message import Message
+from Chain.message.messages import Messages
 from Chain.message.imagemessage import ImageMessage
 from Chain.logging.logging_config import get_logger
 from rich.console import Console
@@ -213,7 +214,7 @@ class Chat:
                 image_content=image_content,
                 mime_type=mime_type,
             )
-            self.messagestore.add(imagemessage)
+            self.messagestore.append(imagemessage)
             response = self.query_model([self.messagestore.last()])
             self.console.print(response)
 
@@ -231,7 +232,7 @@ class Chat:
             self.console.print("No image to delete.", style="red")
 
     # Main query method
-    def query_model(self, input: list[Message | ImageMessage]) -> str | None:
+    def query_model(self, input: list[Message] | Messages) -> str | None:
         """
         Takes either a string or a list of Message objects.
         """
@@ -251,7 +252,7 @@ class Chat:
             )
         Chain._message_store = self.messagestore
         if self.system_message:
-            self.messagestore.add(self.system_message)
+            self.messagestore.append(self.system_message)
         try:
             while True:
                 try:
@@ -279,7 +280,7 @@ class Chat:
                             with self.console.status(
                                 "[green]Thinking[/green]...", spinner="dots"
                             ):
-                                if self.messagestore.messages:
+                                if self.messagestore:
                                     self.messagestore.add_new(
                                         role="user", content=user_input
                                     )
