@@ -23,6 +23,7 @@ if TYPE_CHECKING:
 
 logger = configure_logging(
     # level=logging.INFO,
+    # level=logging.NOTSET,
     # level=logging.DEBUG,
     level=logging.CRITICAL,
 )
