@@ -279,13 +279,11 @@ class Chat:
                             with self.console.status(
                                 "[green]Thinking[/green]...", spinner="dots"
                             ):
-                                if self.messagestore.messages:
+                                if self.messagestore:
                                     self.messagestore.add_new(
                                         role="user", content=user_input
                                     )
-                                    response = self.query_model(
-                                        self.messagestore.messages
-                                    )
+                                    response = self.query_model(self.messagestore)
                                 else:
                                     response = self.query_model(
                                         [Message(role="user", content=user_input)]

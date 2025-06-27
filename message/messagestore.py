@@ -1,90 +1,192 @@
 """
-A MessageStore object is a class that stores messages in a list and provides methods to interact with the list.
+A MessageStore object inherits from Messages and adds persistence and logging capabilities.
 With MessageStore, you can:
-- implement a log for tracing chains (logging mode: openfile with active updates, you can tail -f the file)
-- view the history of messages
-- dequeue the last message per a history size
-- clear the history
-- add a message to the history
-- get a message from the history
-- automatically convert pydantic objects to readable strings
+- Use all Messages methods (append, extend, indexing, etc.) directly
+- Automatically persist changes to TinyDB
+- Log conversations in human-readable format
+- Manage multiple conversation sessions
+- All while being a drop-in replacement for Messages objects
 
-Under the hood, a messagestore is a Messages object, serialized as TinyDB if persistent.
-
-"History" vs. "Log":
-    - The history is a hardcode list of messages in TinyDB (jsonl) format.
-    - The log is a file that is automatically updated with the messages, and is formatted for human readability.
-    - History is invoked by the user.
-    - Log is automatically updated with the messages and therefore a flag for several methods.
+The MessageStore IS a Messages object with superpowers.
 """
 
 from Chain.message.message import Message
 from Chain.message.messages import Messages
-from Chain.logging.logging_config import get_logger
+from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from rich.console import Console
 from rich.rule import Rule
-from pathlib import Path
 from pydantic import BaseModel
-import os, pickle
+from tinydb import TinyDB, Query
+from typing import Optional
+from pathlib import Path
+from datetime import datetime
+import os
 
-logger = get_logger(__name__)
 
-
-class MessageStore:
+class MessageStore(Messages):
     """
-    Defines a message store object.
+    A Messages object with persistence and logging capabilities.
+    Inherits all list-like behavior from Messages while adding database storage.
     """
 
     def __init__(
         self,
+        messages: list[Message] = None,
         console: Console | None = None,
         history_file: str | Path = "",
         log_file: str | Path = "",
         pruning: bool = False,
+        session_id: str | None = None,
+        auto_save: bool = True,
     ):
         """
-        Initializes the message store, and loads the history from a file.
+        Initialize MessageStore with optional persistence and logging.
+
+        Args:
+            messages: Initial list of messages (same as Messages class)
+            console: Rich console for formatting output
+            history_file: Path to TinyDB database file (.json extension recommended)
+            log_file: Path to human-readable log file
+            pruning: Whether to automatically prune old messages
+            session_id: Optional session identifier for grouping messages
+            auto_save: Whether to automatically save changes to database
         """
+        # Initialize parent Messages class
+        super().__init__(messages)
+
         # Use existing console or create a new one
         if not console:
-            self.console = Console()
+            self.console = Console(width=100)
         else:
             self.console = console
-        self.messages: Messages
-        # Config history and log if requested
+
+        # Generate session ID if not provided
+        self.session_id = session_id or datetime.now().isoformat()
+        self.auto_save = auto_save
+
+        # Config history database if requested
         if history_file:
-            self.history_file = history_file
+            # Ensure .json extension for TinyDB
+            if not str(history_file).endswith(".json"):
+                history_file = str(history_file) + ".json"
+            self.history_file = Path(history_file)
             self.persistent = True
-            with open(self.history_file, "a"):
-                os.utime(self.history_file, None)
+            # Initialize TinyDB
+            self.db = TinyDB(self.history_file)
+            self.messages_table = self.db.table("messages")
         else:
-            self.history_file = ""
+            self.history_file = Path()
             self.persistent = False
+            self.db = None
+            self.messages_table = None
+
+        # Config log file if requested
         if log_file:
-            self.log_file = log_file
+            self.log_file = Path(log_file)
             with open(self.log_file, "a"):
                 os.utime(self.log_file, None)
             self.logging = True
         else:
-            self.log_file = ""
+            self.log_file = Path()
             self.logging = False
+
         # Set the prune flag
         self.pruning = pruning
+
+    def _auto_save_if_enabled(self):
+        """Save to database if auto_save is enabled."""
+        if self.auto_save and self.persistent:
+            self.save()
+
+    def _log_message_if_enabled(self, message: Message):
+        """Log message if logging is enabled."""
+        if self.logging:
+            self.write_to_log(message)
+
+    # Override Messages methods to add persistence and logging
+    def append(self, message: Message) -> None:
+        """Add a message to the end of the list with persistence."""
+        super().append(message)
+        self._log_message_if_enabled(message)
+        self._auto_save_if_enabled()
+
+    def extend(self, messages: list[Message]) -> None:
+        """Extend the list with multiple messages with persistence."""
+        super().extend(messages)
+        for message in messages:
+            self._log_message_if_enabled(message)
+        self._auto_save_if_enabled()
+
+    def insert(self, index: int, message: Message) -> None:
+        """Insert a message at the specified index with persistence."""
+        super().insert(index, message)
+        self._log_message_if_enabled(message)
+        self._auto_save_if_enabled()
+
+    def remove(self, message: Message) -> None:
+        """Remove the first occurrence of a message with persistence."""
+        super().remove(message)
+        self._auto_save_if_enabled()
+
+    def pop(self, index: int = -1) -> Message:
+        """Remove and return message at index with persistence."""
+        message = super().pop(index)
+        self._auto_save_if_enabled()
+        return message
+
+    def clear(self) -> None:
+        """Remove all messages with persistence."""
+        super().clear()
+        self._auto_save_if_enabled()
+
+    def __setitem__(self, key, value):
+        """Set message(s) by index or slice with persistence."""
+        super().__setitem__(key, value)
+        if isinstance(value, Message):
+            self._log_message_if_enabled(value)
+        elif isinstance(value, list):
+            for msg in value:
+                if isinstance(msg, Message):
+                    self._log_message_if_enabled(msg)
+        self._auto_save_if_enabled()
+
+    def __delitem__(self, key):
+        """Delete message(s) by index or slice with persistence."""
+        super().__delitem__(key)
+        self._auto_save_if_enabled()
+
+    def __iadd__(self, other) -> "MessageStore":
+        """In-place concatenation with persistence."""
+        result = super().__iadd__(other)
+        if isinstance(other, (list, Messages)):
+            for message in other:
+                if isinstance(message, Message):
+                    self._log_message_if_enabled(message)
+        self._auto_save_if_enabled()
+        return self
+
+    # MessageStore-specific methods
+    def add_new(self, role: str, content: str) -> None:
+        """
+        Create and add a new message (convenience method).
+        """
+        message = Message(role=role, content=content)
+        self.append(message)  # This will handle persistence and logging
 
     def write_to_log(self, item: str | BaseModel) -> None:
         """
         Writes a log to the log file.
-        Need to handle individual strings (i.e. prompts and text completions) as well as pydantic objects.
         """
+        if not self.logging:
+            return
+
         if isinstance(item, str):
-            # We're using a Rich console to write the log to the file with colors
             with open(self.log_file, "a", encoding="utf-8") as file:
-                file_console = Console(
-                    file=file, force_terminal=True
-                )  # force_terminal = treat file as terminal
-                # Write the formatted text to the file (won't be printed to terminal)
+                file_console = Console(file=file, force_terminal=True)
                 file_console.print(f"[bold magenta]{item}[/bold magenta]\n")
-        if isinstance(item, Message):
+
+        elif isinstance(item, Message):
             with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(file=file, force_terminal=True)
                 file_console.print(Rule(title="Message", style="bold green"))
@@ -101,163 +203,213 @@ class MessageStore:
                 except Exception as e:
                     print(f"MessageStore error: {e}")
 
-    def load(self):
-        """
-        Loads the history from a file.
-        """
-        if not self.persistent:
-            print("This message store is not persistent.")
-            return
-        try:
-            with open(self.history_file, "rb") as file:
-                self.messages = pickle.load(file)
-            if self.pruning:
-                self.prune()
-        except FileNotFoundError:
-            self.save()
-        except EOFError:
-            self.messages = []
-            self.save()
-
     def save(self):
         """
-        Saves the history to a file.
+        Saves the current messages to TinyDB.
         """
-        if not self.persistent:
+        if not self.persistent or not self.messages_table:
+            return
+
+        try:
+            # Clear existing messages for this session
+            MessageQuery = Query()
+            self.messages_table.remove(MessageQuery.session_id == self.session_id)
+
+            # Save all current messages
+            for i, message in enumerate(self.messages):
+                if message:  # Handle None messages
+                    doc = {
+                        "session_id": self.session_id,
+                        "timestamp": datetime.now().isoformat(),
+                        "message_index": i,
+                        "message_data": message.to_cache_dict(),
+                    }
+                    self.messages_table.insert(doc)
+
+        except Exception as e:
+            print(f"Error saving history: {e}")
+
+    def load(self, session_id: str | None = None):
+        """
+        Loads messages from TinyDB, replacing current messages.
+
+        Args:
+            session_id: If provided, loads only messages from this session.
+                       If None, loads messages from current session.
+        """
+        if not self.persistent or not self.messages_table:
             print("This message store is not persistent.")
             return
-        if self.persistent:
-            with open(self.history_file, "wb") as file:
-                pickle.dump(self.messages, file)
+
+        try:
+            # Determine which session to load
+            target_session = session_id or self.session_id
+
+            # Query messages from the specified session
+            MessageQuery = Query()
+            message_docs = self.messages_table.search(
+                MessageQuery.session_id == target_session
+            )
+
+            # Sort by timestamp to maintain order
+            message_docs.sort(key=lambda x: x.get("timestamp", ""))
+
+            # Deserialize messages
+            messages_list = []
+            for doc in message_docs:
+                message_data = doc["message_data"]
+                message_type = message_data.get("message_type", "Message")
+
+                if message_type == "ImageMessage":
+                    messages_list.append(ImageMessage.from_cache_dict(message_data))
+                elif message_type == "AudioMessage":
+                    messages_list.append(AudioMessage.from_cache_dict(message_data))
+                else:
+                    messages_list.append(Message.from_cache_dict(message_data))
+
+            # Replace current messages (disable auto_save temporarily)
+            old_auto_save = self.auto_save
+            self.auto_save = False
+
+            self.clear()
+            self.extend(messages_list)
+
+            self.auto_save = old_auto_save
+
+            if self.pruning:
+                self.prune()
+
+        except Exception as e:
+            print(f"Error loading history: {e}. Starting with empty history.")
+            super().clear()  # Don't trigger auto_save for error case
 
     def prune(self):
         """
         Prunes the history to the last 20 messages.
         """
-        if len(self.messages) > 10:
-            self.messages = self.messages[-10:]
+        if len(self) > 20:
+            # Keep last 20 messages
+            pruned_messages = list(self)[-20:]
 
-    def add(self, message: "Message | list[Message]"):
-        """
-        Add an existing message object to messages.
-        """
-        if isinstance(message, Message):
-            self.messages.append(message)
-        elif isinstance(message, list):
-            self.messages.extend(message)
-        else:
-            raise TypeError(
-                "Message must be a Message object or list of Message objects"
-            )
-        if self.logging:
-            self.write_to_log(self.messages[-1])
-        if self.persistent:
-            self.save()
+            # Disable auto_save temporarily to avoid multiple saves
+            old_auto_save = self.auto_save
+            self.auto_save = False
 
-    def add_new(self, role: str, content: str):
-        """
-        Adds a message to the history, constructed from role and content vars.
-        """
-        self.messages.append(Message(role=role, content=content))
-        if self.logging:
-            self.write_to_log(self.messages[-1])
-        if self.persistent:
-            self.save()
+            self.clear()
+            self.extend(pruned_messages)
 
-    def last(self):
-        """
-        Gets the last message from the history.
-        """
-        if self.messages:
-            return self.messages[-1]
+            self.auto_save = old_auto_save
 
-    def get(self, index: int):
-        """
-        Gets a message from the history.
-        """
-        if self.messages:
-            return self.messages[index - 1]
-
-    def delete(self):
-        """
-        Deletes the history file.
-        """
-        if self.persistent:
-            try:
-                os.remove(self.history_file)
-            except FileNotFoundError:
-                pass
+            # Save the pruned version
+            if self.persistent:
+                self.save()
 
     def query_failed(self):
         """
-        Deletes the last message IF:
-        - it's a user message
-        - you have failed to get a response from a query
-        (ensures that user is always followed by assistant and vice versa)
+        Removes the last message if it's a user message (handles failed queries).
         """
-        if self.messages and self.messages[-1].role == "user":
-            self.messages.pop()
+        if self and self.last() and self.last().role == "user":
+            self.pop()  # This will auto-save
             if self.logging:
                 self.write_to_log("Query failed, removing last user message.")
-            if self.persistent:
-                self.save()
 
     def view_history(self):
         """
         Pretty prints the history.
         """
-        if not self.messages:
+        if not self:
             self.console.print("No history (yet).", style="bold red")
             return
-        for index, message in enumerate(self.messages):
-            content = message.content[:50].replace("\n", " ")
-            self.console.print(
-                f"[green]{index+1}.[/green] [bold white]{message.role}:[/bold white] [yellow]{content}[/yellow]"
-            )
 
-    def clear(self):
-        """
-        Clears the history.
-        """
-        self.messages = []
-        if self.persistent:
-            self.save()
+        for index, message in enumerate(self):
+            if message:
+                content = str(message.content)[:50].replace("\n", " ")
+                self.console.print(
+                    f"[green]{index+1}.[/green] [bold white]{message.role}:[/bold white] [yellow]{content}[/yellow]"
+                )
 
     def clear_logs(self):
-        """
-        Clears the logs.
-        """
+        """Clears the log file."""
         if self.logging:
             with open(self.log_file, "w") as file:
-                # clear the file
                 file.write("")
-                pass
 
-    def __getitem__(self, index: int):
-        """
-        MessageStore can act as a list.
-        """
-        return self.messages[index]
+    # Session management methods
+    def list_sessions(self) -> list[str]:
+        """Lists all available session IDs in the database."""
+        if not self.persistent or not self.messages_table:
+            return []
 
-    def __bool__(self):
-        """
-        We want this to return True if the object is initialized.
-        We wouldn't need this if we didn't also want a __len__ method.
-        (If __len__ returns 0, bool() returns False for your average object).
-        """
-        return True
+        try:
+            all_docs = self.messages_table.all()
+            sessions = list(set(doc["session_id"] for doc in all_docs))
+            return sorted(sessions)
+        except Exception as e:
+            print(f"Error listing sessions: {e}")
+            return []
 
-    def __len__(self):
+    def delete_session(self, session_id: str):
+        """Deletes all messages from a specific session."""
+        if not self.persistent or not self.messages_table:
+            return
+
+        try:
+            MessageQuery = Query()
+            self.messages_table.remove(MessageQuery.session_id == session_id)
+
+            # If we deleted the current session, clear current messages
+            if session_id == self.session_id:
+                self.clear()
+        except Exception as e:
+            print(f"Error deleting session: {e}")
+
+    def switch_session(self, session_id: str):
         """
-        Note: see the __bool__ method above for extra context.
+        Switch to a different session, saving current session and loading the new one.
         """
-        return len(self.messages)
+        if not self.persistent:
+            print("Cannot switch sessions without persistence enabled.")
+            return
+
+        # Save current session
+        self.save()
+
+        # Switch to new session
+        self.session_id = session_id
+
+        # Load the new session
+        self.load(session_id)
+
+    def delete_database(self):
+        """Deletes the TinyDB database file."""
+        if self.persistent and self.history_file.exists():
+            try:
+                if self.db:
+                    self.db.close()
+                self.history_file.unlink()
+                self.db = None
+                self.messages_table = None
+            except Exception as e:
+                print(f"Error deleting database: {e}")
+
+    # Enhanced Methods
+    def get(self, index: int) -> Optional[Message]:
+        """Gets a message by 1-based index (convenience method)."""
+        if 1 <= index <= len(self):
+            return self[index - 1]
+        return None
+
+    def copy(self) -> "MessageStore":
+        """Return a copy of the MessageStore (without persistence)."""
+        return MessageStore(
+            messages=list(self.messages),
+            console=self.console,
+            # Don't copy persistence settings - new object manages its own state
+        )
 
     def __repr__(self) -> str:
-        """
-        Standard for all of my classes; changes how the object is represented when invoked in interpreter.
-        """
-        attributes = ", ".join(
-            [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
-        )
-        return f"{self.__class__.__name__}({attributes})"
+        """Enhanced representation showing persistence status."""
+        persistent_info = f"persistent={self.persistent}"
+        if self.persistent:
+            persistent_info += f", session={self.session_id[:8]}..."
+        return f"MessageStore({len(self)} messages, {persistent_info})"
