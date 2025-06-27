@@ -4,7 +4,6 @@ With MessageStore, you can:
 - Use all Messages methods (append, extend, indexing, etc.) directly
 - Automatically persist changes to TinyDB
 - Log conversations in human-readable format
-- Manage multiple conversation sessions
 - All while being a drop-in replacement for Messages objects
 
 The MessageStore IS a Messages object with superpowers.
@@ -16,10 +15,10 @@ from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from rich.console import Console
 from rich.rule import Rule
-from pydantic import BaseModel
-from tinydb import TinyDB, Query
-from typing import Optional
+from pydantic import BaseModel, Field
 from pathlib import Path
+from tinydb import TinyDB
+from typing import Optional
 from datetime import datetime
 import os
 
@@ -30,57 +29,66 @@ class MessageStore(Messages):
     Inherits all list-like behavior from Messages while adding database storage.
     """
 
+    # Add Pydantic fields (Messages inherits from BaseModel)
+    console: Optional[Console] = Field(default=None, exclude=True, repr=False)
+    auto_save: bool = Field(default=True, exclude=True)
+    persistent: bool = Field(default=False, exclude=True) 
+    logging: bool = Field(default=False, exclude=True)
+    pruning: bool = Field(default=False, exclude=True)
+    history_file: Optional[Path] = Field(default=None, exclude=True, repr=False)
+    log_file: Optional[Path] = Field(default=None, exclude=True, repr=False)
+    db: Optional[TinyDB] = Field(default=None, exclude=True, repr=False)
+    
+    model_config = {"arbitrary_types_allowed": True} # Allow Console and TinyDB types
+
     def __init__(
         self,
-        messages: list[Message] = None,
+        messages: list[Message] | Messages | None = None,
         console: Console | None = None,
         history_file: str | Path = "",
         log_file: str | Path = "",
         pruning: bool = False,
-        session_id: str | None = None,
         auto_save: bool = True,
     ):
         """
         Initialize MessageStore with optional persistence and logging.
-
+        
         Args:
             messages: Initial list of messages (same as Messages class)
             console: Rich console for formatting output
             history_file: Path to TinyDB database file (.json extension recommended)
             log_file: Path to human-readable log file
             pruning: Whether to automatically prune old messages
-            session_id: Optional session identifier for grouping messages
             auto_save: Whether to automatically save changes to database
         """
+        # Coerce Messages object to list for parent class
+        if isinstance(messages, Messages):
+            messages = messages.messages  # Extract the list
         # Initialize parent Messages class
         super().__init__(messages)
-
+        
         # Use existing console or create a new one
         if not console:
             self.console = Console(width=100)
         else:
             self.console = console
-
-        # Generate session ID if not provided
-        self.session_id = session_id or datetime.now().isoformat()
+            
         self.auto_save = auto_save
-
+        
         # Config history database if requested
         if history_file:
             # Ensure .json extension for TinyDB
-            if not str(history_file).endswith(".json"):
-                history_file = str(history_file) + ".json"
+            if not str(history_file).endswith('.json'):
+                history_file = str(history_file) + '.json'
             self.history_file = Path(history_file)
             self.persistent = True
             # Initialize TinyDB
             self.db = TinyDB(self.history_file)
-            self.messages_table = self.db.table("messages")
         else:
             self.history_file = Path()
             self.persistent = False
             self.db = None
-            self.messages_table = None
-
+            
         # Config log file if requested
         if log_file:
             self.log_file = Path(log_file)
@@ -90,7 +98,7 @@ class MessageStore(Messages):
         else:
             self.log_file = Path()
             self.logging = False
-
+            
         # Set the prune flag
         self.pruning = pruning
 
@@ -156,7 +164,7 @@ class MessageStore(Messages):
         super().__delitem__(key)
         self._auto_save_if_enabled()
 
-    def __iadd__(self, other) -> "MessageStore":
+    def __iadd__(self, other) -> 'MessageStore':
         """In-place concatenation with persistence."""
         result = super().__iadd__(other)
         if isinstance(other, (list, Messages)):
@@ -180,12 +188,12 @@ class MessageStore(Messages):
         """
         if not self.logging:
             return
-
+            
         if isinstance(item, str):
             with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(file=file, force_terminal=True)
                 file_console.print(f"[bold magenta]{item}[/bold magenta]\n")
-
+                
         elif isinstance(item, Message):
             with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(file=file, force_terminal=True)
@@ -207,78 +215,66 @@ class MessageStore(Messages):
         """
         Saves the current messages to TinyDB.
         """
-        if not self.persistent or not self.messages_table:
+        if not self.persistent or not self.db:
             return
-
+            
         try:
-            # Clear existing messages for this session
-            MessageQuery = Query()
-            self.messages_table.remove(MessageQuery.session_id == self.session_id)
-
+            # Clear existing messages and save all current messages
+            self.db.truncate()
+            
             # Save all current messages
             for i, message in enumerate(self.messages):
                 if message:  # Handle None messages
                     doc = {
-                        "session_id": self.session_id,
-                        "timestamp": datetime.now().isoformat(),
-                        "message_index": i,
-                        "message_data": message.to_cache_dict(),
+                        'timestamp': datetime.now().isoformat(),
+                        'message_index': i,
+                        'message_data': message.to_cache_dict()
                     }
-                    self.messages_table.insert(doc)
-
+                    self.db.insert(doc)
+                    
         except Exception as e:
             print(f"Error saving history: {e}")
 
-    def load(self, session_id: str | None = None):
+    def load(self):
         """
         Loads messages from TinyDB, replacing current messages.
-
-        Args:
-            session_id: If provided, loads only messages from this session.
-                       If None, loads messages from current session.
         """
-        if not self.persistent or not self.messages_table:
+        if not self.persistent or self.db == None:
             print("This message store is not persistent.")
             return
-
+            
         try:
-            # Determine which session to load
-            target_session = session_id or self.session_id
-
-            # Query messages from the specified session
-            MessageQuery = Query()
-            message_docs = self.messages_table.search(
-                MessageQuery.session_id == target_session
-            )
-
-            # Sort by timestamp to maintain order
-            message_docs.sort(key=lambda x: x.get("timestamp", ""))
-
+            # Get all messages from database
+            message_docs = self.db.all()
+            
+            # Sort by message_index to maintain order
+            message_docs.sort(key=lambda x: x.get('message_index', 0))
+            
             # Deserialize messages
             messages_list = []
             for doc in message_docs:
-                message_data = doc["message_data"]
+                message_data = doc['message_data']
                 message_type = message_data.get("message_type", "Message")
-
+                
                 if message_type == "ImageMessage":
                     messages_list.append(ImageMessage.from_cache_dict(message_data))
                 elif message_type == "AudioMessage":
                     messages_list.append(AudioMessage.from_cache_dict(message_data))
                 else:
                     messages_list.append(Message.from_cache_dict(message_data))
-
+            
             # Replace current messages (disable auto_save temporarily)
             old_auto_save = self.auto_save
             self.auto_save = False
-
+            
             self.clear()
             self.extend(messages_list)
-
+            
             self.auto_save = old_auto_save
-
+            
             if self.pruning:
                 self.prune()
-
+                
         except Exception as e:
             print(f"Error loading history: {e}. Starting with empty history.")
             super().clear()  # Don't trigger auto_save for error case
@@ -290,16 +286,16 @@ class MessageStore(Messages):
         if len(self) > 20:
             # Keep last 20 messages
             pruned_messages = list(self)[-20:]
-
+            
             # Disable auto_save temporarily to avoid multiple saves
             old_auto_save = self.auto_save
             self.auto_save = False
-
+            
             self.clear()
             self.extend(pruned_messages)
-
+            
             self.auto_save = old_auto_save
-
+            
             # Save the pruned version
             if self.persistent:
                 self.save()
@@ -320,7 +316,7 @@ class MessageStore(Messages):
         if not self:
             self.console.print("No history (yet).", style="bold red")
             return
-
+            
         for index, message in enumerate(self):
             if message:
                 content = str(message.content)[:50].replace("\n", " ")
@@ -334,52 +330,6 @@ class MessageStore(Messages):
             with open(self.log_file, "w") as file:
                 file.write("")
 
-    # Session management methods
-    def list_sessions(self) -> list[str]:
-        """Lists all available session IDs in the database."""
-        if not self.persistent or not self.messages_table:
-            return []
-
-        try:
-            all_docs = self.messages_table.all()
-            sessions = list(set(doc["session_id"] for doc in all_docs))
-            return sorted(sessions)
-        except Exception as e:
-            print(f"Error listing sessions: {e}")
-            return []
-
-    def delete_session(self, session_id: str):
-        """Deletes all messages from a specific session."""
-        if not self.persistent or not self.messages_table:
-            return
-
-        try:
-            MessageQuery = Query()
-            self.messages_table.remove(MessageQuery.session_id == session_id)
-
-            # If we deleted the current session, clear current messages
-            if session_id == self.session_id:
-                self.clear()
-        except Exception as e:
-            print(f"Error deleting session: {e}")
-
-    def switch_session(self, session_id: str):
-        """
-        Switch to a different session, saving current session and loading the new one.
-        """
-        if not self.persistent:
-            print("Cannot switch sessions without persistence enabled.")
-            return
-
-        # Save current session
-        self.save()
-
-        # Switch to new session
-        self.session_id = session_id
-
-        # Load the new session
-        self.load(session_id)
-
     def delete_database(self):
         """Deletes the TinyDB database file."""
         if self.persistent and self.history_file.exists():
@@ -388,7 +338,6 @@ class MessageStore(Messages):
                     self.db.close()
                 self.history_file.unlink()
                 self.db = None
-                self.messages_table = None
             except Exception as e:
                 print(f"Error deleting database: {e}")
 
@@ -399,7 +348,7 @@ class MessageStore(Messages):
             return self[index - 1]
         return None
 
-    def copy(self) -> "MessageStore":
+    def copy(self) -> 'MessageStore':
         """Return a copy of the MessageStore (without persistence)."""
         return MessageStore(
             messages=list(self.messages),
@@ -410,6 +359,4 @@ class MessageStore(Messages):
     def __repr__(self) -> str:
         """Enhanced representation showing persistence status."""
         persistent_info = f"persistent={self.persistent}"
-        if self.persistent:
-            persistent_info += f", session={self.session_id[:8]}..."
         return f"MessageStore({len(self)} messages, {persistent_info})"

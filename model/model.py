@@ -141,6 +141,7 @@ class Model:
         try:
             # Construct Params object if not provided (majority of cases)
             if not params:
+                logger.info("Constructing Params object from query_input and other parameters.")
                 import inspect
 
                 frame = inspect.currentframe()
@@ -164,6 +165,7 @@ class Model:
                 print(params.model_dump_json())
 
             # Check cache first
+            logger.info("Checking cache for existing results.")
             if cache and self._chain_cache:
                 cached_result = check_cache(self, params)
                 if isinstance(cached_result, ChainResult):
@@ -171,21 +173,32 @@ class Model:
                         cached_result  # This should be a Response (part of ChainResult)
                     )
                 elif cached_result == None:
+                    logger.info("No cached result found, proceeding with query.")
                     pass
                 elif cached_result and not isinstance(cached_result, ChainResult):
+                    logger.error(
+                        f"Cache returned a non-ChainResult type: {type(cached_result)}. Ensure the cache is properly configured."
+                    )
                     raise ValueError(
                         f"Cache returned a non-ChainResult type: {type(cached_result)}. Ensure the cache is properly configured."
                     )
             # Execute the query
+            logger.info("Executing query with client.")
             start_time = time()
             result = self._client.query(params)
             stop_time = time()
+            logger.info(f"Query executed in {stop_time - start_time:.2f} seconds.")
 
             # Handle streaming responses
             if isinstance(result, Stream) or isinstance(result, AnthropicStream):
                 if stream:
+                    logger.info("Returning streaming response.")
                     return result  # Return stream directly
                 else:
+                    logger.error(
+                        "Streaming responses are not supported in this method. "
+                        "Set stream=True to receive streamed responses."
+                    )
                     raise ValueError(
                         "Streaming responses are not supported in this method. "
                         "Set stream=True to receive streamed responses."
@@ -193,8 +206,10 @@ class Model:
 
             # Construct Response object
             if isinstance(result, Response):
+                logger.info("Returning existing Response object.")
                 response = result
             elif isinstance(result, str) or isinstance(result, BaseModel):
+                logger.info("Constructing Response object from result string or BaseModel.")
                 user_message = Message(role="user", content=params.query_input or "")
                 assistant_message = Message(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
@@ -205,11 +220,15 @@ class Model:
                     duration=stop_time - start_time,
                 )
             else:
+                logger.error(
+                    f"Unexpected result type: {type(result)}. Expected Response or str."
+                )
                 raise TypeError(
                     f"Unexpected result type: {type(result)}. Expected Response or str."
                 )
 
             # Update cache after successful query
+            logger.info("Updating cache with the new response.")
             if cache and self._chain_cache:
                 update_cache(self, params, response)
 
@@ -222,7 +241,7 @@ class Model:
                 category="client",
                 request_params=params.model_dump() if params else {},
             )
-            print(chainerror)
+            logger.error(f"Validation error: {chainerror}")
             return chainerror
         except Exception as e:
             chainerror = ChainError.from_exception(
@@ -231,7 +250,7 @@ class Model:
                 category="client",
                 request_params=params.model_dump() if params else {},
             )
-            print(chainerror)
+            logger.error(f"Error during query: {chainerror}")
             return chainerror
 
     def tokenize(self, text: str) -> int:
