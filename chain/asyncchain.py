@@ -3,8 +3,9 @@ from Chain.model.model_async import ModelAsync
 from Chain.result.response import Response
 from Chain.logging.logging_config import configure_logging, logging
 from Chain.parser.parser import Parser
+from Chain.progress.verbosity import Verbosity
 from typing import Optional
-import asyncio, time
+import asyncio
 
 logger = configure_logging(
     level=logging.INFO,
@@ -40,7 +41,7 @@ class AsyncChain(Chain):
         prompt_strings: list[str] | None = None,
         semaphore: Optional[asyncio.Semaphore] = None,
         cache=True,
-        verbose=True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         print_response=False,
     ) -> list[Response]:
         """
@@ -125,7 +126,7 @@ class AsyncChain(Chain):
         prompt_strings: list[str],
         semaphore: Optional[asyncio.Semaphore] = None,
         cache=True,
-        verbose=True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         print_response=False,
     ) -> list:
         """Run multiple prompt strings concurrently with enhanced progress display"""
@@ -146,7 +147,7 @@ class AsyncChain(Chain):
             semaphore: Optional[asyncio.Semaphore],
             tracker: Optional[ConcurrentTracker],
             cache=True,
-            verbose=False,  # Always suppress individual progress during concurrent
+            verbose: Verbosity = Verbosity.SILENT,  # Always suppress individual progress during concurrent
             print_response=False,
         ):
             async def do_work():
@@ -209,7 +210,7 @@ class AsyncChain(Chain):
         input_variables_list: list[dict],
         semaphore: Optional[asyncio.Semaphore] = None,
         cache=True,
-        verbose=True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         print_response=False,
     ) -> list:
         """Run multiple input variable sets concurrently with enhanced progress display"""
@@ -235,7 +236,7 @@ class AsyncChain(Chain):
             semaphore: Optional[asyncio.Semaphore],
             tracker: Optional[ConcurrentTracker],
             cache=True,
-            verbose=False,  # Always suppress individual progress during concurrent
+            verbose: Verbosity = Verbosity.SILENT,  # Always suppress individual progress during concurrent
             print_response=False,
         ):
             async def do_work():

@@ -14,6 +14,7 @@ from Chain.message.messages import Messages
 from Chain.message.messagestore import MessageStore
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.progress.verbosity import Verbosity
 from Chain.logging.logging_config import configure_logging, logging
 from typing import TYPE_CHECKING, Optional
 
@@ -58,7 +59,7 @@ class Chain:
         self,
         input_variables: dict | None = None,
         messages: Messages | list[Message] | None = [],
-        verbose: bool = True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         stream: bool = False,
         cache: bool = True,
         index: int = 0,
@@ -145,7 +146,7 @@ class Chain:
         self,
         messages: list[Message | ImageMessage | AudioMessage],
         prompt: str | None = None,
-        verbose=True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         cache=True,
         index: int = 0,
         total: int = 0,
@@ -194,7 +195,7 @@ class Chain:
     def run_completion(
         self,
         prompt: str,
-        verbose=True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         stream=False,
         cache=True,
         index: int = 0,

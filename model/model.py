@@ -3,6 +3,7 @@ from Chain.message.message import Message
 from Chain.message.messages import Messages
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
+from Chain.progress.verbosity import Verbosity
 from Chain.model.params.params import Params
 from Chain.model.models.models import ModelStore
 from Chain.result.result import ChainResult
@@ -130,7 +131,7 @@ class Model:
         temperature: Optional[float] = None,
         stream: bool = False,
         # For progress reporting decorator
-        verbose: bool = True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         index: int = 0,
         total: int = 0,
         # Options for debugging

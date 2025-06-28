@@ -3,6 +3,7 @@ from Chain.model.models.models import ModelStore
 from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
+from Chain.progress.verbosity import Verbosity
 from Chain.message.message import Message
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
@@ -58,7 +59,7 @@ class ModelAsync(Model):
     async def query_async(
         self,
         query_input: str | list,
-        verbose: bool = True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         parser: Parser | None = None,
         raw=False,
         cache=False,
