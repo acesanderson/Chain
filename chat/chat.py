@@ -284,9 +284,7 @@ class Chat:
                                     self.messagestore.add_new(
                                         role="user", content=user_input
                                     )
-                                    response = self.query_model(
-                                        self.messagestore.messages
-                                    )
+                                    response = self.query_model(self.messagestore)
                                 else:
                                     response = self.query_model(
                                         [Message(role="user", content=user_input)]

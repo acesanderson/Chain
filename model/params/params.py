@@ -1,8 +1,11 @@
 from pydantic import BaseModel, Field, ValidationError
 from typing import Optional, Any, ClassVar, override
 from Chain.message.message import Message
+from Chain.message.messages import Messages
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.progress.verbosity import Verbosity
+from Chain.progress.display_mixins import RichDisplayParamsMixin, PlainDisplayParamsMixin
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
 import importlib, json
@@ -148,14 +151,15 @@ ClientParamsTypes = (
 
 
 # Main Params class
-class Params(BaseModel):
+class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     """
     Parameters that are constructed by Model and are sent to Clients.
+    Note: we mixin our DisplayParamsMixin classes to provide rich and plain display methods.
     """
 
     # Core parameters
     model: str = Field(..., description="The model identifier to use for inference.")
-    messages: list[Message] = Field(
+    messages: list[Message] | Messages = Field(
         default_factory=list,
         description="List of messages to send to the model. Can include text, images, audio, etc.",
     )
@@ -166,7 +170,7 @@ class Params(BaseModel):
         description="Temperature for sampling. If None, defaults to provider-specific value.",
     )
     stream: bool = False
-    verbose: bool = True
+    verbose: Verbosity = Verbosity.PROGRESS
 
     # Post model init parameters
     parser: Optional[Any] = Field(
@@ -294,9 +298,6 @@ class Params(BaseModel):
         else:
             self.messages = input_messages
 
-    
-
-
     def generate_cache_key(self) -> str:
         """
         Generate a reliable cache key for the Params instance.
@@ -320,7 +321,7 @@ class Params(BaseModel):
 
     def to_cache_dict(self) -> dict[str, Any]:
         """
-        Serialize Params to cache-friendly dictionary with proper client_params handling.
+        Serialize Params to cache-friendly dictionary with proper verbosity handling.
         """
         # Use Pydantic's built-in serialization
         params_dict = self.model_dump()
@@ -334,9 +335,8 @@ class Params(BaseModel):
             client_params_dict["_client_params_class"] = f"{self.client_params.__class__.__module__}.{self.client_params.__class__.__name__}"
             params_dict["client_params"] = client_params_dict
 
-        # ✅ FIX: Handle Parser serialization separately
+        # Handle Parser serialization separately
         if self.parser:
-            # Serialize the Parser object properly
             params_dict["parser"] = {
                 "_parser_class": f"{self.parser.__class__.__module__}.{self.parser.__class__.__name__}",
                 "pydantic_model_class": f"{self.parser.pydantic_model.__module__}.{self.parser.pydantic_model.__name__}",
@@ -345,12 +345,20 @@ class Params(BaseModel):
         else:
             params_dict["parser"] = None
 
+        # ✅ NEW: Handle Verbosity serialization
+        if hasattr(self, 'verbose') and self.verbose is not None:
+            from Chain.progress.verbosity import Verbosity
+            if isinstance(self.verbose, Verbosity):
+                params_dict["verbose"] = self.verbose.to_cache_dict()
+            # If it's not a Verbosity enum, let it serialize normally
+
         return params_dict
+
 
     @classmethod
     def from_cache_dict(cls, data: dict[str, Any]) -> "Params":
         """
-        Deserialize Params from cache dictionary with proper client_params reconstruction.
+        Deserialize Params from cache dictionary with proper verbosity reconstruction.
         """
         # Make a copy to avoid mutating the original data
         params_data = data.copy()
@@ -365,13 +373,9 @@ class Params(BaseModel):
 
             if client_params_class_path:
                 try:
-                    # Reconstruct the specific client_params class
                     client_params_class = cls._import_class(client_params_class_path)
-
-                    # Reconstruct the client_params object
                     params_data["client_params"] = client_params_class.model_validate(client_params_data)
                 except (ImportError, AttributeError, ValueError) as e:
-                    # If reconstruction fails, set to None to let Params handle it in model_post_init
                     import warnings
                     warnings.warn(
                         f"Failed to reconstruct client_params from '{client_params_class_path}': {e}. "
@@ -380,38 +384,46 @@ class Params(BaseModel):
                     )
                     params_data["client_params"] = None
 
-        # ✅ FIX: Handle Parser deserialization separately
+        # Handle Parser deserialization
         if "parser" in params_data and params_data["parser"]:
             parser_data = params_data["parser"]
             if isinstance(parser_data, dict) and "_parser_class" in parser_data:
                 try:
-                    # Import the Parser class
                     parser_class = cls._import_class(parser_data["_parser_class"])
-                    
-                    # Import the pydantic model class
                     pydantic_model_class = cls._import_class(parser_data["pydantic_model_class"])
-                    
-                    # Reconstruct the Parser object
                     params_data["parser"] = parser_class(pydantic_model_class)
                 except (ImportError, AttributeError, ValueError) as e:
-                    # If reconstruction fails, set to None
                     import warnings
                     warnings.warn(
-                        f"Failed to reconstruct parser: {e}. "
-                        f"Setting parser to None.",
+                        f"Failed to reconstruct parser: {e}. Setting parser to None.",
                         UserWarning
                     )
                     params_data["parser"] = None
             else:
-                # Legacy format or invalid data
                 params_data["parser"] = None
+
+        # ✅ NEW: Handle Verbosity deserialization
+        if "verbose" in params_data and params_data["verbose"]:
+            verbose_data = params_data["verbose"]
+            if isinstance(verbose_data, dict) and verbose_data.get("verbosity_type") == "Verbosity":
+                try:
+                    from Chain.progress.verbosity import Verbosity
+                    params_data["verbose"] = Verbosity.from_cache_dict(verbose_data)
+                except (ValueError, ImportError) as e:
+                    import warnings
+                    warnings.warn(
+                        f"Failed to reconstruct Verbosity: {e}. Using default PROGRESS.",
+                        UserWarning
+                    )
+                    from Chain.progress.verbosity import Verbosity
+                    params_data["verbose"] = Verbosity.PROGRESS
+            # If it's not a Verbosity cache dict, let normal validation handle it
 
         # Dynamically import and reconstruct Params
         try:
             params_class = cls._import_class(params_class_path)
             return params_class.model_validate(params_data)
         except (ImportError, AttributeError, ValueError) as e:
-            # Fallback to base Params class
             import warnings
             warnings.warn(
                 f"Failed to reconstruct Params from '{params_class_path}': {e}. "

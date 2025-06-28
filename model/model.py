@@ -3,6 +3,7 @@ from Chain.message.message import Message
 from Chain.message.messages import Messages
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
+from Chain.progress.verbosity import Verbosity
 from Chain.model.params.params import Params
 from Chain.model.models.models import ModelStore
 from Chain.result.result import ChainResult
@@ -31,7 +32,6 @@ class Model:
     _console: Optional["Console"] = (
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
-    _debug: bool = False  # If True, you can see contents of requests and responses
 
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
@@ -124,18 +124,21 @@ class Model:
     @progress_display
     def query(
         self,
+        # Standard parameters
         query_input: str | list | Message | None = None,
         parser: Parser | None = None,
         cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,
         # For progress reporting decorator
-        verbose: bool = True,
+        verbose: Verbosity = Verbosity.PROGRESS,
         index: int = 0,
         total: int = 0,
-        # Options for debugging
+        # If we're hand-constructing Params, we can pass them in directly
         params: Optional[Params] = None,
+        # Options for debugging
         return_params: bool = False,
+        return_error: bool = False,
     ) -> ChainResult | Params | Stream | AnthropicStream:
 
         try:
@@ -159,10 +162,11 @@ class Model:
             # For debug, return params if requested
             if return_params:
                 return params
+            # For debug, return error if requested
+            if return_error:
+                from Chain.tests.fixtures import sample_error
+                return sample_error
 
-            # If self._debug == True, print the params
-            if self._debug == True:
-                print(params.model_dump_json())
 
             # Check cache first
             logger.info("Checking cache for existing results.")

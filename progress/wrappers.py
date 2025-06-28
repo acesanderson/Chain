@@ -1,4 +1,10 @@
+"""
+Enhanced progress wrappers with verbosity support.
+Maintains backwards compatibility while adding new verbosity parameter.
+"""
+
 from Chain.logging.logging_config import get_logger
+from Chain.progress.verbosity import Verbosity
 from functools import wraps
 import time, sys, inspect
 
@@ -35,145 +41,165 @@ def extract_query_preview(input_data, max_length=30):
 
 
 def sync_wrapper(
-    model_instance, func, handler, query_preview, index, total, *args, **kwargs
+    model_instance, func, handler, query_preview, index, total, verbosity, *args, **kwargs
 ):
-    """Synchronous wrapper for progress display with in-place updates and clean cancellation"""
+    """Synchronous wrapper for progress display with verbosity support"""
     model_name = model_instance.model
     display_preview = (
         f"[{index}/{total}] {query_preview}" if index is not None else query_preview
     )
 
-    # Show starting state
-    if hasattr(handler, "show_spinner"):
-        handler.show_spinner(model_name, display_preview)
-    else:
-        handler.emit_started(model_name, display_preview)
+    # Show starting state (only for PROGRESS and above)
+    if verbosity >= Verbosity.PROGRESS:
+        if hasattr(handler, "show_spinner"):
+            handler.show_spinner(model_name, display_preview, verbosity=verbosity)
+        else:
+            handler.emit_started(model_name, display_preview, verbosity=verbosity)
 
     start_time = time.time()
     try:
         result = func(model_instance, *args, **kwargs)
         duration = time.time() - start_time
 
-        # Check if result is an error
-        from Chain.result.error import ChainError
+        # Only show completion for PROGRESS and above
+        if verbosity >= Verbosity.PROGRESS:
+            # Check if result is an error
+            from Chain.result.error import ChainError
 
-        if isinstance(result, ChainError):
-            if hasattr(handler, "show_failed"):
-                handler.show_failed(
-                    model_name, display_preview, str(result.info.message)
-                )
+            if isinstance(result, ChainError):
+                if hasattr(handler, "show_failed"):
+                    handler.show_failed(
+                        model_name, display_preview, str(result.info.message), 
+                        verbosity=verbosity, error_obj=result
+                    )
+                else:
+                    handler.emit_failed(
+                        model_name, display_preview, str(result.info.message), 
+                        verbosity=verbosity
+                    )
             else:
-                handler.emit_failed(
-                    model_name, display_preview, str(result.info.message)
-                )
-        else:
-            # Check for cache hit (very fast response)
-            is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
+                # Check for cache hit (very fast response)
+                is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
 
-            if is_cache_hit:
-                if hasattr(handler, "show_cached"):
-                    handler.show_cached(model_name, display_preview, duration)
+                if is_cache_hit:
+                    if hasattr(handler, "show_cached"):
+                        handler.show_cached(model_name, display_preview, duration, verbosity=verbosity)
+                    else:
+                        handler.emit_cached(model_name, display_preview, duration, verbosity=verbosity)
                 else:
-                    handler.emit_cached(model_name, display_preview, duration)
-            else:
-                # Normal success case
-                if hasattr(handler, "show_complete"):
-                    handler.show_complete(model_name, display_preview, duration)
-                else:
-                    handler.emit_complete(model_name, display_preview, duration)
+                    # Normal success case
+                    if hasattr(handler, "show_complete"):
+                        handler.show_complete(
+                            model_name, display_preview, duration, 
+                            verbosity=verbosity, response_obj=result
+                        )
+                    else:
+                        handler.emit_complete(model_name, display_preview, duration, verbosity=verbosity)
 
         return result
     except KeyboardInterrupt:
-        if hasattr(handler, "show_canceled"):
-            handler.show_canceled(model_name, display_preview)
-        else:
-            handler.emit_canceled(model_name, display_preview)
+        if verbosity >= Verbosity.PROGRESS:
+            if hasattr(handler, "show_canceled"):
+                handler.show_canceled(model_name, display_preview, verbosity=verbosity)
+            else:
+                handler.emit_canceled(model_name, display_preview, verbosity=verbosity)
 
         # Exit gracefully without stack trace
         sys.exit(130)  # Standard exit code for Ctrl+C
 
     except Exception as e:
-        if hasattr(handler, "show_failed"):
-            handler.show_failed(model_name, display_preview, str(e))
-        else:
-            handler.emit_failed(model_name, display_preview, str(e))
+        if verbosity >= Verbosity.PROGRESS:
+            if hasattr(handler, "show_failed"):
+                handler.show_failed(model_name, display_preview, str(e), verbosity=verbosity)
+            else:
+                handler.emit_failed(model_name, display_preview, str(e), verbosity=verbosity)
         raise
 
 
-async def async_wrapper(model_instance, func, handler, query_preview, *args, **kwargs):
-    """Asynchronous wrapper for progress display with in-place updates and clean cancellation"""
+async def async_wrapper(model_instance, func, handler, query_preview, verbosity, *args, **kwargs):
+    """Asynchronous wrapper for progress display with verbosity support"""
     model_name = model_instance.model
-    display_preview = (
-        f"[{index}/{total}] {query_preview}" if index is not None else query_preview
-    )
 
-    # Show starting state
-    if hasattr(handler, "show_spinner"):
-        handler.show_spinner(model_name, display_preview)
-    else:
-        handler.emit_started(model_name, display_preview)
+    # Show starting state (only for PROGRESS and above)
+    if verbosity >= Verbosity.PROGRESS:
+        if hasattr(handler, "show_spinner"):
+            handler.show_spinner(model_name, query_preview, verbosity=verbosity)
+        else:
+            handler.emit_started(model_name, query_preview, verbosity=verbosity)
 
     start_time = time.time()
     try:
-        result = func(model_instance, *args, **kwargs)
+        result = await func(model_instance, *args, **kwargs)
         duration = time.time() - start_time
 
-        # Check if result is an error
-        from Chain.result.error import ChainError
+        # Only show completion for PROGRESS and above
+        if verbosity >= Verbosity.PROGRESS:
+            # Check if result is an error
+            from Chain.result.error import ChainError
 
-        if isinstance(result, ChainError):
-            if hasattr(handler, "show_failed"):
-                handler.show_failed(
-                    model_name, display_preview, str(result.info.message)
-                )
+            if isinstance(result, ChainError):
+                if hasattr(handler, "show_failed"):
+                    handler.show_failed(
+                        model_name, query_preview, str(result.info.message), 
+                        verbosity=verbosity, error_obj=result
+                    )
+                else:
+                    handler.emit_failed(
+                        model_name, query_preview, str(result.info.message), 
+                        verbosity=verbosity
+                    )
             else:
-                handler.emit_failed(
-                    model_name, display_preview, str(result.info.message)
-                )
-        else:
-            # Check for cache hit (very fast response)
-            is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
+                # Check for cache hit (very fast response)
+                is_cache_hit = duration < 0.05  # Less than 50ms indicates cache hit
 
-            if is_cache_hit:
-                if hasattr(handler, "show_cached"):
-                    handler.show_cached(model_name, display_preview, duration)
+                if is_cache_hit:
+                    if hasattr(handler, "show_cached"):
+                        handler.show_cached(model_name, query_preview, duration, verbosity=verbosity)
+                    else:
+                        handler.emit_cached(model_name, query_preview, duration, verbosity=verbosity)
                 else:
-                    handler.emit_cached(model_name, display_preview, duration)
-            else:
-                # Normal success case
-                if hasattr(handler, "show_complete"):
-                    handler.show_complete(model_name, display_preview, duration)
-                else:
-                    handler.emit_complete(model_name, display_preview, duration)
+                    # Normal success case
+                    if hasattr(handler, "show_complete"):
+                        handler.show_complete(
+                            model_name, query_preview, duration, 
+                            verbosity=verbosity, response_obj=result
+                        )
+                    else:
+                        handler.emit_complete(model_name, query_preview, duration, verbosity=verbosity)
 
         return result
 
     except KeyboardInterrupt:
-        if hasattr(handler, "show_canceled"):
-            handler.show_canceled(model_name, query_preview)
-        else:
-            handler.emit_canceled(model_name, query_preview)
+        if verbosity >= Verbosity.PROGRESS:
+            if hasattr(handler, "show_canceled"):
+                handler.show_canceled(model_name, query_preview, verbosity=verbosity)
+            else:
+                handler.emit_canceled(model_name, query_preview, verbosity=verbosity)
 
         # Exit gracefully without stack trace
         sys.exit(130)  # Standard exit code for Ctrl+C
 
     except Exception as e:
-        if hasattr(handler, "show_failed"):
-            handler.show_failed(model_name, query_preview, str(e))
-        else:
-            handler.emit_failed(model_name, query_preview, str(e))
+        if verbosity >= Verbosity.PROGRESS:
+            if hasattr(handler, "show_failed"):
+                handler.show_failed(model_name, query_preview, str(e), verbosity=verbosity)
+            else:
+                handler.emit_failed(model_name, query_preview, str(e), verbosity=verbosity)
         raise
 
 
 def progress_display(func):
     """
-    Decorator that adds progress display to Model.query() methods.
+    Decorator that adds progress display to Model.query() methods with verbosity support.
     Automatically detects sync vs async and uses appropriate wrapper.
     """
 
     @wraps(func)
     def sync_decorator(self, *args, **kwargs):
-        verbose = kwargs.pop("verbose", True)
+        # Extract and convert verbosity parameter
+        verbose_input = kwargs.pop("verbose", True)
+        verbosity = Verbosity.from_input(verbose_input)
+        
         index = kwargs.pop("index", None)
         total = kwargs.pop("total", None)
 
@@ -183,7 +209,8 @@ def progress_display(func):
                 "Must provide both 'index' and 'total' parameters or neither"
             )
 
-        if not verbose:
+        # For SILENT, bypass all progress display
+        if verbosity == Verbosity.SILENT:
             return func(self, *args, **kwargs)
 
         # Extract query preview from first argument
@@ -201,15 +228,17 @@ def progress_display(func):
             handler = PlainProgressHandler()
 
         return sync_wrapper(
-            self, func, handler, query_preview, index, total, *args, **kwargs
+            self, func, handler, query_preview, index, total, verbosity, *args, **kwargs
         )
 
     @wraps(func)
     async def async_decorator(self, *args, **kwargs):
-        verbose = kwargs.pop("verbose", True)
-        # Note: index/total not supported for async operations
+        # Extract and convert verbosity parameter
+        verbose_input = kwargs.pop("verbose", True)
+        verbosity = Verbosity.from_input(verbose_input)
 
-        if not verbose:
+        # For SILENT, bypass all progress display
+        if verbosity == Verbosity.SILENT:
             return await func(self, *args, **kwargs)
 
         # Extract query preview from first argument
@@ -226,7 +255,7 @@ def progress_display(func):
 
             handler = PlainProgressHandler()
 
-        return await async_wrapper(self, func, handler, query_preview, *args, **kwargs)
+        return await async_wrapper(self, func, handler, query_preview, verbosity, *args, **kwargs)
 
     # Return the appropriate decorator based on function type
     if inspect.iscoroutinefunction(func):
@@ -261,3 +290,4 @@ def create_concurrent_progress_tracker(console, total: int):
     from Chain.progress.tracker import ConcurrentTracker
 
     return ConcurrentTracker(handler, total)
+
