@@ -33,6 +33,7 @@ from Chain.message.message import Message, create_system_message
 from Chain.message.messages import Messages
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.messagestore import MessageStore
+from Chain.progress.verbosity import Verbosity
 from Chain.cache.cache import ChainCache
 from Chain.chat.chat import Chat
 from Chain.api.server.ChainRequest import ChainRequest
@@ -74,4 +75,5 @@ __all__ = [
     "llm",
     "disable_logging",
     "enable_debug_logging",
+    "Verbosity"
 ]

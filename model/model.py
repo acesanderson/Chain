@@ -32,7 +32,6 @@ class Model:
     _console: Optional["Console"] = (
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
-    _debug: bool = False  # If True, you can see contents of requests and responses
 
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
@@ -125,6 +124,7 @@ class Model:
     @progress_display
     def query(
         self,
+        # Standard parameters
         query_input: str | list | Message | None = None,
         parser: Parser | None = None,
         cache=True,
@@ -134,9 +134,11 @@ class Model:
         verbose: Verbosity = Verbosity.PROGRESS,
         index: int = 0,
         total: int = 0,
-        # Options for debugging
+        # If we're hand-constructing Params, we can pass them in directly
         params: Optional[Params] = None,
+        # Options for debugging
         return_params: bool = False,
+        return_error: bool = False,
     ) -> ChainResult | Params | Stream | AnthropicStream:
 
         try:
@@ -160,10 +162,6 @@ class Model:
             # For debug, return params if requested
             if return_params:
                 return params
-
-            # If self._debug == True, print the params
-            if self._debug == True:
-                print(params.model_dump_json())
 
             # Check cache first
             logger.info("Checking cache for existing results.")

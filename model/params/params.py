@@ -3,6 +3,8 @@ from typing import Optional, Any, ClassVar, override
 from Chain.message.message import Message
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.progress.verbosity import Verbosity
+from Chain.progress.display_mixins import RichDisplayParamsMixin, PlainDisplayParamsMixin
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
 import importlib, json
@@ -148,9 +150,10 @@ ClientParamsTypes = (
 
 
 # Main Params class
-class Params(BaseModel):
+class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     """
     Parameters that are constructed by Model and are sent to Clients.
+    Note: we mixin our DisplayParamsMixin classes to provide rich and plain display methods.
     """
 
     # Core parameters
@@ -166,7 +169,7 @@ class Params(BaseModel):
         description="Temperature for sampling. If None, defaults to provider-specific value.",
     )
     stream: bool = False
-    verbose: bool = True
+    verbose: Verbosity = Verbosity.PROGRESS
 
     # Post model init parameters
     parser: Optional[Any] = Field(

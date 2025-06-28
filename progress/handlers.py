@@ -1,4 +1,10 @@
+"""
+Enhanced progress handlers with verbosity support.
+Maintains backwards compatibility while adding verbosity-aware methods.
+"""
+
 from Chain.logging.logging_config import get_logger
+from Chain.progress.verbosity import Verbosity
 from datetime import datetime
 import time
 
@@ -6,68 +12,114 @@ logger = get_logger(__name__)
 
 
 class RichProgressHandler:
-    """Rich-based progress handler with spinners and colors"""
+    """Rich-based progress handler with spinners and colors - now verbosity-aware"""
 
     def __init__(self, console):
         self.console = console
         self.concurrent_mode = False
         self.concurrent_line_printed = False
 
-    # Existing individual operation methods...
-    def show_spinner(self, model_name, query_preview):
-        """Show Rich spinner with live status"""
+    # Enhanced individual operation methods with verbosity support
+    def show_spinner(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        """Show Rich spinner with live status - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return  # Suppress individual operations during concurrent mode
 
-        self.console.print(
-            f"⠋ {model_name} | {query_preview}",
-            end="\r",
-            highlight=False,
-            soft_wrap=True,
-        )
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            self.console.print(
+                f"⠋ {model_name} | {query_preview}",
+                end="\r",
+                highlight=False,
+                soft_wrap=True,
+            )
+        # Higher verbosity levels will be handled in future phases
 
-    def show_complete(self, model_name, query_preview, duration):
-        """Update same line with green checkmark, keeping context"""
+    def show_complete(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS, response_obj=None):
+        """Update same line with green checkmark - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return  # Suppress individual operations during concurrent mode
 
-        self.console.print(
-            f"✓ {model_name} | {query_preview} | ({duration:.1f}s)", style="green"
-        )
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            self.console.print(
+                f"✓ {model_name} | {query_preview} | ({duration:.1f}s)", style="green"
+            )
+        elif verbosity >= Verbosity.SUMMARY and response_obj:
+            # New behavior - use object display methods
+            # First show the progress line
+            self.console.print(
+                f"✓ {model_name} | {query_preview} | ({duration:.1f}s)", style="green"
+            )
+            # Then show the detailed response
+            rich_content = response_obj.to_rich(verbosity)
+            if rich_content:
+                self.console.print()  # Add spacing
+                self.console.print(rich_content)
 
-    def show_canceled(self, model_name, query_preview):
-        """Update same line with warning, keeping context"""
+    def show_canceled(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        """Update same line with warning - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return
 
-        self.console.print(
-            f"⚠ {model_name} | {query_preview} | Canceled", style="yellow"
-        )
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            self.console.print(
+                f"⚠ {model_name} | {query_preview} | Canceled", style="yellow"
+            )
+        # Higher verbosity levels will be handled in future phases
 
-    def show_cached(self, model_name, query_preview, duration):
-        """Show cache hit with lightning symbol"""
+    def show_cached(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS):
+        """Show cache hit with lightning symbol - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return  # Suppress individual operations during concurrent mode
 
-        self.console.print(
-            f"⚡ {model_name} | {query_preview} | Cached ({duration:.1f}s)",
-            style="cyan",
-        )
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            self.console.print(
+                f"⚡ {model_name} | {query_preview} | Cached ({duration:.1f}s)",
+                style="cyan",
+            )
+        # Higher verbosity levels will be handled in future phases
 
-    def emit_cached(self, model_name, query_preview, duration):
-        """Fallback method for backwards compatibility"""
-        self.show_cached(model_name, query_preview, duration)
-
-    def show_failed(self, model_name, query_preview, error):
-        """Update same line with error, keeping context"""
+    def show_failed(self, model_name, query_preview, error, verbosity=Verbosity.PROGRESS, error_obj=None):
+        """Update same line with error - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return
 
-        self.console.print(
-            f"✗ {model_name} | {query_preview} | Failed: {error}", style="red"
-        )
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            self.console.print(
+                f"✗ {model_name} | {query_preview} | Failed: {error}", style="red"
+            )
+        elif verbosity >= Verbosity.SUMMARY and error_obj:
+            # New behavior - use object display methods
+            # First show the progress line
+            self.console.print(
+                f"✗ {model_name} | {query_preview} | Failed: {error}", style="red"
+            )
+            # Then show the detailed error
+            rich_content = error_obj.to_rich(verbosity)
+            if rich_content:
+                self.console.print()  # Add spacing
+                self.console.print(rich_content)
 
-    # New concurrent operation methods
+    # Concurrent operation methods (unchanged for now)
     def handle_concurrent_start(self, total: int):
         """Handle start of concurrent operations"""
         self.concurrent_mode = True
@@ -105,72 +157,117 @@ class RichProgressHandler:
                 f"[yellow]✓[/yellow] All requests complete: {successful}/{total} successful, {failed} failed in {duration:.1f}s"
             )
 
-    # Fallback methods for backwards compatibility
-    def emit_started(self, model_name, query_preview):
-        self.show_spinner(model_name, query_preview)
+    # Backwards compatibility methods (now verbosity-aware with defaults)
+    def emit_started(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        self.show_spinner(model_name, query_preview, verbosity=verbosity)
 
-    def emit_complete(self, model_name, query_preview, duration):
-        self.show_complete(model_name, query_preview, duration)
+    def emit_complete(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS):
+        self.show_complete(model_name, query_preview, duration, verbosity=verbosity)
 
-    def emit_canceled(self, model_name, query_preview):
-        self.show_canceled(model_name, query_preview)
+    def emit_canceled(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        self.show_canceled(model_name, query_preview, verbosity=verbosity)
 
-    def emit_failed(self, model_name, query_preview, error):
-        self.show_failed(model_name, query_preview, error)
+    def emit_cached(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS):
+        self.show_cached(model_name, query_preview, duration, verbosity=verbosity)
+
+    def emit_failed(self, model_name, query_preview, error, verbosity=Verbosity.PROGRESS):
+        self.show_failed(model_name, query_preview, error, verbosity=verbosity)
 
 
 class PlainProgressHandler:
-    """Simple progress handler for environments without Rich"""
+    """Simple progress handler for environments without Rich - now verbosity-aware"""
 
     def __init__(self):
         self.concurrent_mode = False
 
-    # Existing individual operation methods...
-    def show_spinner(self, model_name, query_preview):
-        """Show starting state (plain text - no spinner)"""
+    # Enhanced individual operation methods with verbosity support
+    def show_spinner(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        """Show starting state (plain text - no spinner) - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return  # Suppress individual operations during concurrent mode
 
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] [{model_name}] Starting: {query_preview}")
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"[{timestamp}] [{model_name}] Starting: {query_preview}")
+        # Higher verbosity levels will be handled in future phases
 
-    def show_complete(self, model_name, query_preview, duration):
-        """Show completion on new line"""
+    def show_complete(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS, response_obj=None):
+        """Show completion on new line - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return
 
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] [{model_name}] Complete: ({duration:.1f}s)")
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"[{timestamp}] [{model_name}] Complete: ({duration:.1f}s)")
+        elif verbosity >= Verbosity.SUMMARY and response_obj:
+            # New behavior - use object display methods
+            # First show the progress line
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"[{timestamp}] [{model_name}] Complete: ({duration:.1f}s)")
+            # Then show the detailed response
+            plain_content = response_obj.to_plain(verbosity)
+            if plain_content:
+                print(plain_content)
 
-    def show_canceled(self, model_name, query_preview):
-        """Show cancellation on new line"""
+    def show_canceled(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        """Show cancellation on new line - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return
 
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] [{model_name}] Canceled")
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"[{timestamp}] [{model_name}] Canceled")
+        # Higher verbosity levels will be handled in future phases
 
-    def show_cached(self, model_name, query_preview, duration):
-        """Show cache hit in plain text"""
+    def show_cached(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS):
+        """Show cache hit in plain text - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return
 
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] [{model_name}] Cache hit: {query_preview}")
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"[{timestamp}] [{model_name}] Cache hit: {query_preview}")
+        # Higher verbosity levels will be handled in future phases
 
-    def emit_cached(self, model_name, query_preview, duration):
-        """Fallback method for backwards compatibility"""
-        self.show_cached(model_name, query_preview, duration)
-
-    def show_failed(self, model_name, query_preview, error):
-        """Show failure on new line"""
+    def show_failed(self, model_name, query_preview, error, verbosity=Verbosity.PROGRESS, error_obj=None):
+        """Show failure on new line - verbosity aware"""
+        if verbosity == Verbosity.SILENT:
+            return
+            
         if self.concurrent_mode:
             return
 
-        timestamp = datetime.now().strftime("%H:%M:%S")
-        print(f"[{timestamp}] [{model_name}] Failed: {error}")
+        if verbosity == Verbosity.PROGRESS:
+            # Current behavior for backwards compatibility
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"[{timestamp}] [{model_name}] Failed: {error}")
+        elif verbosity >= Verbosity.SUMMARY and error_obj:
+            # New behavior - use object display methods
+            # First show the progress line
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            print(f"[{timestamp}] [{model_name}] Failed: {error}")
+            # Then show the detailed error
+            plain_content = error_obj.to_plain(verbosity)
+            if plain_content:
+                print(plain_content)
 
-    # New concurrent operation methods
+    # Concurrent operation methods (unchanged for now)
     def handle_concurrent_start(self, total: int):
         """Handle start of concurrent operations"""
         self.concurrent_mode = True
@@ -198,15 +295,18 @@ class PlainProgressHandler:
                 f"[{timestamp}] All requests complete: {successful}/{total} successful, {failed} failed in {duration:.1f}s"
             )
 
-    # Fallback methods for backwards compatibility
-    def emit_started(self, model_name, query_preview):
-        self.show_spinner(model_name, query_preview)
+    # Backwards compatibility methods (now verbosity-aware with defaults)
+    def emit_started(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        self.show_spinner(model_name, query_preview, verbosity=verbosity)
 
-    def emit_complete(self, model_name, query_preview, duration):
-        self.show_complete(model_name, query_preview, duration)
+    def emit_complete(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS):
+        self.show_complete(model_name, query_preview, duration, verbosity=verbosity)
 
-    def emit_canceled(self, model_name, query_preview):
-        self.show_canceled(model_name, query_preview)
+    def emit_canceled(self, model_name, query_preview, verbosity=Verbosity.PROGRESS):
+        self.show_canceled(model_name, query_preview, verbosity=verbosity)
 
-    def emit_failed(self, model_name, query_preview, error):
-        self.show_failed(model_name, query_preview, error)
+    def emit_cached(self, model_name, query_preview, duration, verbosity=Verbosity.PROGRESS):
+        self.show_cached(model_name, query_preview, duration, verbosity=verbosity)
+
+    def emit_failed(self, model_name, query_preview, error, verbosity=Verbosity.PROGRESS):
+        self.show_failed(model_name, query_preview, error, verbosity=verbosity)

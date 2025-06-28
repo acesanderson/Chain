@@ -10,9 +10,66 @@ class Verbosity(Enum):
     DEBUG - Full JSON with syntax highlighting (level 5)
     """
 
-    SILENT = ""
-    PROGRESS = "v"
-    SUMMARY = "vv"
-    DETAILED = "vvv"
-    COMPLETE = "vvvv"
-    DEBUG = "vvvvv"
+    SILENT = 0
+    PROGRESS = 1
+    SUMMARY = 2
+    DETAILED = 3
+    COMPLETE = 4
+    DEBUG = 5
+
+    @classmethod
+    def from_input(cls, value):
+        """
+        Converts various input types to a Verbosity instance.
+        """
+        if value is False:
+            return cls.SILENT
+        elif value is True:
+            return cls.PROGRESS
+        elif isinstance(value, cls):
+            return value
+        elif isinstance(value, str):
+            # Map string values to enum members
+            string_map = {
+                "": cls.SILENT,
+                "v": cls.PROGRESS,
+                "vv": cls.SUMMARY,
+                "vvv": cls.DETAILED,
+                "vvvv": cls.COMPLETE,
+                "vvvvv": cls.DEBUG
+            }
+            if value in string_map:
+                return string_map[value]
+            raise ValueError(f"Invalid verbosity: {value}")
+        else:
+            raise ValueError(f"Invalid verbosity type: {type(value)}")
+
+    def __bool__(self) -> bool:
+        """
+        Returns True if the verbosity level is not SILENT.
+        """
+        return self != Verbosity.SILENT
+
+    def __lt__(self, other):
+        """Less than comparison based on enum values."""
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+
+    def __le__(self, other):
+        """Less than or equal comparison based on enum values."""
+        if self.__class__ is other.__class__:
+            return self.value <= other.value
+        return NotImplemented
+
+    def __gt__(self, other):
+        """Greater than comparison based on enum values."""
+        if self.__class__ is other.__class__:
+            return self.value > other.value
+        return NotImplemented
+
+    def __ge__(self, other):
+        """Greater than or equal comparison based on enum values."""
+        if self.__class__ is other.__class__:
+            return self.value >= other.value
+        return NotImplemented
