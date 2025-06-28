@@ -58,13 +58,18 @@ class ModelAsync(Model):
     @progress_display
     async def query_async(
         self,
+        # Standard params
         query_input: str | list,
         verbose: Verbosity = Verbosity.PROGRESS,
         parser: Parser | None = None,
         raw=False,
         cache=False,
         print_response=False,
+        # If hand-rolling params, you can just pass the object directly.
         params: Optional[Params] = None,
+        # For debug: return Params, or an example Error
+        return_params: bool = False,
+        return_error: bool = False,
     ) -> ChainResult:
 
         try:
@@ -81,6 +86,14 @@ class ModelAsync(Model):
             assert params and isinstance(
                 params, Params
             ), f"params should be a Params object, not {type(params)}"
+
+            # For debug, return Params if requested
+            if return_params:
+                return params
+            # For debug, return error if requested
+            if return_error:
+                from Chain.tests.fixtures import sample_error
+                return sample_error
 
             # Check cache first
             if cache and self._chain_cache:

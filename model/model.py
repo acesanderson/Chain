@@ -162,6 +162,11 @@ class Model:
             # For debug, return params if requested
             if return_params:
                 return params
+            # For debug, return error if requested
+            if return_error:
+                from Chain.tests.fixtures import sample_error
+                return sample_error
+
 
             # Check cache first
             logger.info("Checking cache for existing results.")

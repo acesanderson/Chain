@@ -33,11 +33,11 @@ def is_base64_simple(s):
     return bool(re.match(r"^[A-Za-z0-9+/]*={0,2}$", s)) and len(s) % 4 == 0
 
 
-def extension_to_mimetype(file_path: Path) -> str:
+def extension_to_mimetype(image_file: Path) -> str:
     """
     Given a Path object, return the mimetype.
     """
-    extension = file_path.suffix.lower()
+    extension = image_file.suffix.lower()
     try:
         mimetype = format_to_mime[extension]
         return mimetype
@@ -110,7 +110,7 @@ class ImageMessage(Message):
 
     You can instantiate it with either:
     1. text_content + image_content + mime_type
-    2. text_content + file_path (conversion happens automatically)
+    2. text_content + image_file (conversion happens automatically)
 
     You can convert it to provider formats with to_openai() and to_anthropic() methods.
     """
@@ -119,7 +119,7 @@ class ImageMessage(Message):
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
     )
-    file_path: str | Path = Field(
+    image_file: str | Path = Field(
         description="File name for the image, if available.", default=""
     )
     image_content: str = Field(description="The base64-encoded image.", default="")
@@ -130,8 +130,8 @@ class ImageMessage(Message):
 
     def model_post_init(self, __context) -> None:
         """Called after model initialization to construct content field."""
-        # Skip post_init if this is a cache restoration (empty file_path and existing content)
-        if not self.file_path or self.file_path == "":
+        # Skip post_init if this is a cache restoration (empty image_file and existing content)
+        if not self.image_file or self.image_file == "":
             if self.image_content and self.mime_type:
                 # This is cache restoration - content already exists
                 if not hasattr(self, "content") or not self.content:
@@ -144,17 +144,17 @@ class ImageMessage(Message):
             if self.mime_type != "image/png":
                 self.image_content = convert_image(self.image_content)
                 self.mime_type = "image/png"
-        # If user submits a file_path instead of the mimetype / image_content
-        if self.file_path:
-            # Convert the file_path to a Path object if it's a string
-            if isinstance(self.file_path, str):
-                self.file_path = Path(self.file_path)
+        # If user submits a image_file instead of the mimetype / image_content
+        if self.image_file and not self.image_content:
+            # Convert the image_file to a Path object if it's a string
+            if isinstance(self.image_file, str):
+                self.image_file = Path(self.image_file)
             if self.image_content and self.mime_type:
                 raise ValueError(
                     "Can't instantiate ImageMessage with both file_name and image_content at the same time."
                 )
-            self.mime_type = extension_to_mimetype(Path(self.file_path))
-            self.image_content = convert_image_file(self.file_path)
+            self.mime_type = extension_to_mimetype(Path(self.image_file))
+            self.image_content = convert_image_file(self.image_file)
 
         # Validate the MIME type
         if self.mime_type not in format_to_mime.values():
@@ -166,9 +166,9 @@ class ImageMessage(Message):
         # Construct our content
         self.content = [self.image_content, self.text_content]
 
-        # Change file_path back to a string for consistency
-        if isinstance(self.file_path, Path):
-            self.file_path = str(self.file_path)
+        # Change image_file back to a string for consistency
+        if isinstance(self.image_file, Path):
+            self.image_file = str(self.image_file)
         # Raise an error if we have an incomplete object at the end of this process.
         if self.image_content == "" or not self.mime_type or not self.content:
             raise ValidationError("Incorrect initialization for some reason.")
@@ -181,7 +181,7 @@ class ImageMessage(Message):
             "message_type": "ImageMessage",
             "role": self.role.value if hasattr(self.role, "value") else self.role,
             "text_content": self.text_content,
-            "file_path": str(self.file_path),
+            "image_file": str(self.image_file),
             "image_content": self.image_content,
             "mime_type": self.mime_type,
         }
@@ -190,20 +190,20 @@ class ImageMessage(Message):
     def from_cache_dict(cls, data: Dict[str, Any]) -> "ImageMessage":
         """
         Deserialize ImageMessage from cache dictionary.
-        Temporarily removes file_path to avoid validation conflict.
+        Temporarily removes image_file to avoid validation conflict.
         """
         # Create instance with minimal data first
         instance = cls.model_construct(
             role=data["role"],
             text_content=data["text_content"],
-            file_path="",  # Empty to avoid conflict
+            image_file="",  # Empty to avoid conflict
             image_content=data["image_content"],
             mime_type=data["mime_type"],
         )
 
         # Manually set the remaining fields after construction
         instance.content = [data["image_content"], data["text_content"]]
-        instance.file_path = data["file_path"]  # Set the real file path
+        instance.image_file = data["image_file"]  # Set the real file path
 
         return instance
 
