@@ -10,7 +10,6 @@ from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from Chain.message.convert_image import convert_image, convert_image_file
 from Chain.logging.logging_config import get_logger
-from Chain.cache.cacheable import CacheableMixin
 from pathlib import Path
 from typing import Any, Optional
 import re

@@ -6,7 +6,6 @@ We define list[Message] as Messages in a parallel file, this class can handle th
 
 from Chain.prompt.prompt import Prompt
 from Chain.logging.logging_config import get_logger
-from Chain.cache.cacheable import CacheableMixin
 from enum import Enum
 from pydantic import BaseModel
 from typing import Any
@@ -24,7 +23,7 @@ class Role(Enum):
     SYSTEM = "system"
 
 
-class Message(BaseModel, CacheableMixin):
+class Message(BaseModel):
     """
     Industry standard, more or less, for messaging with LLMs.
     System roles can have some weirdness (like with Anthropic), but role/content is standard.

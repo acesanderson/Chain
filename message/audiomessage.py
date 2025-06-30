@@ -1,7 +1,6 @@
 from Chain.message.message import Message
 from Chain.message.imagemessage import OpenAITextContent
 from Chain.logging.logging_config import get_logger
-from Chain.cache.cacheable import CacheableMixin
 from pydantic import BaseModel, Field
 from typing import Literal, Any, Optional
 from pathlib import Path

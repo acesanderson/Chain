@@ -1,13 +1,12 @@
-from typing import Any, Iterator, Optional
+from typing import Iterator, Optional
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
 from Chain.logging.logging_config import get_logger
-from Chain.cache.cacheable import CacheableMixin
 
 logger = get_logger(__name__)
 
 
-class Messages(BaseModel, CacheableMixin):
+class Messages(BaseModel):
     """
     A Pydantic BaseModel that contains a list of Message objects.
     Behaves like a list through dunder methods while being fully Pydantic-compatible.

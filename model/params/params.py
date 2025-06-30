@@ -6,7 +6,6 @@ from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.progress.verbosity import Verbosity
 from Chain.progress.display_mixins import RichDisplayParamsMixin, PlainDisplayParamsMixin
-from Chain.cache.cacheable import CacheableMixin
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
 import json
@@ -152,7 +151,7 @@ ClientParamsTypes = (
 
 
 # Main Params class
-class Params(BaseModel, CacheableMixin, RichDisplayParamsMixin, PlainDisplayParamsMixin):
+class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     """
     Parameters that are constructed by Model and are sent to Clients.
     Note: we mixin our DisplayParamsMixin classes to provide rich and plain display methods.

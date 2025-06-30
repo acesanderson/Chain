@@ -7,7 +7,6 @@ from Chain.message.messages import Messages
 from Chain.model.params.params import Params
 from Chain.logging.logging_config import get_logger
 from Chain.progress.display_mixins import RichDisplayResponseMixin, PlainDisplayResponseMixin
-from Chain.cache.cacheable import CacheableMixin
 from pydantic import BaseModel
 from typing import Optional, Any, Dict
 from datetime import datetime
@@ -15,7 +14,7 @@ from datetime import datetime
 logger = get_logger(__name__)
 
 
-class Response(BaseModel, CacheableMixin, RichDisplayResponseMixin, PlainDisplayResponseMixin):
+class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     """
     Our class for a successful Result.
     We mixin display modules so that Responses can to_plain, to_rich as part of our progress tracking / verbosity system.
