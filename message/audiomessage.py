@@ -124,7 +124,11 @@ class AudioMessage(Message):
             return base64.b64encode(f.read()).decode("utf-8")
 
     def __repr__(self):
-        return f"AudioMessage(role={self.role}, text_content={self.text_content}, audio_file={self.audio_file}, format={self.format})"
+        """
+        String representation of the AudioMessage.
+        """
+        return f"AudioMessage(role={self.role}, content=[{self.text_content}, {self.audio_content[:30]}...], format={self.format})"
+
 
     def to_openai(self) -> OpenAIAudioMessage:
         """
@@ -139,10 +143,21 @@ class AudioMessage(Message):
 
     def play(self):
         """
-        Play the audio.
+        Play the audio from the base64 content (no file required).
         """
         from pydub import AudioSegment
         from pydub.playback import play
+        import base64
+        import io
 
-        audio = AudioSegment.from_file(self.audio_file, format=self.format)
+        # Decode base64 to bytes
+        audio_bytes = base64.b64decode(self.audio_content)
+        
+        # Create a file-like object from bytes
+        audio_buffer = io.BytesIO(audio_bytes)
+        
+        # Load audio from the buffer
+        audio = AudioSegment.from_file(audio_buffer, format=self.format)
+        
+        # Play the audio
         play(audio)
