@@ -33,10 +33,11 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     # Initialization attributes
     timestamp: Optional[str] = None
 
-    def model_post_init(self, __context__):
+    def model_post_init(self, __context):
         """
         Post-initialization hook to set the timestamp and ensure Messages type.
         """
+        super().model_post_init(__context)  # Call the mixin's post_init first!
         if self.timestamp is None:
             self.timestamp = datetime.now().isoformat()
 
@@ -52,100 +53,38 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         Serialize Response to cache-friendly dictionary.
         """
-        return {
-            "messages": self._serialize_messages(),
-            "params": self._serialize_params(),
-            "duration": self.duration,
-            "timestamp": self.timestamp,
-        }
+        # return {
+        #     "messages": self._serialize_messages(),
+        #     "params": self._serialize_params(),
+        #     "duration": self.duration,
+        #     "timestamp": self.timestamp,
+        # }
+        pass
 
     @classmethod
     def from_cache_dict(cls, data: Dict[str, Any]) -> "Response":
         """
         Deserialize Response from cache dictionary.
         """
-        from Chain.message.messages import Messages  # Import at the top
-
-        # Deserialize messages
-        messages_list = cls._deserialize_messages(data["messages"])
-        messages = Messages(messages_list)  # Wrap in Messages object
-
-        # Deserialize params
-        params = cls._deserialize_params(data["params"])
-
-        # Create instance
-        instance = cls(
-            messages=messages,  # Now it's a Messages object
-            params=params,
-            duration=data["duration"],
-            timestamp=data["timestamp"],
-        )
-
-        return instance
-
-    def _serialize_messages(self) -> list[Dict[str, Any]]:
-        """
-        Serialize the messages list, handling different message types.
-        """
-        serialized_messages = []
-        for message in self.messages:
-            if hasattr(message, "to_cache_dict"):
-                # Message has its own serialization method
-                serialized_messages.append(message.to_cache_dict())
-            else:
-                # Fallback for basic Message objects
-                serialized_messages.append(
-                    {
-                        "message_type": "Message",
-                        "role": (
-                            message.role.value
-                            if hasattr(message.role, "value")
-                            else message.role
-                        ),
-                        "content": {"type": "string", "data": str(message.content)},
-                    }
-                )
-        return serialized_messages
-
-    @classmethod
-    def _deserialize_messages(
-        cls, messages_data: list[Dict[str, Any]]
-    ) -> list[Message]:
-        """
-        Deserialize messages list, handling different message types.
-        """
-        messages = []
-        for msg_data in messages_data:
-            message_type = msg_data.get("message_type", "Message")
-
-            if message_type == "ImageMessage":
-                from Chain.message.imagemessage import ImageMessage
-
-                messages.append(ImageMessage.from_cache_dict(msg_data))
-            elif message_type == "AudioMessage":
-                from Chain.message.audiomessage import AudioMessage
-
-                messages.append(AudioMessage.from_cache_dict(msg_data))
-            else:
-                # Standard Message
-                messages.append(Message.from_cache_dict(msg_data))
-
-        return messages
-
-    def _serialize_params(self) -> Dict[str, Any]:
-        """
-        Serialize the Params object using its own serialization method.
-        """
-        return self.params.to_cache_dict()
-
-    @classmethod
-    def _deserialize_params(cls, params_data: Dict[str, Any]) -> Params:
-        """
-        Deserialize the Params object using its own deserialization method.
-        """
-        from Chain.model.params.params import Params
-
-        return Params.from_cache_dict(params_data)
+        # from Chain.message.messages import Messages  # Import at the top
+        #
+        # # Deserialize messages
+        # messages_list = cls._deserialize_messages(data["messages"])
+        # messages = Messages(messages_list)  # Wrap in Messages object
+        #
+        # # Deserialize params
+        # params = cls._deserialize_params(data["params"])
+        #
+        # # Create instance
+        # instance = cls(
+        #     messages=messages,  # Now it's a Messages object
+        #     params=params,
+        #     duration=data["duration"],
+        #     timestamp=data["timestamp"],
+        # )
+        #
+        # return instance
+        pass
 
     @property
     def prompt(self) -> str | None:
@@ -200,17 +139,3 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         We want to be able to check the length of the content.
         """
         return len(self.__str__())
-
-
-if __name__ == "__main__":
-    # Create an example Response object
-    sample_reponse = Response(
-        messages=Messages(
-            [
-                Message(role="user", content="Hello, world!"),
-                Message(role="assistant", content="Hello! How can I assist you today?"),
-            ]
-        ),
-        params=Params(model="gpt-3.5-turbo"),
-        duration=1.23,
-    )

@@ -1,8 +1,8 @@
-from Chain.message.message import Message
+from Chain.message.message import Message, MessageType, Role
 from Chain.message.imagemessage import OpenAITextContent
 from Chain.logging.logging_config import get_logger
 from pydantic import BaseModel, Field
-from typing import Literal, Dict, Any
+from typing import Literal, override
 from pathlib import Path
 import base64, re
 
@@ -42,115 +42,93 @@ class OpenAIAudioContent(BaseModel):
     )
 
 
-class OpenAIAudioMessage(Message):
+class OpenAIAudioMessage(BaseModel):
     """
     Gemini AudioMessage should have a single AudioContent and a single TextContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
     """
-
+    role: Role = Field(default="user", description="The role of the message sender.")
     content: list[OpenAIAudioContent | OpenAITextContent]  # type: ignore
 
-
-class AudioMessage(Message):  # ← Changed from BaseModel to Message
+class AudioMessage(Message):
     """
-    AudioMessage with serialization/deserialization support.
-    You can splat it to an OpenAI or Gemini message; with the to_openai() method.
+    AudioMessage is a message that contains audio content.
+    It can be created from an audio file and contains both the audio content in base64 format
     """
-
-    # Text content is inherited from Message base class as 'content'
-    # We'll override it with a more specific structure
-    content: str | list[BaseModel] | None = Field(default=None)
-
-    # AudioMessage-specific fields
-    text_content: str = Field(
-        description="The text content of the message, i.e. the prompt."
-    )
-    audio_file: str | Path = Field(description="The path to the audio file to be sent.")
-
-    # Post-init variables
-    format: Literal["wav", "mp3", ""] = Field(
-        description="The audio format.", default=""
-    )
-    audio_content: str = Field(
-        description="The base64-encoded audio data.", default="", repr=False
-    )
-
-    def model_post_init(self, __context):  # type: ignore
+    message_type: MessageType = Field(default = "audio", exclude=True, repr=False)
+    content: list[str] = Field(default_factory=list)
+    text_content: str = Field(exclude=True, repr=False)
+    audio_content: str = Field(exclude=True, repr=False) 
+    format: Literal["wav", "mp3"] = Field(exclude=True, repr=False)
+    
+    @classmethod
+    def from_audio_file(cls, audio_file: str | Path, text_content: str, role: str = "user") -> "AudioMessage":
         """
-        Convert the audio file to base64 string and set up the content field.
+        Create AudioMessage from audio file.
+
+        Args:
+            audio_file (str | Path): Path to the audio file.
+            text_content (str): Text content associated with the audio.
+            role (str): Role of the message sender, default is "user".
         """
-        # Skip post_init if this is a cache restoration (empty audio_file)
-        if not self.audio_file or self.audio_file == "":
-            if self.audio_content and self.format:
-                # This is cache restoration - set content field
-                self.content = [self.audio_content, self.text_content]
-                return
+        # Do all the file processing here
+        audio_file = Path(audio_file)
+        if not audio_file.exists():
+            raise FileNotFoundError(f"Audio file {audio_file} does not exist.")
+        
+        audio_content = cls._convert_audio_to_base64(audio_file)
+        format = audio_file.suffix.lower()[1:]  # "mp3" or "wav"
+        
+        return cls(
+            role=role,
+            content=[audio_content, text_content],
+            text_content=text_content,
+            audio_content=audio_content,
+            format=format
+        )
 
-        # Check if the audio file exists
-        if isinstance(self.audio_file, str):
-            self.audio_file = Path(self.audio_file)
-        if not self.audio_file.exists():
-            raise FileNotFoundError(f"Audio file {self.audio_file} does not exist.")
+    @override
+    def to_cache_dict(self) -> dict:
+        """
+        Convert the AudioMessage to a dictionary for caching.
+        """
+        return {
+            "message_type": self.message_type,
+            "role": self.role,
+            "content": self.content,
+            "text_content": self.text_content,
+            "audio_content": self.audio_content,
+            "format": self.format
+        }
 
-        # Convert the audio file to base64 string
-        self.audio_content = self._convert_audio_to_base64(self.audio_file)
-        if not is_base64_simple(self.audio_content):
-            raise ValueError("Audio content is not a valid base64 string.")
+    @override
+    @classmethod
+    def from_cache_dict(cls, cache_dict: dict) -> "AudioMessage":
+        """
+        Create an AudioMessage from a cached dictionary.
+        """
+        return cls(
+            role=cache_dict["role"],
+            content=cache_dict["content"],
+            text_content=cache_dict["text_content"],
+            audio_content=cache_dict["audio_content"],
+            format=cache_dict["format"]
+        )
 
-        # Infer the audio format from the file extension if not provided
-        if self.format == "":
-            if self.audio_file.suffix.lower()[1:] in ["mp3", "wav"]:
-                self.format = self.audio_file.suffix.lower()[1:]
-
-        # Set up the content field to match Message interface
-        self.content = [self.audio_content, self.text_content]
-
-        # Change audio_file to str so it can be used in OpenAI API
-        self.audio_file = str(self.audio_file)
-
-    def _convert_audio_to_base64(self, file_path: Path) -> str:
+    @classmethod
+    def _convert_audio_to_base64(cls, file_path: Path) -> str:
         """
         Convert the audio file to base64 string.
         """
         with open(file_path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
 
-    def to_cache_dict(self) -> Dict[str, Any]:
-        """
-        Serialize AudioMessage to cache-friendly dictionary.
-        """
-        return {
-            "message_type": "AudioMessage",
-            "role": self.role.value if hasattr(self.role, "value") else self.role,
-            "text_content": self.text_content,
-            "audio_file": str(self.audio_file),
-            "format": self.format,
-            "audio_content": self.audio_content,
-        }
-
-    @classmethod
-    def from_cache_dict(cls, data: Dict[str, Any]) -> "AudioMessage":
-        """
-        Deserialize AudioMessage from cache dictionary.
-        Temporarily removes audio_file to avoid file existence check.
-        """
-        # Create instance with minimal data first
-        instance = cls.model_construct(
-            role=data["role"],
-            text_content=data["text_content"],
-            audio_file="",  # Empty to avoid file check
-            format=data["format"],
-            audio_content=data["audio_content"],
-        )
-
-        # Manually set the remaining fields after construction
-        instance.content = [data["audio_content"], data["text_content"]]
-        instance.audio_file = data["audio_file"]  # Set the real file path
-
-        return instance
-
     def __repr__(self):
-        return f"AudioMessage(role={self.role}, text_content={self.text_content}, audio_file={self.audio_file}, format={self.format})"
+        """
+        String representation of the AudioMessage.
+        """
+        return f"AudioMessage(role={self.role}, content=[{self.text_content}, {self.audio_content[:30]}...], format={self.format})"
+
 
     def to_openai(self) -> OpenAIAudioMessage:
         """
@@ -165,10 +143,21 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
 
     def play(self):
         """
-        Play the audio.
+        Play the audio from the base64 content (no file required).
         """
         from pydub import AudioSegment
         from pydub.playback import play
+        import base64
+        import io
 
-        audio = AudioSegment.from_file(self.audio_file, format=self.format)
+        # Decode base64 to bytes
+        audio_bytes = base64.b64decode(self.audio_content)
+        
+        # Create a file-like object from bytes
+        audio_buffer = io.BytesIO(audio_bytes)
+        
+        # Load audio from the buffer
+        audio = AudioSegment.from_file(audio_buffer, format=self.format)
+        
+        # Play the audio
         play(audio)

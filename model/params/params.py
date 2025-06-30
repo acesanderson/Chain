@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ValidationError
 from typing import Optional, Any, ClassVar, override
 from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
@@ -8,7 +9,7 @@ from Chain.progress.verbosity import Verbosity
 from Chain.progress.display_mixins import RichDisplayParamsMixin, PlainDisplayParamsMixin
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
-import importlib, json
+import json
 
 
 # Sub classes for specialized params
@@ -159,7 +160,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     # Core parameters
     model: str = Field(..., description="The model identifier to use for inference.")
-    messages: list[Message] | Messages = Field(
+    messages: Messages | list[Message] = Field(
         default_factory=list,
         description="List of messages to send to the model. Can include text, images, audio, etc.",
     )
@@ -208,6 +209,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         - validate ClientParams against provider
         - set client_params based on provider if not already set
         """
+        super().model_post_init(__context) # Call the mixin's post_init first!
         # 1. Validate that we have EITHER messages or query_input
         if not self.messages and not self.query_input:
             raise ValidationError(
@@ -240,13 +242,14 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         # 8. Set client_params based on provider if not already set
         if self.client_params is None:
             for client_param_type in ClientParamsTypes.__args__:
-                if self.provider == client_param_type.provider:
+                # Use getattr with a default to safely check for 'provider' on ClassVar
+                if self.provider == getattr(client_param_type, 'provider', None):
                     self.client_params = client_param_type()
                     break
-        if self.client_params is None:
-            raise ValueError(
-                f"ClientParams not found for provider: {self.provider}. Please set client_params explicitly."
-            )
+            if self.client_params is None:
+                 raise ValidationError(
+                    f"ClientParams could not be determined for model provider: {self.provider}. This may indicate an unsupported provider or a missing client_params initialization logic."
+                )
 
     def validate_temperature(self):
         """
@@ -279,7 +282,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         if isinstance(self.query_input, Message):
             input_messages.append(self.query_input)
         elif isinstance(self.query_input, str):
-            message = Message(role="user", content=self.query_input)
+            message = TextMessage(role="user", content=self.query_input)
             input_messages.append(message)
         elif isinstance(self.query_input, list):
             if not all(isinstance(item, Message) for item in self.query_input):
@@ -318,140 +321,6 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         params_str = "|".join([messages_str, self.model, temp_str, parser_str])
 
         return sha256(params_str.encode("utf-8")).hexdigest()
-
-    def to_cache_dict(self) -> dict[str, Any]:
-        """
-        Serialize Params to cache-friendly dictionary with proper verbosity handling.
-        """
-        # Use Pydantic's built-in serialization
-        params_dict = self.model_dump()
-
-        # Add type information for reconstruction
-        params_dict["_params_class"] = f"{self.__class__.__module__}.{self.__class__.__name__}"
-
-        # Handle client_params serialization separately to preserve type
-        if self.client_params:
-            client_params_dict = self.client_params.model_dump()
-            client_params_dict["_client_params_class"] = f"{self.client_params.__class__.__module__}.{self.client_params.__class__.__name__}"
-            params_dict["client_params"] = client_params_dict
-
-        # Handle Parser serialization separately
-        if self.parser:
-            params_dict["parser"] = {
-                "_parser_class": f"{self.parser.__class__.__module__}.{self.parser.__class__.__name__}",
-                "pydantic_model_class": f"{self.parser.pydantic_model.__module__}.{self.parser.pydantic_model.__name__}",
-                "original_spec_class": f"{self.parser.original_spec.__module__}.{self.parser.original_spec.__name__}" if hasattr(self.parser, 'original_spec') else None
-            }
-        else:
-            params_dict["parser"] = None
-
-        # ✅ NEW: Handle Verbosity serialization
-        if hasattr(self, 'verbose') and self.verbose is not None:
-            from Chain.progress.verbosity import Verbosity
-            if isinstance(self.verbose, Verbosity):
-                params_dict["verbose"] = self.verbose.to_cache_dict()
-            # If it's not a Verbosity enum, let it serialize normally
-
-        return params_dict
-
-
-    @classmethod
-    def from_cache_dict(cls, data: dict[str, Any]) -> "Params":
-        """
-        Deserialize Params from cache dictionary with proper verbosity reconstruction.
-        """
-        # Make a copy to avoid mutating the original data
-        params_data = data.copy()
-
-        # Extract class information
-        params_class_path = params_data.pop("_params_class", "Chain.model.params.params.Params")
-
-        # Handle client_params deserialization first
-        if "client_params" in params_data and params_data["client_params"]:
-            client_params_data = params_data["client_params"].copy()
-            client_params_class_path = client_params_data.pop("_client_params_class", None)
-
-            if client_params_class_path:
-                try:
-                    client_params_class = cls._import_class(client_params_class_path)
-                    params_data["client_params"] = client_params_class.model_validate(client_params_data)
-                except (ImportError, AttributeError, ValueError) as e:
-                    import warnings
-                    warnings.warn(
-                        f"Failed to reconstruct client_params from '{client_params_class_path}': {e}. "
-                        f"Will create new client_params based on provider.",
-                        UserWarning
-                    )
-                    params_data["client_params"] = None
-
-        # Handle Parser deserialization
-        if "parser" in params_data and params_data["parser"]:
-            parser_data = params_data["parser"]
-            if isinstance(parser_data, dict) and "_parser_class" in parser_data:
-                try:
-                    parser_class = cls._import_class(parser_data["_parser_class"])
-                    pydantic_model_class = cls._import_class(parser_data["pydantic_model_class"])
-                    params_data["parser"] = parser_class(pydantic_model_class)
-                except (ImportError, AttributeError, ValueError) as e:
-                    import warnings
-                    warnings.warn(
-                        f"Failed to reconstruct parser: {e}. Setting parser to None.",
-                        UserWarning
-                    )
-                    params_data["parser"] = None
-            else:
-                params_data["parser"] = None
-
-        # ✅ NEW: Handle Verbosity deserialization
-        if "verbose" in params_data and params_data["verbose"]:
-            verbose_data = params_data["verbose"]
-            if isinstance(verbose_data, dict) and verbose_data.get("verbosity_type") == "Verbosity":
-                try:
-                    from Chain.progress.verbosity import Verbosity
-                    params_data["verbose"] = Verbosity.from_cache_dict(verbose_data)
-                except (ValueError, ImportError) as e:
-                    import warnings
-                    warnings.warn(
-                        f"Failed to reconstruct Verbosity: {e}. Using default PROGRESS.",
-                        UserWarning
-                    )
-                    from Chain.progress.verbosity import Verbosity
-                    params_data["verbose"] = Verbosity.PROGRESS
-            # If it's not a Verbosity cache dict, let normal validation handle it
-
-        # Dynamically import and reconstruct Params
-        try:
-            params_class = cls._import_class(params_class_path)
-            return params_class.model_validate(params_data)
-        except (ImportError, AttributeError, ValueError) as e:
-            import warnings
-            warnings.warn(
-                f"Failed to reconstruct Params from '{params_class_path}': {e}. "
-                f"Falling back to base Params class.",
-                UserWarning
-            )
-            return cls.model_validate(params_data)
-
-    @staticmethod
-    def _import_class(class_path: str):
-        """
-        Dynamically import a class from its full module path.
-        
-        Args:
-            class_path: Full class path like "Chain.model.params.params.Params"
-            
-        Returns:
-            The imported class
-            
-        Raises:
-            ImportError: If module cannot be imported
-            AttributeError: If class cannot be found in module
-        """
-        module_path, class_name = class_path.rsplit(".", 1)
-        module = importlib.import_module(module_path)
-        return getattr(module, class_name)
-
-
 
     def __str__(self) -> str:
         """
@@ -494,7 +363,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                         "AudioMessage can only be used with the gpt-4o-audio-preview model."
                     )
                 converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, Message) and self.provider == "anthropic":
+            elif isinstance(message, TextMessage) and self.provider == "anthropic":
                 # For Anthropic, we need to convert the message to the appropriate format.
                 converted_messages.append(message.model_dump())
             else:

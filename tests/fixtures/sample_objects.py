@@ -1,7 +1,7 @@
 from Chain.result.error import ChainError, ErrorInfo, ErrorDetail
 from Chain.result.response import Response
 from Chain.model.params.params import Params
-from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.message.messages import Messages
@@ -11,22 +11,21 @@ from pathlib import Path
 dir_path = Path(__file__).parent
 
 # Messages
-sample_message = Message(role="user", content="Hello, world!")
+sample_message = TextMessage(role="user", content="Hello, world!")
 sample_messages = Messages([
-    Message(role="user", content="Hello, world!"),
-    Message(role="assistant", content="Hello! How can I assist you today?"),
-    Message(role="user", content="What is the weather like?"),
+    TextMessage(role="user", content="Hello, world!"),
+    TextMessage(role="assistant", content="Hello! How can I assist you today?"),
+    TextMessage(role="user", content="What is the weather like?"),
 ])
 
 sample_audio_file = dir_path / "audio.mp3"
-sample_audio_message = AudioMessage(
+sample_audio_message = AudioMessage.from_audio_file(
     role="user",
-    content="What is this audio about?",
     text_content="This is a sample audio message.",
     audio_file=sample_audio_file,
 )
 sample_image_file = dir_path / "image.png"
-sample_image_message = ImageMessage(
+sample_image_message = ImageMessage.from_image_file(
     role="user",
     text_content="This is a sample image message.",
     image_file=sample_image_file,
@@ -55,8 +54,8 @@ sample_response = Response(
 sample_params = Params(
     model="gpt-3.5-turbo-0125",
     messages=[
-        Message(role="user", content="Hello, world!"),
-        Message(role="assistant", content="Hello! How can I assist you today?")
+        TextMessage(role="user", content="Hello, world!"),
+        TextMessage(role="assistant", content="Hello! How can I assist you today?")
     ],
     temperature=0.7,
     stream=True,

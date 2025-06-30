@@ -4,7 +4,8 @@ from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
-from Chain.message.message import Message
+from Chain.message.messages import Messages
+from Chain.message.textmessage import TextMessage
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
 from Chain.cache.cache import check_cache, update_cache
@@ -111,10 +112,8 @@ class ModelAsync(Model):
             if isinstance(result, Response):
                 response = result
             elif isinstance(result, str):
-                from Chain.message.messages import Messages
-
-                user_message = Message(role="user", content=params.query_input or "")
-                assistant_message = Message(role="assistant", content=result)
+                user_message = TextMessage(role="user", content=params.query_input or "")
+                assistant_message = TextMessage(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
 
                 response = Response(
@@ -128,8 +127,8 @@ class ModelAsync(Model):
                 # Handle other result types (BaseModel, etc.)
                 from Chain.message.messages import Messages
 
-                user_message = Message(role="user", content=params.query_input or "")
-                assistant_message = Message(role="assistant", content=result)
+                user_message = TextMessage(role="user", content=params.query_input or "")
+                assistant_message = TextMessage(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
 
                 response = Response(

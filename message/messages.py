@@ -1,10 +1,11 @@
-from typing import Any, Iterator, Optional
+from typing import Iterator, Optional, override
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
+from Chain.message.audiomessage import AudioMessage
+from Chain.message.imagemessage import ImageMessage
 from Chain.logging.logging_config import get_logger
 
 logger = get_logger(__name__)
-
 
 class Messages(BaseModel):
     """
@@ -155,42 +156,6 @@ class Messages(BaseModel):
             return NotImplemented
         return self
 
-    # Serialization methods (updated for BaseModel)
-    def to_cache_dict(self) -> dict[str, Any]:
-        """
-        Serialize Messages to cache-friendly dictionary.
-        """
-        return {"messages": [msg.to_cache_dict() for msg in self.messages]}
-
-    @classmethod
-    def from_cache_dict(cls, data: dict[str, Any]) -> "Messages":
-        """
-        Deserialize Messages from cache dictionary.
-        """
-        messages_list = []
-
-        for msg_data in data["messages"]:
-            # Check if this is a specialized message type
-            message_type = msg_data.get("message_type", "Message")
-
-            if message_type == "ImageMessage":
-                # Import here to avoid circular imports
-                from Chain.message.imagemessage import ImageMessage
-
-                messages_list.append(ImageMessage.from_cache_dict(msg_data))
-            elif message_type == "AudioMessage":
-                # Import here to avoid circular imports
-                from Chain.message.audiomessage import AudioMessage
-
-                messages_list.append(AudioMessage.from_cache_dict(msg_data))
-            else:
-                # Standard Message
-                from Chain.message.message import Message
-
-                messages_list.append(Message.from_cache_dict(msg_data))
-
-        return cls(messages=messages_list)
-
     # Chain-specific convenience methods
     def add_new(self, role: str, content: str) -> None:
         """
@@ -246,3 +211,27 @@ class Messages(BaseModel):
         String representation showing message count and types.
         """
         return self.__repr__()
+
+    # Serialization methods
+    @override
+    def to_cache_dict(self) -> dict:
+        return {"messages": [message.to_cache_dict() for message in self.messages]}
+
+    @override
+    @classmethod
+    def from_cache_dict(cls, cache_dict: dict) -> "Messages":
+        """
+        Deserialize from a dictionary.
+
+        Args:
+            cache_dict: Dictionary containing cached messages
+
+        Returns:
+            Messages object
+        """
+        if "messages" not in cache_dict:
+            logger.error("Cache dict must contain 'messages' key")
+            raise KeyError("Cache dict must contain 'messages' key")
+        messages = cache_dict["messages"]
+        message_dicts = [Message.from_cache_dict(msg) for msg in messages]
+        return cls(messages=message_dicts)

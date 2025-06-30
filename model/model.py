@@ -1,5 +1,6 @@
 from Chain.cache.cache import ChainCache, check_cache, update_cache
 from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
@@ -218,8 +219,10 @@ class Model:
                 logger.info(
                     "Constructing Response object from result string or BaseModel."
                 )
-                user_message = Message(role="user", content=params.query_input or "")
-                assistant_message = Message(role="assistant", content=result)
+                user_message = TextMessage(
+                    role="user", content=params.query_input or ""
+                )
+                assistant_message = TextMessage(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
 
                 response = Response(

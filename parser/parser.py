@@ -11,14 +11,26 @@ logger = get_logger(__name__)
 
 
 class Parser:
+    _response_models: list[Type[BaseModel]] = [] # Store all pydantic classes, important for de-serialization
+
     def __init__(self, pydantic_model: Union[Type[BaseModel], type]):
         """
         Initialize the Parser with a model specification.
         :param pydantic_model: A Pydantic BaseModel class or a list of BaseModel classes.
         """
         self.original_spec = pydantic_model
-
         self.pydantic_model = pydantic_model
+        # Save response models to singleton for validation
+        if isinstance(pydantic_model, type) and issubclass(pydantic_model, BaseModel):
+            if pydantic_model not in self._response_models:
+                self._response_models.append(pydantic_model)
+        elif isinstance(pydantic_model, list):
+            for model in pydantic_model:
+                if isinstance(model, type) and issubclass(model, BaseModel):
+                    if model not in self._response_models:
+                        self._response_models.append(model)
+                else:
+                    raise ValueError("All items in the list must be Pydantic BaseModel subclasses.")
 
     def __repr__(self):
         return f"Parser({self.original_spec})"
@@ -29,8 +41,6 @@ class Parser:
         For wrapper classes with single list fields, extract the inner type
         so Instructor can handle multiple tool calls properly.
         """
-        import typing
-
         # Handle wrapper models with a single list field
         if isinstance(self.pydantic_model, type) and issubclass(
             self.pydantic_model, BaseModel
@@ -69,46 +79,3 @@ class Parser:
         # For non-wrapper classes, return as-is
         return self.pydantic_model
 
-    #
-    #
-    #
-    # def to_perplexity(self) -> BaseModel | type:
-    #     """
-    #     Convert the Pydantic model to a type suitable for Perplexity API.
-    #     """
-    #     import typing
-    #
-    #     # Handle direct list[BaseModel] type annotations
-    #     origin = typing.get_origin(self.pydantic_model)
-    #     if origin is list:
-    #         args = typing.get_args(self.pydantic_model)
-    #         if args and issubclass(args[0], BaseModel):
-    #             return self.pydantic_model  # Return list[SomeModel] directly
-    #
-    #     # Handle wrapper models with a single list field
-    #     if isinstance(self.pydantic_model, type) and issubclass(
-    #         self.pydantic_model, BaseModel
-    #     ):
-    #         # Pydantic v2
-    #         if hasattr(self.pydantic_model, "model_fields"):
-    #             fields = self.pydantic_model.model_fields
-    #         # Pydantic v1 fallback
-    #         else:
-    #             fields = self.pydantic_model.__fields__
-    #
-    #         if len(fields) == 1:
-    #             field_name, field_info = next(iter(fields.items()))
-    #             field_type = (
-    #                 field_info.annotation
-    #                 if hasattr(field_info, "annotation")
-    #                 else field_info.type_
-    #             )
-    #
-    #             # Check if it's list[SomeBaseModel]
-    #             field_origin = typing.get_origin(field_type)
-    #             if field_origin is list:
-    #                 args = typing.get_args(field_type)
-    #                 if args and issubclass(args[0], BaseModel):
-    #                     return list[args[0]]
-    #
-    #     return self.pydantic_model
