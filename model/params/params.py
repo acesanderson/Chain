@@ -6,7 +6,10 @@ from Chain.message.messages import Messages
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.progress.verbosity import Verbosity
-from Chain.progress.display_mixins import RichDisplayParamsMixin, PlainDisplayParamsMixin
+from Chain.progress.display_mixins import (
+    RichDisplayParamsMixin,
+    PlainDisplayParamsMixin,
+)
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
 import json
@@ -39,6 +42,7 @@ class ClientParams(BaseModel):
     """
     Parameters that are specific to a client.
     """
+
     provider: ClassVar[str]
 
 
@@ -53,7 +57,11 @@ class OpenAIParams(ClientParams):
     temperature_range: ClassVar[tuple[float, float]] = (0.0, 2.0)
 
     # Excluded from serialization in API calls
-    model: str = Field(default="", description="The model identifier to use for inference.", exclude=True)
+    model: str = Field(
+        default="",
+        description="The model identifier to use for inference.",
+        exclude=True,
+    )
 
     # Core parameters
     max_tokens: Optional[int] = None
@@ -114,6 +122,7 @@ class OllamaParams(OpenAIParams):
         base_dict = self.model_dump(*args, **kwargs)
         return json.dumps(base_dict)
 
+
 class AnthropicParams(ClientParams):
     """
     Parameters specific to Anthropic clients.
@@ -125,14 +134,19 @@ class AnthropicParams(ClientParams):
 
     # Core parameters
     max_tokens: int = (
-        4000  
-        ) # TBD: three defaults: 256, 1024, 4000, depending on use case
+        4000  # TBD: three defaults: 256, 1024, 4000, depending on use case
+    )
     top_k: Optional[int] = None
     top_p: Optional[float] = None
     stop_sequences: Optional[list[str]] = None
 
     # Excluded from serialization in API calls
-    model: str = Field(default="", description="The model identifier to use for inference.", exclude=True)
+    model: str = Field(
+        default="",
+        description="The model identifier to use for inference.",
+        exclude=True,
+    )
+
 
 class PerplexityParams(OpenAIParams):
     """
@@ -209,7 +223,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         - validate ClientParams against provider
         - set client_params based on provider if not already set
         """
-        super().model_post_init(__context) # Call the mixin's post_init first!
+        super().model_post_init(__context)  # Call the mixin's post_init first!
         # 1. Validate that we have EITHER messages or query_input
         if not self.messages and not self.query_input:
             raise ValidationError(
@@ -243,11 +257,11 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         if self.client_params is None:
             for client_param_type in ClientParamsTypes.__args__:
                 # Use getattr with a default to safely check for 'provider' on ClassVar
-                if self.provider == getattr(client_param_type, 'provider', None):
+                if self.provider == getattr(client_param_type, "provider", None):
                     self.client_params = client_param_type()
                     break
             if self.client_params is None:
-                 raise ValidationError(
+                raise ValidationError(
                     f"ClientParams could not be determined for model provider: {self.provider}. This may indicate an unsupported provider or a missing client_params initialization logic."
                 )
 
@@ -376,7 +390,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     # Each serialization method first operates on client_params, then constructs base parameters.
     def _to_openai_spec(self) -> dict:
-        assert isinstance(self.client_params, OpenAIParams), f"OpenAIParams (and subclasses) expected for OpenAI client, not {type(self.client_params)}. This is a bug in the code."
+        assert isinstance(
+            self.client_params, OpenAIParams
+        ), f"OpenAIParams (and subclasses) expected for OpenAI client, not {type(self.client_params)}. This is a bug in the code."
         """
         We use OpenAI spec with OpenAI, Gemini, Ollama, and Perplexity clients.
         """
@@ -401,7 +417,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         }  # Actually filter None values EXCEPT for response_model, as Instructor expects it to be present
 
     def to_openai(self) -> dict:
-        assert type(self.client_params) is OpenAIParams, f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+        assert (
+            type(self.client_params) is OpenAIParams
+        ), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
         return self._to_openai_spec()
 
     def to_ollama(self) -> dict:
@@ -409,11 +427,15 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         We should set num_ctx so we have maximal context window.
         Recall that Ollama with Instructor/OpenAI spec expects options to be nested under extra_body, so we have overriden model_dump.
         """
-        assert isinstance(self.client_params, OllamaParams), f"OllamaParams expected for Ollama client, not {type(self.client_params)}."
+        assert isinstance(
+            self.client_params, OllamaParams
+        ), f"OllamaParams expected for Ollama client, not {type(self.client_params)}."
         # Set num_ctx to the maximum context window for the model.
         num_ctx = ModelStore.get_num_ctx(self.model)
         if num_ctx is None:
-            raise ValueError(f"Model '{self.model}' does not have a defined context window.")
+            raise ValueError(
+                f"Model '{self.model}' does not have a defined context window."
+            )
         self.client_params.num_ctx = num_ctx
         return self._to_openai_spec()
 
@@ -425,7 +447,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         2. max_tokens is required
         3. No response_model in the API call params
         """
-        assert isinstance(self.client_params, AnthropicParams), f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
+        assert isinstance(
+            self.client_params, AnthropicParams
+        ), f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
         # Start with converted messages
         converted_messages = self.convert_messages()
 
@@ -482,9 +506,13 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         }
 
     def to_google(self) -> dict:
-        assert isinstance(self.client_params, GoogleParams), f"GeminiParams expected for Gemini client, not {type(self.client_params)}."
+        assert isinstance(
+            self.client_params, GoogleParams
+        ), f"GeminiParams expected for Gemini client, not {type(self.client_params)}."
         return self._to_openai_spec()
 
     def to_perplexity(self) -> dict:
-        assert isinstance(self.client_params, PerplexityParams), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
+        assert isinstance(
+            self.client_params, PerplexityParams
+        ), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
         return self._to_openai_spec()

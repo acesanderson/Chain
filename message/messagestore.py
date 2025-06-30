@@ -9,10 +9,11 @@ With MessageStore, you can:
 The MessageStore IS a Messages object with superpowers.
 """
 
-from Chain.message.message import Message
-from Chain.message.messages import Messages
+from Chain.message.message import Message, Role
+from Chain.message.textmessage import TextMessage
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
+from Chain.message.messages import Messages
 from rich.console import Console
 from rich.rule import Rule
 from pydantic import BaseModel, Field
@@ -32,14 +33,14 @@ class MessageStore(Messages):
     # Add Pydantic fields (Messages inherits from BaseModel)
     console: Optional[Console] = Field(default=None, exclude=True, repr=False)
     auto_save: bool = Field(default=True, exclude=True)
-    persistent: bool = Field(default=False, exclude=True) 
+    persistent: bool = Field(default=False, exclude=True)
     logging: bool = Field(default=False, exclude=True)
     pruning: bool = Field(default=False, exclude=True)
     history_file: Optional[Path] = Field(default=None, exclude=True, repr=False)
     log_file: Optional[Path] = Field(default=None, exclude=True, repr=False)
     db: Optional[TinyDB] = Field(default=None, exclude=True, repr=False)
-    
-    model_config = {"arbitrary_types_allowed": True} # Allow Console and TinyDB types
+
+    model_config = {"arbitrary_types_allowed": True}  # Allow Console and TinyDB types
 
     def __init__(
         self,
@@ -52,7 +53,7 @@ class MessageStore(Messages):
     ):
         """
         Initialize MessageStore with optional persistence and logging.
-        
+
         Args:
             messages: Initial list of messages (same as Messages class)
             console: Rich console for formatting output
@@ -66,20 +67,20 @@ class MessageStore(Messages):
             messages = messages.messages  # Extract the list
         # Initialize parent Messages class
         super().__init__(messages)
-        
+
         # Use existing console or create a new one
         if not console:
             self.console = Console(width=100)
         else:
             self.console = console
-            
+
         self.auto_save = auto_save
-        
+
         # Config history database if requested
         if history_file:
             # Ensure .json extension for TinyDB
-            if not str(history_file).endswith('.json'):
-                history_file = str(history_file) + '.json'
+            if not str(history_file).endswith(".json"):
+                history_file = str(history_file) + ".json"
             self.history_file = Path(history_file)
             self.persistent = True
             # Initialize TinyDB
@@ -88,7 +89,7 @@ class MessageStore(Messages):
             self.history_file = Path()
             self.persistent = False
             self.db = None
-            
+
         # Config log file if requested
         if log_file:
             self.log_file = Path(log_file)
@@ -98,7 +99,7 @@ class MessageStore(Messages):
         else:
             self.log_file = Path()
             self.logging = False
-            
+
         # Set the prune flag
         self.pruning = pruning
 
@@ -164,7 +165,7 @@ class MessageStore(Messages):
         super().__delitem__(key)
         self._auto_save_if_enabled()
 
-    def __iadd__(self, other) -> 'MessageStore':
+    def __iadd__(self, other) -> "MessageStore":
         """In-place concatenation with persistence."""
         result = super().__iadd__(other)
         if isinstance(other, (list, Messages)):
@@ -175,11 +176,11 @@ class MessageStore(Messages):
         return self
 
     # MessageStore-specific methods
-    def add_new(self, role: str, content: str) -> None:
+    def add_new(self, role: Role, content: str) -> None:
         """
         Create and add a new message (convenience method).
         """
-        message = Message(role=role, content=content)
+        message = TextMessage(role=role, content=content)
         self.append(message)  # This will handle persistence and logging
 
     def write_to_log(self, item: str | BaseModel) -> None:
@@ -188,12 +189,12 @@ class MessageStore(Messages):
         """
         if not self.logging:
             return
-            
+
         if isinstance(item, str):
             with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(file=file, force_terminal=True)
                 file_console.print(f"[bold magenta]{item}[/bold magenta]\n")
-                
+
         elif isinstance(item, Message):
             with open(self.log_file, "a", encoding="utf-8") as file:
                 file_console = Console(file=file, force_terminal=True)
@@ -217,21 +218,21 @@ class MessageStore(Messages):
         """
         if not self.persistent or not self.db:
             return
-            
+
         try:
             # Clear existing messages and save all current messages
             self.db.truncate()
-            
+
             # Save all current messages
             for i, message in enumerate(self.messages):
                 if message:  # Handle None messages
                     doc = {
-                        'timestamp': datetime.now().isoformat(),
-                        'message_index': i,
-                        'message_data': message.to_cache_dict()
+                        "timestamp": datetime.now().isoformat(),
+                        "message_index": i,
+                        "message_data": message.to_cache_dict(),
                     }
                     self.db.insert(doc)
-                    
+
         except Exception as e:
             print(f"Error saving history: {e}")
 
@@ -242,39 +243,39 @@ class MessageStore(Messages):
         if not self.persistent or self.db == None:
             print("This message store is not persistent.")
             return
-            
+
         try:
             # Get all messages from database
             message_docs = self.db.all()
-            
+
             # Sort by message_index to maintain order
-            message_docs.sort(key=lambda x: x.get('message_index', 0))
-            
+            message_docs.sort(key=lambda x: x.get("message_index", 0))
+
             # Deserialize messages
             messages_list = []
             for doc in message_docs:
-                message_data = doc['message_data']
+                message_data = doc["message_data"]
                 message_type = message_data.get("message_type", "Message")
-                
+
                 if message_type == "ImageMessage":
                     messages_list.append(ImageMessage.from_cache_dict(message_data))
                 elif message_type == "AudioMessage":
                     messages_list.append(AudioMessage.from_cache_dict(message_data))
                 else:
                     messages_list.append(Message.from_cache_dict(message_data))
-            
+
             # Replace current messages (disable auto_save temporarily)
             old_auto_save = self.auto_save
             self.auto_save = False
-            
+
             self.clear()
             self.extend(messages_list)
-            
+
             self.auto_save = old_auto_save
-            
+
             if self.pruning:
                 self.prune()
-                
+
         except Exception as e:
             print(f"Error loading history: {e}. Starting with empty history.")
             super().clear()  # Don't trigger auto_save for error case
@@ -286,16 +287,16 @@ class MessageStore(Messages):
         if len(self) > 20:
             # Keep last 20 messages
             pruned_messages = list(self)[-20:]
-            
+
             # Disable auto_save temporarily to avoid multiple saves
             old_auto_save = self.auto_save
             self.auto_save = False
-            
+
             self.clear()
             self.extend(pruned_messages)
-            
+
             self.auto_save = old_auto_save
-            
+
             # Save the pruned version
             if self.persistent:
                 self.save()
@@ -316,7 +317,7 @@ class MessageStore(Messages):
         if not self:
             self.console.print("No history (yet).", style="bold red")
             return
-            
+
         for index, message in enumerate(self):
             if message:
                 content = str(message.content)[:50].replace("\n", " ")
@@ -348,7 +349,7 @@ class MessageStore(Messages):
             return self[index - 1]
         return None
 
-    def copy(self) -> 'MessageStore':
+    def copy(self) -> "MessageStore":
         """Return a copy of the MessageStore (without persistence)."""
         return MessageStore(
             messages=list(self.messages),

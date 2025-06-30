@@ -6,7 +6,7 @@ Perplexity inputs the footnotes within the content.
 For this reason, we define a Pydantic class as our framework is fine with BaseModels as a response. You can still access it as a string and get the content if needed. Citations can be access by choice.
 """
 
-from Chain.model.clients.client import Client
+from Chain.model.clients.client import Client, Usage
 from Chain.model.clients.load_env import load_env
 from Chain.model.params.params import Params
 from openai import OpenAI, AsyncOpenAI, Stream
@@ -15,14 +15,17 @@ from typing import Optional
 from pydantic import BaseModel
 import instructor, tiktoken
 
+
 class PerplexityCitation(BaseModel):
     title: str
     url: str
     date: Optional[str]
 
+
 class PerplexityContent(BaseModel):
     text: str
     citations: list[PerplexityCitation]
+
 
 class PerplexityClient(Client):
     """
@@ -66,26 +69,32 @@ class PerplexityClientSync(PerplexityClient):
         )
         return instructor.from_perplexity(perplexity_client)
 
-
     def query(
         self,
         params: Params,
-        ) -> str | BaseModel:
+    ) -> tuple:
         result = self._client.chat.completions.create(**params.to_perplexity())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.prompt_tokens,
+            output_tokens=result.usage.completion_tokens,
+        )
         if isinstance(result, ChatCompletion):
             # Construct a PerplexityContent object from the response
             citations = result.search_results
-            assert isinstance(citations, list) and all([isinstance(citation, dict) for citation in citations]), "Citations should be a list of dicts"
+            assert isinstance(citations, list) and all(
+                [isinstance(citation, dict) for citation in citations]
+            ), "Citations should be a list of dicts"
             citations = [PerplexityCitation(**citation) for citation in citations]
             content = PerplexityContent(
-                text=result.choices[0].message.content,
-                citations=citations
+                text=result.choices[0].message.content, citations=citations
             )
-            return content
+            return content, usage
         if isinstance(result, BaseModel):
-            return result
+            return result, usage
         else:
             raise ValueError("Unexpected result type: {}".format(type(result)))
+
 
 class PerplexityClientAsync(PerplexityClient):
     def _initialize_client(self):
@@ -100,20 +109,25 @@ class PerplexityClientAsync(PerplexityClient):
     async def query(
         self,
         params: Params,
-        ) -> str | BaseModel | Stream:
+    ) -> tuple:
         result = await self._client.chat.completions.create(**params.to_perplexity())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.prompt_tokens,
+            output_tokens=result.usage.completion_tokens,
+        )
         if isinstance(result, ChatCompletion):
             # Construct a PerplexityContent object from the response
             citations = result.search_results
-            assert isinstance(citations, list) and all([isinstance(citation, dict) for citation in citations]), "Citations should be a list of dicts"
+            assert isinstance(citations, list) and all(
+                [isinstance(citation, dict) for citation in citations]
+            ), "Citations should be a list of dicts"
             citations = [PerplexityCitation(**citation) for citation in citations]
             content = PerplexityContent(
-                text=result.choices[0].message.content,
-                citations=citations
+                text=result.choices[0].message.content, citations=citations
             )
-            return content
+            return content, usage
         if isinstance(result, BaseModel):
-            return result
+            return result, usage
         else:
             raise ValueError("Unexpected result type: {}".format(type(result)))
-

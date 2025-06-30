@@ -219,14 +219,10 @@ class Model:
                 logger.info(
                     "Constructing Response object from result string or BaseModel."
                 )
-                user_message = TextMessage(
-                    role="user", content=params.query_input or ""
-                )
                 assistant_message = TextMessage(role="assistant", content=result)
-                messages = Messages([user_message, assistant_message])
 
                 response = Response(
-                    messages=messages,
+                    message=assistant_message,
                     params=params,
                     duration=stop_time - start_time,
                     input_tokens=usage.input_tokens,

@@ -10,8 +10,7 @@ from Chain.progress.display_mixins import (
     RichDisplayResponseMixin,
     PlainDisplayResponseMixin,
 )
-from pydantic import BaseModel
-from typing import Optional, Any, Dict
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 logger = get_logger(__name__)
@@ -24,32 +23,19 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     """
 
     # Core attributes
-    messages: Messages
+    message: Message
     params: Params
     input_tokens: int
     output_tokens: int
-    duration: Optional[float]
+    duration: float
 
     # Initialization attributes
-    timestamp: Optional[str] = None
+    timestamp: str = Field(
+        default_factory=lambda: datetime.now().isoformat(),
+        description="Timestamp of the response creation",
+    )
 
-    def model_post_init(self, __context):
-        """
-        Post-initialization hook to set the timestamp and ensure Messages type.
-        """
-        super().model_post_init(__context)  # Call the mixin's post_init first!
-        if self.timestamp is None:
-            self.timestamp = datetime.now().isoformat()
-
-        # Ensure messages is always a Messages object
-        if not isinstance(self.messages, Messages):
-            self.messages = Messages(self.messages)
-
-    @property
-    def total_tokens(self) -> int:
-        return self.input_tokens + self.output_tokens
-
-    def to_cache_dict(self) -> Dict[str, Any]:
+    def to_cache_dict(self) -> dict:
         """
         Serialize Response to cache-friendly dictionary.
         """
@@ -62,7 +48,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         pass
 
     @classmethod
-    def from_cache_dict(cls, data: Dict[str, Any]) -> "Response":
+    def from_cache_dict(cls, cache_dict: dict) -> "Response":
         """
         Deserialize Response from cache dictionary.
         """
@@ -91,27 +77,29 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         This is the last user message.
         """
-        if self.messages and isinstance(self.messages[-1], Message):
-            return self.messages[-1].content
-        return None
+        return self.params.messages[-1].content
 
     @property
     def message(self) -> Message:
         """
         Return last message (good for messagestore handling).
         """
-        if self.messages and isinstance(self.messages[-1], Message):
-            return self.messages[-1]
-        raise ValueError("No messages available in the response.")
+        return self.message
 
     @property
-    def content(self) -> Any:
+    def messages(self) -> Messages:
+        return Messages(messages=self.params.messages + [self.message])
+
+    @property
+    def total_tokens(self) -> int:
+        return self.input_tokens + self.output_tokens
+
+    @property
+    def content(self) -> str | BaseModel | list[BaseModel] | list[str]:
         """
         This is the last assistant message content.
         """
-        if self.messages and isinstance(self.messages[-1], Message):
-            return self.messages[-1].content
-        return None
+        return self.message.content
 
     @property
     def model(self) -> str:
@@ -130,7 +118,6 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         We want to pass as string when possible.
         Allow json objects (dict) to be pretty printed.
-        Not sure what this does if we have pydantic objects.
         """
         return str(self.content) if self.content is not None else ""
 

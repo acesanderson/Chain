@@ -47,9 +47,11 @@ sample_error = ChainError(
     )
 )
 sample_response = Response(
-    messages=sample_messages,
+    message=sample_message,
     params=Params(model="gpt-3.5-turbo-0125", messages = sample_messages),
     duration=1.23
+    input_tokens=60,
+    output_tokens=120
 )
 sample_params = Params(
     model="gpt-3.5-turbo-0125",
