@@ -1,129 +1,49 @@
 """
 Message is the default message type recognized as industry standard (role + content).
-Our Message class is inherited from specialized types like AudioMessage, ImageMessage, etc.
-We define list[Message] as Messages in a parallel file, this class can handle the serialization / deserialization needed for message historys, api calls, and caching.
+Our Message class is inherited from specialized types like TextMessage, AudioMessage, ImageMessage, etc.
 """
 
-from Chain.prompt.prompt import Prompt
+from abc import abstractmethod, ABC
 from Chain.logging.logging_config import get_logger
 from pydantic import BaseModel
-from typing import Literal
-
+from typing import Literal, Any
 
 logger = get_logger(__name__)
 
 # Useful type aliases
 Role = Literal["user", "assistant", "system"]
-MessageType = Literal["message", "audio", "image"]
+MessageType = Literal["text", "audio", "image"]
 
-class Message(BaseModel):
-    """
-    Industry standard, more or less, for messaging with LLMs.
-    System roles can have some weirdness (like with Anthropic), but role/content is standard.
-    """
-    message_type: MessageType = "message"
-    role: str | Role
-    content: str | BaseModel | list[BaseModel]
 
-    def __str__(self):
-        """
-        Returns the message in a human-readable format.
-        """
-        return f"{self.role}: {self.content}"
+class Message(BaseModel, ABC):
+    """Base message class - abstract with required Pydantic functionality"""
+    message_type: MessageType
+    role: Role
+    content: Any
 
-    def __getitem__(self, key):
-        """
-        Allows for dictionary-style access to the object.
-        """
-        return getattr(self, key)
-
+    @abstractmethod
     def to_cache_dict(self) -> dict:
         """
         Serializes the message to a dictionary for caching.
+        Must be implemented by subclasses.
         """
-        role = self.role
-        if isinstance(self.content, str):
-            content = self.content
-        elif isinstance(self.content, BaseModel):
-            content = self._serialize_pydantic(self.content)
-        elif isinstance(self.content, list):
-            content = [self._serialize_pydantic(item) for item in self.content]
-        else:
-            logger.error(f"Unsupported content type: {type(self.content)}")
-            raise TypeError("Content must be a string, BaseModel, or list of BaseModels.")
-        assert isinstance(content, (str, dict, list)), (
-            "Content must be a string, dict, or list of dicts, "
-        )
-        return {
-            "role": role,
-            "content": content,
-        }
-
+        raise NotImplementedError("Subclasses must implement this method.")
+   
     @classmethod
-    def from_cache_dict(cls, cache_dict: dict):
-        """
-        Deserializes the message from a dictionary.
-        """
-        role = cache_dict["role"]
-        content = cache_dict["content"]
-        # If it's a BaseModel, we need to deserialize it
-        if isinstance(content, str):
-            content = content
-        elif isinstance(content, dict) and "__class__" in content:
-            if "__class__" in cache_dict["content"]:
-                content = cls._deserialize_pydantic(cache_dict["content"])
-            else:
-                logger.error("Content dictionary does not contain '__class__' key.")
-                raise ValueError("Content dictionary must contain '__class__' key for deserialization.")
-        # If it's a list of BaseModels, we need to deserialize each item
-        elif isinstance(content, list):
-            content = [cls._deserialize_pydantic(item) for item in content]
-        else:
-            logger.error(f"Unsupported content type: {type(content)}")
-            raise TypeError("Content must be a string, dict, or list of dicts.")
-        return cls(role=role, content=content)
-
-    def _serialize_pydantic(self, obj: BaseModel) -> dict:
-        """
-        Serializes a Pydantic model to a dictionary.
-        """
-        obj_dict = obj.model_dump()
-        obj_dict["__class__"] = obj.__class__.__name__
-        return obj_dict
-
-    @classmethod
-    def _deserialize_pydantic(cls, obj_dict: dict) -> BaseModel:
-        from Chain.parser.parser import Parser 
-
-        class_name = obj_dict.pop("__class__")
-
-        for response_model in Parser._response_models:
-            if response_model.__name__ == class_name:
-                try:
-                    return response_model.model_validate(obj_dict)
-                except Exception as e:
-                    logger.error(f"Error deserializing {class_name}: {e}")
-                    raise ValueError(f"Error deserializing {class_name}: {e}. There maybe version conflicts with the response model.")
-        logger.error(f"Unknown class name: {class_name}")
-        raise ValueError(f"Unknown class name: {class_name}. Please check the response models in Parser._response_model.")
+    def from_cache_dict(cls, cache_dict: dict) -> "Message":
+        """Parse JSON with lazy imports to avoid circular dependencies"""
+        message_type = cache_dict["message_type"]
         
+        # Import only when needed
+        if message_type == "text":
+            from Chain.message.textmessage import TextMessage
+            return TextMessage.from_cache_dict(cache_dict)
+        elif message_type == "audio":
+            from Chain.message.audiomessage import AudioMessage  
+            return AudioMessage.from_cache_dict(cache_dict)
+        elif message_type == "image":
+            from Chain.message.imagemessage import ImageMessage
+            return ImageMessage.from_cache_dict(cache_dict)
+        else:
+            raise ValueError(f"Unknown message type: {message_type}")
 
-# Some helpful functions
-def create_system_message(
-    system_prompt: str | Prompt, input_variables=None
-) -> list[Message]:
-    """
-    Takes a system prompt object (Prompt()) or a string, an optional input object, and returns a Message object.
-    """
-    if isinstance(system_prompt, str):
-        system_prompt = Prompt(system_prompt)
-    if input_variables:
-        system_message = [
-            Message(
-                role="system",
-                content=system_prompt.render(input_variables=input_variables),
-            )
-        ]
-    else:
-        system_message = [Message(role="system", content=system_prompt.prompt_string)]
-    return system_message

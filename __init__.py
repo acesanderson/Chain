@@ -29,9 +29,11 @@ from Chain.result.response import Response
 from Chain.result.error import ChainError
 from Chain.result.result import ChainResult
 from Chain.parser.parser import Parser
-from Chain.message.message import Message, create_system_message
-from Chain.message.messages import Messages
+from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage, create_system_message
 from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
+from Chain.message.messages import Messages
 from Chain.message.messagestore import MessageStore
 from Chain.progress.verbosity import Verbosity
 from Chain.cache.cache import ChainCache
@@ -53,6 +55,8 @@ __all__ = [
     "ChainError",
     "ChainResult",
     "Message",
+    "TextMessage",
+    "AudioMessage",
     "ImageMessage",
     "MessageStore",
     "ModelStore",

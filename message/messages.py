@@ -1,10 +1,11 @@
-from typing import Iterator, Optional
+from typing import Iterator, Optional, override
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
+from Chain.message.audiomessage import AudioMessage
+from Chain.message.imagemessage import ImageMessage
 from Chain.logging.logging_config import get_logger
 
 logger = get_logger(__name__)
-
 
 class Messages(BaseModel):
     """
@@ -210,3 +211,27 @@ class Messages(BaseModel):
         String representation showing message count and types.
         """
         return self.__repr__()
+
+    # Serialization methods
+    @override
+    def to_cache_dict(self) -> dict:
+        return {"messages": [message.to_cache_dict() for message in self.messages]}
+
+    @override
+    @classmethod
+    def from_cache_dict(cls, cache_dict: dict) -> "Messages":
+        """
+        Deserialize from a dictionary.
+
+        Args:
+            cache_dict: Dictionary containing cached messages
+
+        Returns:
+            Messages object
+        """
+        if "messages" not in cache_dict:
+            logger.error("Cache dict must contain 'messages' key")
+            raise KeyError("Cache dict must contain 'messages' key")
+        messages = cache_dict["messages"]
+        message_dicts = [Message.from_cache_dict(msg) for msg in messages]
+        return cls(messages=message_dicts)

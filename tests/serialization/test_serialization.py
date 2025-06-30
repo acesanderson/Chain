@@ -10,6 +10,7 @@ from datetime import datetime
 
 # Import all the classes to test
 from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.messages import Messages
@@ -24,7 +25,7 @@ def test_message_strings():
     print("Testing Message...")
     
     # Create original
-    original = Message(role="user", content="Hello world")
+    original = TextMessage(role="user", content="Hello world")
     
     # Serialize
     cache_dict = original.to_cache_dict()
@@ -49,7 +50,7 @@ def test_message_pydantic():
     from Chain import Parser
     _ = Parser(TestFrog)
     frog = TestFrog(species = "Rana temporaria", name = "Freddy", legs = 4, color = "green")
-    original = Message(role="user", content=frog)
+    original = TextMessage(role="user", content=frog)
 
     # Serialize
     cache_dict = original.to_cache_dict()
@@ -77,7 +78,7 @@ def test_message_list_pydantic():
         TestFrog(species="Rana temporaria", name="Freddy", legs=4, color="green"),
         TestFrog(species="Bufo bufo", name="Benny", legs=4, color="brown")
     ]
-    original = Message(role="user", content=frogs)
+    original = TextMessage(role="user", content=frogs)
 
     # Serialize
     cache_dict = original.to_cache_dict()
@@ -117,7 +118,7 @@ def test_audiomessage():
         cache_dict = original.to_cache_dict()
         
         # Deserialize
-        restored = AudioMessage.from_cache_dict(cache_dict)
+        restored = Message.from_cache_dict(cache_dict)
         
         # Check
         assert restored.role == original.role
@@ -151,7 +152,7 @@ def test_imagemessage():
         cache_dict = original.to_cache_dict()
         
         # Deserialize
-        restored = ImageMessage.from_cache_dict(cache_dict)
+        restored = Message.from_cache_dict(cache_dict)
         
         # Check
         assert restored.role == original.role
@@ -167,8 +168,8 @@ def test_messages():
     print("Testing Messages...")
     
     # Create original
-    msg1 = Message(role="user", content="Hello")
-    msg2 = Message(role="assistant", content="Hi there")
+    msg1 = TextMessage(role="user", content="Hello")
+    msg2 = TextMessage(role="assistant", content="Hi there")
     original = Messages([msg1, msg2])
     
     # Serialize
