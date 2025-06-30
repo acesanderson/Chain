@@ -7,6 +7,7 @@ from Chain.message.messages import Messages
 from Chain.model.params.params import Params
 from Chain.logging.logging_config import get_logger
 from Chain.progress.display_mixins import RichDisplayResponseMixin, PlainDisplayResponseMixin
+from Chain.cache.cacheable import CacheableMixin
 from pydantic import BaseModel
 from typing import Optional, Any, Dict
 from datetime import datetime
@@ -14,7 +15,7 @@ from datetime import datetime
 logger = get_logger(__name__)
 
 
-class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
+class Response(BaseModel, CacheableMixin, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     """
     Our class for a successful Result.
     We mixin display modules so that Responses can to_plain, to_rich as part of our progress tracking / verbosity system.
@@ -27,51 +28,17 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     # Initialization attributes
     timestamp: Optional[str] = None
 
-    def model_post_init(self, __context__):
+    def model_post_init(self, __context):
         """
         Post-initialization hook to set the timestamp and ensure Messages type.
         """
+        super().model_post_init(__context) # Call the mixin's post_init first!
         if self.timestamp is None:
             self.timestamp = datetime.now().isoformat()
 
         # Ensure messages is always a Messages object
         if not isinstance(self.messages, Messages):
             self.messages = Messages(self.messages)
-
-    def to_cache_dict(self) -> Dict[str, Any]:
-        """
-        Serialize Response to cache-friendly dictionary.
-        """
-        return {
-            "messages": self._serialize_messages(),
-            "params": self._serialize_params(),
-            "duration": self.duration,
-            "timestamp": self.timestamp,
-        }
-
-    @classmethod
-    def from_cache_dict(cls, data: Dict[str, Any]) -> "Response":
-        """
-        Deserialize Response from cache dictionary.
-        """
-        from Chain.message.messages import Messages  # Import at the top
-
-        # Deserialize messages
-        messages_list = cls._deserialize_messages(data["messages"])
-        messages = Messages(messages_list)  # Wrap in Messages object
-
-        # Deserialize params
-        params = cls._deserialize_params(data["params"])
-
-        # Create instance
-        instance = cls(
-            messages=messages,  # Now it's a Messages object
-            params=params,
-            duration=data["duration"],
-            timestamp=data["timestamp"],
-        )
-
-        return instance
 
     def _serialize_messages(self) -> list[Dict[str, Any]]:
         """
@@ -190,14 +157,3 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         We want to be able to check the length of the content.
         """
         return len(self.__str__())
-
-if __name__ == "__main__":
-    # Create an example Response object
-    sample_reponse = Response(
-        messages=Messages([
-            Message(role="user", content="Hello, world!"),
-            Message(role="assistant", content="Hello! How can I assist you today?")
-        ]),
-        params=Params(model="gpt-3.5-turbo"),
-        duration=1.23
-    )

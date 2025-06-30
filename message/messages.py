@@ -2,11 +2,12 @@ from typing import Any, Iterator, Optional
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
 from Chain.logging.logging_config import get_logger
+from Chain.cache.cacheable import CacheableMixin
 
 logger = get_logger(__name__)
 
 
-class Messages(BaseModel):
+class Messages(BaseModel, CacheableMixin):
     """
     A Pydantic BaseModel that contains a list of Message objects.
     Behaves like a list through dunder methods while being fully Pydantic-compatible.
@@ -154,42 +155,6 @@ class Messages(BaseModel):
         else:
             return NotImplemented
         return self
-
-    # Serialization methods (updated for BaseModel)
-    def to_cache_dict(self) -> dict[str, Any]:
-        """
-        Serialize Messages to cache-friendly dictionary.
-        """
-        return {"messages": [msg.to_cache_dict() for msg in self.messages]}
-
-    @classmethod
-    def from_cache_dict(cls, data: dict[str, Any]) -> "Messages":
-        """
-        Deserialize Messages from cache dictionary.
-        """
-        messages_list = []
-
-        for msg_data in data["messages"]:
-            # Check if this is a specialized message type
-            message_type = msg_data.get("message_type", "Message")
-
-            if message_type == "ImageMessage":
-                # Import here to avoid circular imports
-                from Chain.message.imagemessage import ImageMessage
-
-                messages_list.append(ImageMessage.from_cache_dict(msg_data))
-            elif message_type == "AudioMessage":
-                # Import here to avoid circular imports
-                from Chain.message.audiomessage import AudioMessage
-
-                messages_list.append(AudioMessage.from_cache_dict(msg_data))
-            else:
-                # Standard Message
-                from Chain.message.message import Message
-
-                messages_list.append(Message.from_cache_dict(msg_data))
-
-        return cls(messages=messages_list)
 
     # Chain-specific convenience methods
     def add_new(self, role: str, content: str) -> None:

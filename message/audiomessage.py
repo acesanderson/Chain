@@ -1,8 +1,9 @@
 from Chain.message.message import Message
 from Chain.message.imagemessage import OpenAITextContent
 from Chain.logging.logging_config import get_logger
+from Chain.cache.cacheable import CacheableMixin
 from pydantic import BaseModel, Field
-from typing import Literal, Dict, Any
+from typing import Literal, Any, Optional
 from pathlib import Path
 import base64, re
 
@@ -51,21 +52,19 @@ class OpenAIAudioMessage(Message):
     content: list[OpenAIAudioContent | OpenAITextContent]  # type: ignore
 
 
-class AudioMessage(Message):  # ← Changed from BaseModel to Message
+class AudioMessage(Message):
     """
     AudioMessage with serialization/deserialization support.
     You can splat it to an OpenAI or Gemini message; with the to_openai() method.
     """
 
-    # Text content is inherited from Message base class as 'content'
-    # We'll override it with a more specific structure
-    content: str | list[BaseModel] | None = Field(default=None)
+    content: Optional[Any] = Field(default=None)
 
     # AudioMessage-specific fields
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
     )
-    audio_file: str | Path = Field(description="The path to the audio file to be sent.")
+    audio_file: str | Path = Field(default="", description="The path to the audio file to be sent.")
 
     # Post-init variables
     format: Literal["wav", "mp3", ""] = Field(
@@ -79,6 +78,7 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
         """
         Convert the audio file to base64 string and set up the content field.
         """
+        super().model_post_init(__context) # Call the mixin's post_init first!
         # Skip post_init if this is a cache restoration (empty audio_file)
         if not self.audio_file or self.audio_file == "":
             if self.audio_content and self.format:
@@ -114,40 +114,6 @@ class AudioMessage(Message):  # ← Changed from BaseModel to Message
         """
         with open(file_path, "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
-
-    def to_cache_dict(self) -> Dict[str, Any]:
-        """
-        Serialize AudioMessage to cache-friendly dictionary.
-        """
-        return {
-            "message_type": "AudioMessage",
-            "role": self.role.value if hasattr(self.role, "value") else self.role,
-            "text_content": self.text_content,
-            "audio_file": str(self.audio_file),
-            "format": self.format,
-            "audio_content": self.audio_content,
-        }
-
-    @classmethod
-    def from_cache_dict(cls, data: Dict[str, Any]) -> "AudioMessage":
-        """
-        Deserialize AudioMessage from cache dictionary.
-        Temporarily removes audio_file to avoid file existence check.
-        """
-        # Create instance with minimal data first
-        instance = cls.model_construct(
-            role=data["role"],
-            text_content=data["text_content"],
-            audio_file="",  # Empty to avoid file check
-            format=data["format"],
-            audio_content=data["audio_content"],
-        )
-
-        # Manually set the remaining fields after construction
-        instance.content = [data["audio_content"], data["text_content"]]
-        instance.audio_file = data["audio_file"]  # Set the real file path
-
-        return instance
 
     def __repr__(self):
         return f"AudioMessage(role={self.role}, text_content={self.text_content}, audio_file={self.audio_file}, format={self.format})"

@@ -10,8 +10,9 @@ from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from Chain.message.convert_image import convert_image, convert_image_file
 from Chain.logging.logging_config import get_logger
+from Chain.cache.cacheable import CacheableMixin
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Optional
 import re
 
 logger = get_logger(__name__)
@@ -115,7 +116,7 @@ class ImageMessage(Message):
     You can convert it to provider formats with to_openai() and to_anthropic() methods.
     """
 
-    content: list[BaseModel | str] | None = Field(default=None)
+    content: Optional[Any] = Field(default=None)
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."
     )
@@ -130,6 +131,7 @@ class ImageMessage(Message):
 
     def model_post_init(self, __context) -> None:
         """Called after model initialization to construct content field."""
+        super().model_post_init(__context) # Call the mixin's post_init first!
         # Skip post_init if this is a cache restoration (empty image_file and existing content)
         if not self.image_file or self.image_file == "":
             if self.image_content and self.mime_type:
@@ -172,40 +174,6 @@ class ImageMessage(Message):
         # Raise an error if we have an incomplete object at the end of this process.
         if self.image_content == "" or not self.mime_type or not self.content:
             raise ValidationError("Incorrect initialization for some reason.")
-
-    def to_cache_dict(self) -> Dict[str, Any]:
-        """
-        Serialize ImageMessage to cache-friendly dictionary.
-        """
-        return {
-            "message_type": "ImageMessage",
-            "role": self.role.value if hasattr(self.role, "value") else self.role,
-            "text_content": self.text_content,
-            "image_file": str(self.image_file),
-            "image_content": self.image_content,
-            "mime_type": self.mime_type,
-        }
-
-    @classmethod
-    def from_cache_dict(cls, data: Dict[str, Any]) -> "ImageMessage":
-        """
-        Deserialize ImageMessage from cache dictionary.
-        Temporarily removes image_file to avoid validation conflict.
-        """
-        # Create instance with minimal data first
-        instance = cls.model_construct(
-            role=data["role"],
-            text_content=data["text_content"],
-            image_file="",  # Empty to avoid conflict
-            image_content=data["image_content"],
-            mime_type=data["mime_type"],
-        )
-
-        # Manually set the remaining fields after construction
-        instance.content = [data["image_content"], data["text_content"]]
-        instance.image_file = data["image_file"]  # Set the real file path
-
-        return instance
 
     def __repr__(self):
         return f"ImageMessage(role={self.role}, text_content={self.text_content}, image_content={self.image_content[:10]}..., mime_type={self.mime_type})"
