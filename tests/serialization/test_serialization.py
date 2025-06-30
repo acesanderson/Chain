@@ -16,9 +16,11 @@ from Chain.message.messages import Messages
 from Chain.model.params.params import Params
 from Chain.result.response import Response
 from Chain.result.error import ChainError, ErrorInfo, ErrorDetail
+from Chain.tests.fixtures.sample_models import TestFrog
+import json
 
 
-def test_message():
+def test_message_strings():
     print("Testing Message...")
     
     # Create original
@@ -26,14 +28,73 @@ def test_message():
     
     # Serialize
     cache_dict = original.to_cache_dict()
-    
+
+    # To json
+    json_str = json.dumps(cache_dict, indent=2)
+
+    # From json
+    cache_dict_new = json.loads(json_str)
+
     # Deserialize
-    restored = Message.from_cache_dict(cache_dict)
+    restored = Message.from_cache_dict(cache_dict_new)
     
     # Check
-    assert restored.role == original.role
+    assert str(restored.role) == str(original.role)
     assert restored.content == original.content
     print("✅ Message passed")
+
+def test_message_pydantic():
+    print("Testing Message with Pydantic object")
+    # Add pydantic class to Parser._response_models
+    from Chain import Parser
+    _ = Parser(TestFrog)
+    frog = TestFrog(species = "Rana temporaria", name = "Freddy", legs = 4, color = "green")
+    original = Message(role="user", content=frog)
+
+    # Serialize
+    cache_dict = original.to_cache_dict()
+
+    # To json
+    json_str = json.dumps(cache_dict, indent=2)
+
+    # From json
+    cache_dict_new = json.loads(json_str)
+
+    # Deserialize
+    restored = Message.from_cache_dict(cache_dict_new)
+
+    # Check
+    assert str(restored.role) == str(original.role)
+    assert restored.content == original.content
+    print("✅ Message with Pydantic object passed")
+
+def test_message_list_pydantic():
+    print("Testing Message with list of Pydantic objects")
+    # Add pydantic class to Parser._response_models
+    from Chain import Parser
+    _ = Parser(TestFrog)
+    frogs = [
+        TestFrog(species="Rana temporaria", name="Freddy", legs=4, color="green"),
+        TestFrog(species="Bufo bufo", name="Benny", legs=4, color="brown")
+    ]
+    original = Message(role="user", content=frogs)
+
+    # Serialize
+    cache_dict = original.to_cache_dict()
+
+    # To json
+    json_str = json.dumps(cache_dict, indent=2)
+
+    # From json
+    cache_dict_new = json.loads(json_str)
+
+    # Deserialize
+    restored = Message.from_cache_dict(cache_dict_new)
+
+    # Check
+    assert str(restored.role) == str(original.role)
+    assert restored.content == original.content
+    print("✅ Message with list of Pydantic objects passed")
 
 
 def test_audiomessage():

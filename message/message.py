@@ -6,21 +6,14 @@ We define list[Message] as Messages in a parallel file, this class can handle th
 
 from Chain.prompt.prompt import Prompt
 from Chain.logging.logging_config import get_logger
-from enum import Enum
 from pydantic import BaseModel
-from typing import Any
+from typing import Literal
+
 
 logger = get_logger(__name__)
 
 
-class Role(Enum):
-    """
-    Enum for the role of the message.
-    """
-
-    USER = "user"
-    ASSISTANT = "assistant"
-    SYSTEM = "system"
+Role = Literal["user", "assistant", "system"]
 
 
 class Message(BaseModel):
@@ -30,7 +23,7 @@ class Message(BaseModel):
     """
 
     role: str | Role
-    content: Any
+    content: str | BaseModel | list[BaseModel]
 
     def __str__(self):
         """
@@ -44,6 +37,88 @@ class Message(BaseModel):
         """
         return getattr(self, key)
 
+    def to_cache_dict(self) -> dict:
+        """
+        Serializes the message to a dictionary for caching.
+        """
+        role = self.role
+        if isinstance(self.content, str):
+            content = self.content
+        elif isinstance(self.content, BaseModel):
+            content = self._serialize_pydantic(self.content)
+        elif isinstance(self.content, list):
+            content = [self._serialize_pydantic(item) for item in self.content]
+        else:
+            logger.error(f"Unsupported content type: {type(self.content)}")
+            raise TypeError("Content must be a string, BaseModel, or list of BaseModels.")
+        assert isinstance(content, (str, dict, list)), (
+            "Content must be a string, dict, or list of dicts, "
+        )
+        return {
+            "role": role,
+            "content": content,
+        }
+
+    @classmethod
+    def from_cache_dict(cls, cache_dict: dict):
+        """
+        Deserializes the message from a dictionary.
+        """
+        role = cache_dict["role"]
+        content = cache_dict["content"]
+        # If it's a BaseModel, we need to deserialize it
+        if isinstance(content, str):
+            content = content
+        elif isinstance(content, dict) and "__class__" in content:
+            if "__class__" in cache_dict["content"]:
+                content = cls._deserialize_pydantic(cache_dict["content"])
+            else:
+                logger.error("Content dictionary does not contain '__class__' key.")
+                raise ValueError("Content dictionary must contain '__class__' key for deserialization.")
+        # If it's a list of BaseModels, we need to deserialize each item
+        elif isinstance(content, list):
+            content = [cls._deserialize_pydantic(item) for item in content]
+        else:
+            logger.error(f"Unsupported content type: {type(content)}")
+            raise TypeError("Content must be a string, dict, or list of dicts.")
+        return cls(role=role, content=content)
+
+    def _serialize_pydantic(self, obj: BaseModel) -> dict:
+        """
+        Serializes a Pydantic model to a dictionary.
+        """
+        obj_dict = obj.model_dump()
+        obj_dict["__class__"] = obj.__class__.__name__
+        return obj_dict
+
+    # @classmethod
+    # def _is_valid_json(cls, json_str: str) -> bool:
+    #     """
+    #     Checks if the given string is a valid JSON representation of a Message.
+    #     """
+    #     import json
+    #     try:
+    #         _ = json.loads(json_str)
+    #         return True
+    #     except json.JSONDecodeError:
+    #         return False
+
+    @classmethod
+    def _deserialize_pydantic(cls, obj_dict: dict) -> BaseModel:
+        from Chain.parser.parser import Parser 
+
+        class_name = obj_dict.pop("__class__")
+
+        for response_model in Parser._response_models:
+            if response_model.__name__ == class_name:
+                try:
+                    return response_model.model_validate(obj_dict)
+                except Exception as e:
+                    logger.error(f"Error deserializing {class_name}: {e}")
+                    raise ValueError(f"Error deserializing {class_name}: {e}. There maybe version conflicts with the response model.")
+        logger.error(f"Unknown class name: {class_name}")
+        raise ValueError(f"Unknown class name: {class_name}. Please check the response models in Parser._response_model.")
+        
 
 # Some helpful functions
 def create_system_message(
