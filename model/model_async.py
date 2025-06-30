@@ -9,10 +9,10 @@ from Chain.result.result import ChainResult
 from Chain.result.response import Response
 from Chain.cache.cache import check_cache, update_cache
 from Chain.logging.logging_config import get_logger
-import importlib
 from typing import Optional
 from time import time
 from pydantic import ValidationError
+import importlib
 
 logger = get_logger(__name__)
 
@@ -93,6 +93,7 @@ class ModelAsync(Model):
             # For debug, return error if requested
             if return_error:
                 from Chain.tests.fixtures import sample_error
+
                 return sample_error
 
             # Check cache first
@@ -103,7 +104,7 @@ class ModelAsync(Model):
 
             # Execute the query
             start_time = time()
-            result = await self._client.query(params)
+            result, usage = await self._client.query(params)
             stop_time = time()
 
             # Create Response object
@@ -120,6 +121,8 @@ class ModelAsync(Model):
                     messages=messages,
                     params=params,
                     duration=stop_time - start_time,
+                    input_tokens=usage.input_tokens,
+                    output_tokens=usage.output_tokens,
                 )
             else:
                 # Handle other result types (BaseModel, etc.)
@@ -133,6 +136,8 @@ class ModelAsync(Model):
                     messages=messages,
                     params=params,
                     duration=stop_time - start_time,
+                    input_tokens=usage.input_tokens,
+                    output_tokens=usage.output_tokens,
                 )
 
             # Update cache after successful query

@@ -1,4 +1,4 @@
-from Chain.model.clients.client import Client
+from Chain.model.clients.client import Client, Usage
 from Chain.model.clients.load_env import load_env
 from Chain.model.params.params import Params
 from openai import OpenAI, AsyncOpenAI, Stream
@@ -42,20 +42,25 @@ class OpenAIClientSync(OpenAIClient):
     def query(
         self,
         params: Params,
-        ) -> str | BaseModel | Stream | None:
+    ) -> tuple:
         result = self._client.chat.completions.create(**params.to_openai())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.prompt_tokens,
+            output_tokens=result.usage.completion_tokens,
+        )
         # First try to get text content from the result
         try:
             result = result.choices[0].message.content
-            return result
+            return result, usage
         except AttributeError:
             # If the result is a BaseModel or Stream, handle accordingly
             pass
         if isinstance(result, BaseModel):
-            return result
+            return result, usage
         elif isinstance(result, Stream):
             # Handle streaming response if needed
-            return result
+            return result, usage
 
 
 class OpenAIClientAsync(OpenAIClient):
@@ -69,14 +74,19 @@ class OpenAIClientAsync(OpenAIClient):
     async def query(
         self,
         params: Params,
-        ) -> str | BaseModel | None:
+    ) -> tuple:
         result = await self._client.chat.completions.create(**params.to_openai())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.prompt_tokens,
+            output_tokens=result.usage.completion_tokens,
+        )
         # First try to get text content from the result
         try:
             result = result.choices[0].message.content
-            return result
+            return result, usage
         except AttributeError:
             # If the result is a BaseModel or Stream, handle accordingly
             pass
         if isinstance(result, BaseModel):
-            return result
+            return result, usage

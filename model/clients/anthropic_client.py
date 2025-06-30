@@ -3,7 +3,7 @@ Client subclass for Anthropic models.
 TBD: implement streaming support.
 """
 
-from Chain.model.clients.client import Client
+from Chain.model.clients.client import Client, Usage
 from Chain.model.params.params import Params
 from Chain.model.clients.load_env import load_env
 from anthropic import Anthropic, AsyncAnthropic, Stream
@@ -56,19 +56,24 @@ class AnthropicClientSync(AnthropicClient):
     def query(
         self,
         params: Params,
-    ) -> str | BaseModel | Stream | None:
+    ) -> tuple:
         result = self._client.chat.completions.create(**params.to_anthropic())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.input_tokens,
+            output_tokens=result.usage.output_tokens,
+        )
         # First try to get text content from the result
         try:
             result = result.content[0].text
-            return result
+            return result, usage
         except AttributeError:
             pass
         if isinstance(result, BaseModel):
-            return result
+            return result, usage
         elif isinstance(result, Stream):
             # Handle streaming response if needed
-            return result
+            return result, usage
 
 
 class AnthropicClientAsync(AnthropicClient):
@@ -82,16 +87,21 @@ class AnthropicClientAsync(AnthropicClient):
     async def query(
         self,
         params: Params,
-        ) -> str | BaseModel | Stream | None:
+    ) -> tuple:
         result = await self._client.chat.completions.create(**params.to_anthropic())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.input_tokens,
+            output_tokens=result.usage.output_tokens,
+        )
         # First try to get text content from the result
         try:
             result = result.content[0].text
-            return result
+            return result, usage
         except AttributeError:
             pass
         if isinstance(result, BaseModel):
-            return result
+            return result, usage
         elif isinstance(result, Stream):
             # Handle streaming response if needed
-            return result
+            return result, usage

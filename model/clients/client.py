@@ -10,6 +10,16 @@ from abc import ABC, abstractmethod
 from Chain.model.params.params import Params
 from pydantic import BaseModel
 
+
+class Usage(BaseModel):
+    """
+    Simple data class for usage statistics, standardized across providers.
+    """
+
+    input_tokens: int
+    output_tokens: int
+
+
 class Client(ABC):
     @abstractmethod
     def __init__(self):
@@ -35,13 +45,15 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def query(self, params: Params) -> str | BaseModel:
+    def query(self, params: Params) -> tuple:
         """
         All client subclasses must have a query function that can take:
         - a Params object, which contains all the parameters needed for the query
 
         And returns
-        - either a string (i.e. text generation) or a Pydantic model (function calling)
+        - A tuple of
+            - either a string (i.e. text generation) or a Pydantic model (function calling)
+            - a Usage object containing input and output token counts
         """
         pass
 

@@ -6,7 +6,7 @@ This has special logic for updating the models.json file, since the available Ol
 We define preferred defaults for context sizes in a separate json file.
 """
 
-from Chain.model.clients.client import Client
+from Chain.model.clients.client import Client, Usage
 from Chain.model.params.params import Params
 from pydantic import BaseModel
 from openai import OpenAI, AsyncOpenAI, Stream
@@ -88,19 +88,24 @@ class OllamaClientSync(OllamaClient):
     def query(
         self,
         params: Params,
-    ) -> str | BaseModel | Stream | None:
+    ) -> tuple:
         result = self._client.chat.completions.create(**params.to_ollama())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.prompt_tokens,
+            output_tokens=result.usage.completion_tokens,
+        )
         # Try to retrieve the text first
         try:
-            return result.choices[0].message.content
+            return result.choices[0].message.content, usage
         except AttributeError:
             # If the result is not in the expected format, return the raw result
             pass
         if isinstance(result, BaseModel):
-            return result
+            return result, usage
         if isinstance(result, Stream):
             # Handle streaming response if needed
-            return result
+            return result, usage
 
 
 class OllamaClientAsync(OllamaClient):
@@ -117,13 +122,18 @@ class OllamaClientAsync(OllamaClient):
     async def query(
         self,
         params: Params,
-    ) -> str | BaseModel | None:
+    ) -> tuple:
         result = await self._client.chat.completions.create(**params.to_ollama())
+        # Capture usage
+        usage = Usage(
+            input_tokens=result.usage.prompt_tokens,
+            output_tokens=result.usage.completion_tokens,
+        )
         # Try to retrieve the text first
         try:
-            return result.choices[0].message.content
+            return result.choices[0].message.content, usage
         except AttributeError:
             # If the result is not in the expected format, return the raw result
             pass
         if isinstance(result, BaseModel):
-            return result
+            return result, usage

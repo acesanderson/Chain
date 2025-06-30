@@ -144,7 +144,9 @@ class Model:
         try:
             # Construct Params object if not provided (majority of cases)
             if not params:
-                logger.info("Constructing Params object from query_input and other parameters.")
+                logger.info(
+                    "Constructing Params object from query_input and other parameters."
+                )
                 import inspect
 
                 frame = inspect.currentframe()
@@ -165,8 +167,8 @@ class Model:
             # For debug, return error if requested
             if return_error:
                 from Chain.tests.fixtures import sample_error
-                return sample_error
 
+                return sample_error
 
             # Check cache first
             logger.info("Checking cache for existing results.")
@@ -189,7 +191,7 @@ class Model:
             # Execute the query
             logger.info("Executing query with client.")
             start_time = time()
-            result = self._client.query(params)
+            result, usage = self._client.query(params)
             stop_time = time()
             logger.info(f"Query executed in {stop_time - start_time:.2f} seconds.")
 
@@ -213,7 +215,9 @@ class Model:
                 logger.info("Returning existing Response object.")
                 response = result
             elif isinstance(result, str) or isinstance(result, BaseModel):
-                logger.info("Constructing Response object from result string or BaseModel.")
+                logger.info(
+                    "Constructing Response object from result string or BaseModel."
+                )
                 user_message = Message(role="user", content=params.query_input or "")
                 assistant_message = Message(role="assistant", content=result)
                 messages = Messages([user_message, assistant_message])
@@ -222,6 +226,8 @@ class Model:
                     messages=messages,
                     params=params,
                     duration=stop_time - start_time,
+                    input_tokens=usage.input_tokens,
+                    output_tokens=usage.output_tokens,
                 )
             else:
                 logger.error(

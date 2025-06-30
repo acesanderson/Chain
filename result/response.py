@@ -6,7 +6,10 @@ from Chain.message.message import Message
 from Chain.message.messages import Messages
 from Chain.model.params.params import Params
 from Chain.logging.logging_config import get_logger
-from Chain.progress.display_mixins import RichDisplayResponseMixin, PlainDisplayResponseMixin
+from Chain.progress.display_mixins import (
+    RichDisplayResponseMixin,
+    PlainDisplayResponseMixin,
+)
 from pydantic import BaseModel
 from typing import Optional, Any, Dict
 from datetime import datetime
@@ -19,9 +22,12 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     Our class for a successful Result.
     We mixin display modules so that Responses can to_plain, to_rich as part of our progress tracking / verbosity system.
     """
+
     # Core attributes
     messages: Messages
     params: Params
+    input_tokens: int
+    output_tokens: int
     duration: Optional[float]
 
     # Initialization attributes
@@ -37,6 +43,10 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         # Ensure messages is always a Messages object
         if not isinstance(self.messages, Messages):
             self.messages = Messages(self.messages)
+
+    @property
+    def total_tokens(self) -> int:
+        return self.input_tokens + self.output_tokens
 
     def to_cache_dict(self) -> Dict[str, Any]:
         """
@@ -191,13 +201,16 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         return len(self.__str__())
 
+
 if __name__ == "__main__":
     # Create an example Response object
     sample_reponse = Response(
-        messages=Messages([
-            Message(role="user", content="Hello, world!"),
-            Message(role="assistant", content="Hello! How can I assist you today?")
-        ]),
+        messages=Messages(
+            [
+                Message(role="user", content="Hello, world!"),
+                Message(role="assistant", content="Hello! How can I assist you today?"),
+            ]
+        ),
         params=Params(model="gpt-3.5-turbo"),
-        duration=1.23
+        duration=1.23,
     )
