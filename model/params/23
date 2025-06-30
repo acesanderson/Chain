@@ -1,20 +1,171 @@
 from pydantic import BaseModel, Field, ValidationError
-from typing import Optional
+from typing import Optional, Any, ClassVar, override
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
+from Chain.message.messages import Messages
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
-from Chain.message.messages import Messages
-from Chain.parser.parser import Parser
 from Chain.progress.verbosity import Verbosity
 from Chain.progress.display_mixins import (
     RichDisplayParamsMixin,
     PlainDisplayParamsMixin,
 )
-from Chain.model.params.clientparams import Provider, ClientParamsModels, OpenAIParams, OllamaParams, AnthropicParams, GoogleParams, PerplexityParams
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
+import json
 
+
+# Sub classes for specialized params
+## Special instructor-native params
+# class RetryConfig(BaseModel):
+#     """
+#     Configuration for retry logic in the instructor framework.
+#     """
+#
+#     max_retries: int = 3
+#     timeout: Optional[float] = None
+#     exponential_backoff: bool = True
+#     retry_on_validation_error: bool = True
+#     circuit_breaker_threshold: int = 5
+#
+#
+# class MockConfig(BaseModel):
+#     """
+#     Configuration for mocking responses in the instructor framework.
+#     """
+#
+#     enabled: bool = False
+#     responses: dict[str, Any] = Field(default_factory=dict)
+
+
+class ClientParams(BaseModel):
+    """
+    Parameters that are specific to a client.
+    """
+
+    provider: ClassVar[str]
+
+
+class OpenAIParams(ClientParams):
+    """
+    Parameters specific to OpenAI API spec-using clients.
+    NOTE: This is a generic OpenAI client, not the official OpenAI API.
+    """
+
+    # Class vars
+    provider: ClassVar[str] = "openai"
+    temperature_range: ClassVar[tuple[float, float]] = (0.0, 2.0)
+
+    # Excluded from serialization in API calls
+    model: str = Field(
+        default="",
+        description="The model identifier to use for inference.",
+        exclude=True,
+    )
+
+    # Core parameters
+    max_tokens: Optional[int] = None
+    frequency_penalty: Optional[float] = None
+    presence_penalty: Optional[float] = None
+    stop: Optional[list[str]] = None
+    safety_settings: Optional[dict[str, Any]] = None
+
+
+class GoogleParams(OpenAIParams):
+    """
+    Parameters specific to Gemini clients.
+    Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
+    """
+
+    # Class vars
+    provider: ClassVar[str] = "google"
+    temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
+
+
+class OllamaParams(OpenAIParams):
+    """
+    Parameters specific to Ollama clients.
+    Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
+    """
+
+    # Class vars (excluded by default)
+    provider: ClassVar[str] = "ollama"
+    temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
+
+    # Core parameters -- note for Instructor we will need to embed these in "extra_body":{"options": {}}
+    num_ctx: Optional[int] = None
+    temperature: Optional[float] = None
+    top_k: Optional[int] = None
+    top_p: Optional[float] = None
+    repeat_penalty: Optional[float] = None
+    stop: Optional[list[str]] = None
+
+    @override
+    def model_dump(self, *args, **kwargs):
+        """
+        Override model_dump to embed dicts as needed for our Instructor/OpenAI Spec/Ollama compatibility.
+        Why is this needed? Because Ollama expects "options" to be nested under "extra_body" in the API call.
+        """
+        # Call the parent method to get the base dict
+        base_dict = super().model_dump(*args, **kwargs)
+
+        # Ollama expects options to be nested under "extra_body"
+        extra_body = {"options": base_dict}
+        return {"extra_body": extra_body}
+
+    @override
+    def model_dump_json(self, *args, **kwargs):
+        """
+        Override model_dump_json to ensure OllamaParams is serialized correctly.
+        """
+        # Use the custom model_dump method to get the dict
+        base_dict = self.model_dump(*args, **kwargs)
+        return json.dumps(base_dict)
+
+
+class AnthropicParams(ClientParams):
+    """
+    Parameters specific to Anthropic clients.
+    """
+
+    # Class vars
+    provider: ClassVar[str] = "anthropic"
+    temperature_range: ClassVar[tuple[float, float]] = (0.0, 1.0)
+
+    # Core parameters
+    max_tokens: int = (
+        4000  # TBD: three defaults: 256, 1024, 4000, depending on use case
+    )
+    top_k: Optional[int] = None
+    top_p: Optional[float] = None
+    stop_sequences: Optional[list[str]] = None
+
+    # Excluded from serialization in API calls
+    model: str = Field(
+        default="",
+        description="The model identifier to use for inference.",
+        exclude=True,
+    )
+
+
+class PerplexityParams(OpenAIParams):
+    """
+    Parameters specific to Perplexity clients.
+    Inherits from OpenAIParams to maintain compatibility with OpenAI API spec.
+    """
+
+    # Class vars
+    provider: ClassVar[str] = "perplexity"
+    temperature_range: ClassVar[tuple[float, float]] = (0.0, 2.0)
+
+
+# Union type for all client-specific parameters
+ClientParamsTypes = (
+    OpenAIParams | OllamaParams | AnthropicParams | GoogleParams | PerplexityParams
+)
+
+
+# Main Params class
 class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     """
     Parameters that are constructed by Model and are sent to Clients.
@@ -34,50 +185,28 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         description="Temperature for sampling. If None, defaults to provider-specific value.",
     )
     stream: bool = False
-    verbose: Verbosity = Field(default = Verbosity.PROGRESS, exclude=True, description="Verbosity level for logging and progress display.")
-    pydantic_model: Optional[type[BaseModel]] = Field(
-        default=None,
-        description="Pydantic model to convert messages to a specific format."
-    )
+    verbose: Verbosity = Verbosity.PROGRESS
+
     # Post model init parameters
-    provider: Optional[Provider] = Field(
+    parser: Optional[Any] = Field(
+        default=None,
+        description="Parser to convert messages to a specific format. Not intended for direct use.",
+    )
+    query_input: str | Message | list[Message] | None = Field(
+        default=None,
+        description="Various possible input types that we coerce to a list of Messages. Not intended for direct use.",
+    )
+    provider: Optional[str] = Field(
         default=None,
         description="Provider of the model, populated post init. Not intended for direct use.",
     )
+
     # Client parameters (embedded in dict for now)
-    client_params: Optional[dict] = Field(
+    client_params: Optional[ClientParams] = Field(
         default=None,
-        description="Client-specific parameters. Validated against the provider-approved params, through our ClientParams.",
+        description="Client-specific parameters. Can be OpenAIParams, OllamaParams, AnthropicParams, etc.",
     )
 
-    def model_post_init(self, __context) -> None:
-        """
-        Post-initialization method to validate and set parameters.
-        Validates:
-        - Model is supported by at least one provider
-        - Temperature is within range for the provider
-        - Client parameters match the provider
-        Sets:
-        - Provider based on the model
-        - Client parameters based on the provider
-        Constructs:
-        - Client parameters based on the provider
-        Finally, validates that we have our required parameters.
-        """
-        self._validate_model() # Raise error if model is not supported
-        self._set_provider() # Set provider based on model
-        self._validate_temperature() # Raise error if temperature is out of range for provider
-        self._set_client_params() # Set client_params based on provider
-        self._validate_client_params() # Raise error if client_params do not match provider
-        # Validate the whole lot
-        if self.messages is None or len(self.messages) == 0:
-            raise ValueError("Messages cannot be empty. Likely a code error.")
-        if self.provider == "" or self.provider is None:
-            raise ValueError("Provider must be set based on the model. Likely a code error.")
-        if self.client_params is None:
-            raise ValueError("Client parameters must be set based on the provider. Likely a code error.")
-
-    # Constructor methods
     @classmethod
     def from_query_input(cls, query_input: str, **kwargs) -> "Params":
         """
@@ -91,16 +220,32 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             **kwargs,
         )
 
-    # Validation methods
-    def _set_provider(self) -> str:
-        for provider in ModelStore.models().keys():
-            if self.model in ModelStore.models()[provider]:
-                self.provider = provider
-        raise ValueError(f"Model '{self.model}' is not supported by any provider.")
-
-    def _set_client_params(self):
+    def model_post_init(self, __context) -> None:
+        """
+        Steps:
+        - validate model
+        - set provider
+        - validate temperature (provider-specific ranges)
+        - validate Parser object in self.parser
+        - set up client_params
+        - validate ClientParams against provider
+        - set client_params based on provider if not already set
+        """
+        self._validate_model()
+        self.provider = self._set_provider(self.model)
+        self._validate_temperature()
+        # 6. Validate Parser object in self.parser
+        if self.parser is not None and not isinstance(self.parser, Parser):
+            raise TypeError("parser must be an instance of Parser")
+        # 7. Validate ClientParams against provider.
+        if self.client_params:
+            if self.client_params.provider != self.provider:
+                raise ValidationError(
+                    f"ClientParams provider '{self.client_params.provider}' does not match Params provider '{self.provider}'."
+                )
+        # 8. Set client_params based on provider if not already set
         if self.client_params is None:
-            for client_param_type in ClientParamsModels.__args__:
+            for client_param_type in ClientParamsTypes.__args__:
                 # Use getattr with a default to safely check for 'provider' on ClassVar
                 if self.provider == getattr(client_param_type, "provider", None):
                     self.client_params = client_param_type()
@@ -110,6 +255,14 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                     f"ClientParams could not be determined for model provider: {self.provider}. This may indicate an unsupported provider or a missing client_params initialization logic."
                 )
 
+    # Validation methods
+    def _set_provider(self, model: str) -> str:
+        for provider in ModelStore.models().keys():
+            if model in ModelStore.models()[provider]:
+                return provider
+        raise ValueError(f"Model '{model}' is not supported by any provider.")
+
+
     def _validate_temperature(self):
         """
         Validate temperature against provider-specific ranges.
@@ -118,7 +271,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             return
         # Find the temperature range for the provider
         temperature_range: Optional[tuple[float, float]] = None
-        for client_param_type in ClientParamsModels.__args__:
+        for client_param_type in ClientParamsTypes.__args__:
             if self.provider == client_param_type.provider:
                 temperature_range = client_param_type.temperature_range
         if not temperature_range:
@@ -132,18 +285,6 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             raise ValidationError(
                 f"Temperature {self.temperature} is out of range {temperature_range} for provider: {self.provider}"
             )
-    
-    def _validate_client_params(self):
-        """
-        Validate that the client_params match the provider.
-        """
-        if self.client_params is None:
-            return
-        if self.client_params.provider != self.provider:
-            raise ValidationError(
-                f"ClientParams provider '{self.client_params.provider}' does not match Params provider '{self.provider}'."
-            )
-        return
 
     def _validate_model(self):
         """
@@ -164,11 +305,15 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
         # Use sort_keys for deterministic JSON ordering
         messages_str = json.dumps(self.convert_messages(), sort_keys=True)
+
         # Include parser since it affects response format
-        schema_str = Parser.as_string(self.pydantic_model) if self.pydantic_model else "none"
+        parser_str = self.parser.pydantic_model.__name__ if self.parser else "none"
+
         # Handle None temperature gracefully
         temp_str = str(self.temperature) if self.temperature is not None else "none"
-        params_str = "|".join([messages_str, self.model, temp_str, schema_str])
+
+        params_str = "|".join([messages_str, self.model, temp_str, parser_str])
+
         return sha256(params_str.encode("utf-8")).hexdigest()
 
     # Dunder methods for string representation
