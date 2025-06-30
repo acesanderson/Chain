@@ -7,11 +7,11 @@ We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthro
 """
 
 from pydantic import BaseModel, Field, ValidationError
-from Chain.message.message import Message
+from Chain.message.message import Message, MessageType
 from Chain.message.convert_image import convert_image, convert_image_file
 from Chain.logging.logging_config import get_logger
 from pathlib import Path
-from typing import Any, Optional, Literal
+from typing import override
 import re
 
 logger = get_logger(__name__)
@@ -47,7 +47,7 @@ def extension_to_mimetype(image_file: Path) -> str:
         )
 
 
-# Anthropic-specific message classes
+# Provider-specific classes -- these are NOT serialized at all, but constructed.
 class AnthropicTextContent(BaseModel):
     type: str = "text"
     text: str
@@ -103,81 +103,119 @@ class OpenAIImageMessage(Message):
     content: list[OpenAIImageContent | OpenAITextContent]  # type: ignore
 
 
+
+
+
+
 # Our base ImageMessage class with serialization support
 class ImageMessage(Message):
     """
     ImageMessage with serialization/deserialization support.
-
-    You can instantiate it with either:
-    1. text_content + image_content + mime_type
-    2. text_content + image_file (conversion happens automatically)
-
+    
+    Create with:
+    1. ImageMessage.from_image_file(image_file, text_content) - from file
+    2. ImageMessage(role="user", content=[image_data, text], ...) - from processed data
+    
     You can convert it to provider formats with to_openai() and to_anthropic() methods.
     """
-
-    message_type: Literal["image"] = "image"
-    content: Optional[Any] = Field(default=None)
-    text_content: str = Field(
-        description="The text content of the message, i.e. the prompt."
-    )
-    image_file: str | Path = Field(
-        description="File name for the image, if available.", default=""
-    )
-    image_content: str = Field(description="The base64-encoded image.", default="")
-    mime_type: str = Field(
-        description="The MIME type of the image, e.g. 'image/jpeg', 'image/png'.",
-        default="",
-    )
-
-    def model_post_init(self, __context) -> None:
-        """Called after model initialization to construct content field."""
-        super().model_post_init(__context) # Call the mixin's post_init first!
-        # Skip post_init if this is a cache restoration (empty image_file and existing content)
-        if not self.image_file or self.image_file == "":
-            if self.image_content and self.mime_type:
-                # This is cache restoration - content already exists
-                if not hasattr(self, "content") or not self.content:
-                    self.content = [self.image_content, self.text_content]
-                return
-
-        # If user adds image_content and mime_type, convert them to PNG, downsample, and update base64 string.
-        if self.image_content and self.mime_type:
-            # Convert the image_content to a base64-encoded PNG if it's not already in that format.
-            if self.mime_type != "image/png":
-                self.image_content = convert_image(self.image_content)
-                self.mime_type = "image/png"
-        # If user submits a image_file instead of the mimetype / image_content
-        if self.image_file and not self.image_content:
-            # Convert the image_file to a Path object if it's a string
-            if isinstance(self.image_file, str):
-                self.image_file = Path(self.image_file)
-            if self.image_content and self.mime_type:
-                raise ValueError(
-                    "Can't instantiate ImageMessage with both file_name and image_content at the same time."
-                )
-            self.mime_type = extension_to_mimetype(Path(self.image_file))
-            self.image_content = convert_image_file(self.image_file)
-
-        # Validate the MIME type
-        if self.mime_type not in format_to_mime.values():
-            raise ValueError(f"Unsupported MIME type: {self.mime_type}")
-        # Validate the image content
-        if not is_base64_simple(self.image_content):
-            raise ValueError("Image content must be a base64-encoded string.")
-
-        # Construct our content
-        self.content = [self.image_content, self.text_content]
-
-        # Change image_file back to a string for consistency
-        if isinstance(self.image_file, Path):
-            self.image_file = str(self.image_file)
-        # Raise an error if we have an incomplete object at the end of this process.
-        if self.image_content == "" or not self.mime_type or not self.content:
-            raise ValidationError("Incorrect initialization for some reason.")
-
+    message_type: MessageType = "image"
+    content: list[str] = Field(default_factory=list, description="[image_content, text_content]")
+    text_content: str = Field(description="The text content/prompt", exclude=True, repr=False)
+    image_content: str = Field(description="Base64-encoded PNG image", exclude=True, repr=False)
+    mime_type: str = Field(description="Always 'image/png' after processing", default="image/png", exclude=True, repr=False)
+    
+    @classmethod
+    def from_image_file(
+        cls, 
+        image_file: str | Path, 
+        text_content: str, 
+        role: str = "user"
+    ) -> "ImageMessage":
+        """
+        Create ImageMessage from image file.
+        
+        Args:
+            image_file: Path to image file (any supported format)
+            text_content: Text prompt/question about the image
+            role: Message role (default: "user")
+            
+        Returns:
+            ImageMessage with processed image data
+            
+        Raises:
+            FileNotFoundError: If image file doesn't exist
+            ValueError: If image format is unsupported
+        """
+        image_path = Path(image_file)
+        
+        if not image_path.exists():
+            raise FileNotFoundError(f"Image file {image_path} does not exist")
+        
+        # Validate file format
+        if image_path.suffix.lower() not in {'.png', '.jpg', '.jpeg', '.gif', '.webp'}:
+            raise ValueError(f"Unsupported image format: {image_path.suffix}")
+        
+        # Convert image to optimized PNG base64
+        try:
+            image_content = convert_image_file(image_path)
+        except Exception as e:
+            raise ValueError(f"Failed to process image file {image_path}: {e}")
+        
+        # Validate the conversion worked
+        if not is_base64_simple(image_content):
+            raise ValueError("Image conversion produced invalid base64 data")
+        
+        return cls(
+            role=role,
+            content=[image_content, text_content],
+            text_content=text_content,
+            image_content=image_content,
+            mime_type="image/png"  # Always PNG after convert_image_file()
+        )
+    
+    @classmethod 
+    def from_base64(
+        cls,
+        image_content: str,
+        text_content: str,
+        mime_type: str = "image/png",
+        role: str = "user"
+    ) -> "ImageMessage":
+        """
+        Create ImageMessage from base64 image data.
+        
+        Args:
+            image_content: Base64-encoded image data
+            text_content: Text prompt/question about the image  
+            mime_type: MIME type of the image (will be converted to PNG)
+            role: Message role (default: "user")
+            
+        Returns:
+            ImageMessage with processed image data
+        """
+        # Validate base64
+        if not is_base64_simple(image_content):
+            raise ValueError("Invalid base64 image data")
+        
+        # Convert to PNG if needed
+        if mime_type != "image/png":
+            try:
+                image_content = convert_image(image_content)
+                mime_type = "image/png"
+            except Exception as e:
+                raise ValueError(f"Failed to convert image to PNG: {e}")
+        
+        return cls(
+            role=role,
+            content=[image_content, text_content],
+            text_content=text_content,
+            image_content=image_content,
+            mime_type=mime_type
+        )
+    
     def __repr__(self):
-        return f"ImageMessage(role={self.role}, text_content={self.text_content}, image_content={self.image_content[:10]}..., mime_type={self.mime_type})"
-
+        return f"ImageMessage(role={self.role}, text_content='{self.text_content[:30]}...', mime_type={self.mime_type})"
+    
     def display(self):
         """
         Display a base64-encoded image using chafa.
@@ -199,12 +237,51 @@ class ImageMessage(Message):
             process = subprocess.Popen(cmd, stdin=subprocess.PIPE)
             process.communicate(input=image_data)
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error displaying image: {e}")
 
+    # Serialization methods
+    @override
+    def to_cache_dict(self) -> dict:
+        """
+        Convert the ImageMessage to a dictionary for caching.
+        
+        Returns:
+            A dictionary representation of the ImageMessage.
+        """
+        return {
+            "message_type": self.message_type,
+            "role": self.role,
+            "text_content": self.text_content,
+            "image_content": self.image_content,
+            "mime_type": self.mime_type,
+        }
+
+    @override
+    @classmethod
+    def from_cache_dict(cls, data: dict) -> "ImageMessage":
+        """
+        Create an ImageMessage from a cached dictionary.
+        
+        Args:
+            data: Dictionary containing the cached data.
+            
+        Returns:
+            An ImageMessage instance.
+            
+        Raises:
+            ValidationError: If the data is invalid.
+        """
+        return cls(
+            message_type=data["message_type"],
+            role=data["role"],
+            text_content=data["text_content"],
+            image_content=data["image_content"],
+            mime_type=data["mime_type"]
+        )
+
+    # Construction methods for specific provider implementations.
     def to_anthropic(self) -> AnthropicImageMessage:
-        """
-        Converts the ImageMessage to the Anthropic format.
-        """
+        """Converts the ImageMessage to the Anthropic format."""
         image_source = AnthropicImageSource(
             type="base64", media_type=self.mime_type, data=self.image_content
         )
@@ -215,9 +292,7 @@ class ImageMessage(Message):
         )
 
     def to_openai(self) -> OpenAIImageMessage:
-        """
-        Converts the ImageMessage to the OpenAI format.
-        """
+        """Converts the ImageMessage to the OpenAI format."""
         # Create the nested URL object
         image_url_obj = OpenAIImageUrl(
             url=f"data:{self.mime_type};base64,{self.image_content}"

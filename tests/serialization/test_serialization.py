@@ -141,7 +141,7 @@ def test_imagemessage():
     
     try:
         # Create original
-        original = ImageMessage(
+        original = ImageMessage.from_image_file(
             role="user",
             text_content="What's in this image?",
             image_file=image_file

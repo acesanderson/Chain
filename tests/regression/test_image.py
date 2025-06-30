@@ -23,7 +23,7 @@ def vision_models() -> list[str]:
 @fixture
 def sample_image_message() -> ImageMessage:
     """Create a sample image message for testing"""
-    return ImageMessage(
+    return ImageMessage.from_image_file(
         role="user",
         text_content="What do you see in this image?",
         image_file=sample_image_file
@@ -43,7 +43,7 @@ def test_imagemessage_creation(sample_image_message):
 
 def test_imagemessage_from_file():
     """Test ImageMessage creation from file"""
-    img_msg = ImageMessage(
+    img_msg = ImageMessage.from_image_file(
         role="user",
         text_content="Describe this image",
         image_file=sample_image_file
@@ -58,7 +58,7 @@ def test_imagemessage_from_file():
 def test_model_query_with_imagemessage():
     """Test single model query with ImageMessage"""
     model = Model("gpt-4o")
-    img_msg = ImageMessage(
+    img_msg = ImageMessage.from_image_file(
         role="user",
         text_content="What is in this image?",
         image_file=sample_image_file
@@ -74,7 +74,7 @@ def test_chain_with_imagemessage():
     model = Model("claude")
     chain = Chain(model=model)
     
-    img_msg = ImageMessage(
+    img_msg = ImageMessage.from_image_file(
         role="user",
         text_content="Please describe what you see",
         image_file=sample_image_file
@@ -89,7 +89,7 @@ def test_chain_with_imagemessage():
 
 def test_imagemessage_to_openai():
     """Test ImageMessage OpenAI format conversion"""
-    img_msg = ImageMessage(
+    img_msg = ImageMessage.from_image_file(
         role="user",
         text_content="Test image",
         image_file=sample_image_file
@@ -101,7 +101,7 @@ def test_imagemessage_to_openai():
 
 def test_imagemessage_to_anthropic():
     """Test ImageMessage Anthropic format conversion"""
-    img_msg = ImageMessage(
+    img_msg = ImageMessage.from_image_file(
         role="user", 
         text_content="Test image",
         image_file=sample_image_file

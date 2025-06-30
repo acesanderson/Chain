@@ -25,7 +25,7 @@ sample_audio_message = AudioMessage.from_audio_file(
     audio_file=sample_audio_file,
 )
 sample_image_file = dir_path / "image.png"
-sample_image_message = ImageMessage(
+sample_image_message = ImageMessage.from_image_file(
     role="user",
     text_content="This is a sample image message.",
     image_file=sample_image_file,
