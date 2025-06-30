@@ -107,7 +107,7 @@ def test_audiomessage():
     
     try:
         # Create original
-        original = AudioMessage(
+        original = AudioMessage.from_audio_file(
             role="user",
             text_content="Transcribe this",
             audio_file=audio_file
@@ -275,7 +275,9 @@ def main():
     print("=" * 40)
     
     try:
-        test_message()
+        test_message_strings()
+        test_message_pydantic()
+        test_message_list_pydantic()
         test_audiomessage()
         test_imagemessage()
         test_messages()

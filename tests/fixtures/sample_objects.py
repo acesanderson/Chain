@@ -19,9 +19,8 @@ sample_messages = Messages([
 ])
 
 sample_audio_file = dir_path / "audio.mp3"
-sample_audio_message = AudioMessage(
+sample_audio_message = AudioMessage.from_audio_file(
     role="user",
-    content="What is this audio about?",
     text_content="This is a sample audio message.",
     audio_file=sample_audio_file,
 )

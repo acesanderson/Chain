@@ -11,7 +11,7 @@ from Chain.message.message import Message
 from Chain.message.convert_image import convert_image, convert_image_file
 from Chain.logging.logging_config import get_logger
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Literal
 import re
 
 logger = get_logger(__name__)
@@ -115,6 +115,7 @@ class ImageMessage(Message):
     You can convert it to provider formats with to_openai() and to_anthropic() methods.
     """
 
+    message_type: Literal["image"] = "image"
     content: Optional[Any] = Field(default=None)
     text_content: str = Field(
         description="The text content of the message, i.e. the prompt."

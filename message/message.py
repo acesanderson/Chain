@@ -12,16 +12,16 @@ from typing import Literal
 
 logger = get_logger(__name__)
 
-
+# Useful type aliases
 Role = Literal["user", "assistant", "system"]
-
+MessageType = Literal["message", "audio", "image"]
 
 class Message(BaseModel):
     """
     Industry standard, more or less, for messaging with LLMs.
     System roles can have some weirdness (like with Anthropic), but role/content is standard.
     """
-
+    message_type: MessageType = "message"
     role: str | Role
     content: str | BaseModel | list[BaseModel]
 
@@ -90,18 +90,6 @@ class Message(BaseModel):
         obj_dict = obj.model_dump()
         obj_dict["__class__"] = obj.__class__.__name__
         return obj_dict
-
-    # @classmethod
-    # def _is_valid_json(cls, json_str: str) -> bool:
-    #     """
-    #     Checks if the given string is a valid JSON representation of a Message.
-    #     """
-    #     import json
-    #     try:
-    #         _ = json.loads(json_str)
-    #         return True
-    #     except json.JSONDecodeError:
-    #         return False
 
     @classmethod
     def _deserialize_pydantic(cls, obj_dict: dict) -> BaseModel:
