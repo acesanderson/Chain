@@ -6,7 +6,7 @@ Our Message class is inherited from specialized types like AudioMessage, ImageMe
 from Chain.prompt.prompt import Prompt
 from Chain.logging.logging_config import get_logger
 from Chain.message.message import Message, MessageType
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Literal
 
 
@@ -20,7 +20,7 @@ class TextMessage(Message):
     Industry standard, more or less, for messaging with LLMs.
     System roles can have some weirdness (like with Anthropic), but role/content is standard.
     """
-    message_type: MessageType = "text"
+    message_type: MessageType = Field(default = "text", exclude=True, repr=False)
     content: str | BaseModel | list[BaseModel]
 
     def __str__(self):

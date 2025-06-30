@@ -43,25 +43,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         Serialize the messages list, handling different message types.
         """
-        serialized_messages = []
-        for message in self.messages:
-            if hasattr(message, "to_cache_dict"):
-                # Message has its own serialization method
-                serialized_messages.append(message.to_cache_dict())
-            else:
-                # Fallback for basic Message objects
-                serialized_messages.append(
-                    {
-                        "message_type": "Message",
-                        "role": (
-                            message.role.value
-                            if hasattr(message.role, "value")
-                            else message.role
-                        ),
-                        "content": {"type": "string", "data": str(message.content)},
-                    }
-                )
-        return serialized_messages
+        return [message.to_cache_dict() for message in self.messages]
 
     @classmethod
     def _deserialize_messages(

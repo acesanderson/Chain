@@ -6,8 +6,8 @@ There are two basic message formats:
 We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthropic formats.
 """
 
-from pydantic import BaseModel, Field, ValidationError
-from Chain.message.message import Message, MessageType
+from pydantic import BaseModel, Field
+from Chain.message.message import Message, MessageType, Role
 from Chain.message.convert_image import convert_image, convert_image_file
 from Chain.logging.logging_config import get_logger
 from pathlib import Path
@@ -64,12 +64,12 @@ class AnthropicImageContent(BaseModel):
     source: AnthropicImageSource
 
 
-class AnthropicImageMessage(Message):
+class AnthropicImageMessage(BaseModel):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
     """
 
-    role: str
+    role: Role = Field(default="user", description="The role of the message sender.")
     content: list[AnthropicImageContent | AnthropicTextContent]  # type: ignore
 
 
@@ -94,18 +94,13 @@ class OpenAIImageContent(BaseModel):
     image_url: OpenAIImageUrl = Field(description="The image URL object")
 
 
-class OpenAIImageMessage(Message):
+class OpenAIImageMessage(BaseModel):
     """
     ImageMessage should have a single ImageContent and a single TextContent object.
     """
 
-    role: str
+    role: Role = Field(default="user", description="The role of the message sender.")
     content: list[OpenAIImageContent | OpenAITextContent]  # type: ignore
-
-
-
-
-
 
 # Our base ImageMessage class with serialization support
 class ImageMessage(Message):
@@ -118,7 +113,7 @@ class ImageMessage(Message):
     
     You can convert it to provider formats with to_openai() and to_anthropic() methods.
     """
-    message_type: MessageType = "image"
+    message_type: MessageType = Field(default = "image", exclude=True, repr=False)
     content: list[str] = Field(default_factory=list, description="[image_content, text_content]")
     text_content: str = Field(description="The text content/prompt", exclude=True, repr=False)
     image_content: str = Field(description="Base64-encoded PNG image", exclude=True, repr=False)

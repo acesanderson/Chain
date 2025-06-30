@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, ValidationError
 from typing import Optional, Any, ClassVar, override
 from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.audiomessage import AudioMessage
@@ -281,7 +282,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         if isinstance(self.query_input, Message):
             input_messages.append(self.query_input)
         elif isinstance(self.query_input, str):
-            message = Message(role="user", content=self.query_input)
+            message = TextMessage(role="user", content=self.query_input)
             input_messages.append(message)
         elif isinstance(self.query_input, list):
             if not all(isinstance(item, Message) for item in self.query_input):
@@ -362,7 +363,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                         "AudioMessage can only be used with the gpt-4o-audio-preview model."
                     )
                 converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, Message) and self.provider == "anthropic":
+            elif isinstance(message, TextMessage) and self.provider == "anthropic":
                 # For Anthropic, we need to convert the message to the appropriate format.
                 converted_messages.append(message.model_dump())
             else:

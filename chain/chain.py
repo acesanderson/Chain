@@ -10,10 +10,9 @@ from Chain.model.model import Model
 from Chain.result.response import Response
 from Chain.parser.parser import Parser
 from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
 from Chain.message.messagestore import MessageStore
-from Chain.message.imagemessage import ImageMessage
-from Chain.message.audiomessage import AudioMessage
 from Chain.progress.verbosity import Verbosity
 from Chain.logging.logging_config import configure_logging, logging
 from typing import TYPE_CHECKING, Optional
@@ -144,7 +143,7 @@ class Chain:
 
     def run_messages(
         self,
-        messages: list[Message | ImageMessage | AudioMessage],
+        messages: list[Message],
         prompt: str | None = None,
         verbose: Verbosity = Verbosity.PROGRESS,
         cache=True,
@@ -160,7 +159,7 @@ class Chain:
         if prompt:
             logger.info("Using prompt to create a user message.")
             # Add new query to messages list
-            message = Message(role="user", content=prompt)
+            message = TextMessage(role="user", content=prompt)
             messages.append(message)
         # If we have class-level logging
         if Chain._message_store:
@@ -181,7 +180,7 @@ class Chain:
             logger.info("Running model query without parser.")
             result = self.model.query(messages, verbose=verbose, cache=cache)
         # Convert result to a Message object
-        assistant_message = Message(role="assistant", content=result)
+        assistant_message = TextMessage(role="assistant", content=result)
         # If we have class-level logging
         if Chain._message_store:
             logger.info("Adding assistant message to message store.")
@@ -202,7 +201,7 @@ class Chain:
         total: int = 0,
     ):
         logger.info("Running completion with prompt: %s", prompt)
-        user_message = Message(role="user", content=prompt)
+        user_message = TextMessage(role="user", content=prompt)
 
         if Chain._message_store:
             logger.info("Adding user message to message store.")
@@ -237,7 +236,7 @@ class Chain:
                 logger.info("Running model query without parser.")
                 result = self.model.query(prompt, verbose=verbose, cache=cache)
 
-            assistant_message = Message(role="assistant", content=result)
+            assistant_message = TextMessage(role="assistant", content=result)
             if Chain._message_store:
                 logger.info("Adding assistant message to message store.")
                 Chain._message_store.add(assistant_message)

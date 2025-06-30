@@ -1,4 +1,4 @@
-from Chain.message.message import Message, MessageType
+from Chain.message.message import Message, MessageType, Role
 from Chain.message.imagemessage import OpenAITextContent
 from Chain.logging.logging_config import get_logger
 from pydantic import BaseModel, Field
@@ -42,12 +42,12 @@ class OpenAIAudioContent(BaseModel):
     )
 
 
-class OpenAIAudioMessage(Message):
+class OpenAIAudioMessage(BaseModel):
     """
     Gemini AudioMessage should have a single AudioContent and a single TextContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
     """
-
+    role: Role = Field(default="user", description="The role of the message sender.")
     content: list[OpenAIAudioContent | OpenAITextContent]  # type: ignore
 
 class AudioMessage(Message):
@@ -55,7 +55,7 @@ class AudioMessage(Message):
     AudioMessage is a message that contains audio content.
     It can be created from an audio file and contains both the audio content in base64 format
     """
-    message_type: MessageType = "audio"
+    message_type: MessageType = Field(default = "audio", exclude=True, repr=False)
     content: list[str] = Field(default_factory=list)
     text_content: str = Field(exclude=True, repr=False)
     audio_content: str = Field(exclude=True, repr=False) 
