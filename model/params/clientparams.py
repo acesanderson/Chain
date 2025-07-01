@@ -25,7 +25,6 @@ class OpenAIParams(ClientParams):
     frequency_penalty: Optional[float] = None
     presence_penalty: Optional[float] = None
     stop: Optional[list[str]] = None
-    safety_settings: Optional[dict[str, Any]] = None
 
 
 class GoogleParams(OpenAIParams):

@@ -60,15 +60,12 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         Sets:
         - Provider based on the model
         - Client parameters based on the provider
-        Constructs:
-        - Client parameters based on the provider
         Finally, validates that we have our required parameters.
         """
         self._validate_model() # Raise error if model is not supported
         self._set_provider() # Set provider based on model
         self._validate_temperature() # Raise error if temperature is out of range for provider
         self._set_client_params() # Set client_params based on provider
-        self._validate_client_params() # Raise error if client_params do not match provider
         # Validate the whole lot
         if self.messages is None or len(self.messages) == 0:
             raise ValueError("Messages cannot be empty. Likely a code error.")
@@ -109,8 +106,12 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         for client_param_type in ClientParamsModels:
             if self.provider == client_param_type.provider:
                 # Validate the dict against the provider's client params
-                self.client_params = client_param_type.model_validate(self.client_params)
-
+                try:
+                    client_param_type.model_validate(self.client_params)
+                except ValidationError as e:
+                    raise ValidationError(
+                        f"Client parameters do not match the expected format for provider '{self.provider}': {e}"
+                    )
 
     def _validate_temperature(self):
         """
@@ -134,18 +135,6 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             raise ValidationError(
                 f"Temperature {self.temperature} is out of range {temperature_range} for provider: {self.provider}"
             )
-    
-    def _validate_client_params(self):
-        """
-        Validate that the client_params match the provider.
-        """
-        if self.client_params is None:
-            return
-        if self.client_params.provider != self.provider:
-            raise ValidationError(
-                f"ClientParams provider '{self.client_params.provider}' does not match Params provider '{self.provider}'."
-            )
-        return
 
     def _validate_model(self):
         """
@@ -355,9 +344,13 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     def to_google(self) -> dict:
         if self.client_params:
             assert GoogleParams.model_validate(self.client_params), f"GoogleParams expected for Google client, not {type(self.client_params)}."
+        # Remove "frequency_penalty" key if it exists, as Google does not use it (unlike OpenAI).
+        self.client_params.pop("frequency_penalty", None)
         return self._to_openai_spec()
 
     def to_perplexity(self) -> dict:
         if self.client_params:
             assert PerplexityParams.model_validate(self.client_params), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
+        # Remove "stop" key if it exists, as Perplexity does not use it (unlike OpenAI).
+        self.client_params.pop("stop", None)
         return self._to_openai_spec()
