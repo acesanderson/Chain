@@ -4,6 +4,7 @@ Provides transparent caching for Chain responses with automatic serialization/de
 """
 
 from Chain.logging.logging_config import get_logger
+from Chain.result.response import Response
 from typing import Optional, Any
 from pathlib import Path
 import json, sqlite3
@@ -59,7 +60,7 @@ class ChainCache:
 
         if result:
             response_data = result[0]
-            return self._deserialize_from_cache(response_data)
+            return self._deserialize_response(response_data)
         return None
 
     def set(self, cache_key: str, response: Any):
@@ -70,7 +71,7 @@ class ChainCache:
             cache_key: Unique cache key
             response: Response object to cache
         """
-        serialized_data = self._serialize_for_cache(response)
+        serialized_data = self._serialize_response(response)
 
         self.cursor.execute(
             """
@@ -81,82 +82,13 @@ class ChainCache:
         )
         self.connection.commit()
 
-    def _serialize_for_cache(self, obj: Any) -> str:
-        """
-        Serialize object using new cache dict methods.
+    def _serialize_response(self, response: Response) -> str:
+        return json.dumps(response.to_cache_dict())
 
-        Args:
-            obj: Object to serialize (should have to_cache_dict method)
-
-        Returns:
-            JSON string representation
-        """
-        if hasattr(obj, "to_cache_dict"):
-            cache_dict = obj.to_cache_dict()
-            return json.dumps(cache_dict, default=str, ensure_ascii=False)
-        else:
-            # Fallback for simple objects
-            return json.dumps(str(obj), ensure_ascii=False)
-
-    def _deserialize_from_cache(self, data: str) -> Any:
-        """
-        Deserialize object using cache dict methods.
-        Type information is embedded in the JSON structure.
-
-        Args:
-            data: JSON string to deserialize
-
-        Returns:
-            Reconstructed object or None if deserialization fails
-        """
-        try:
-            cache_dict = json.loads(data)
-
-            # Determine object type based on structure and deserialize accordingly
-            if (
-                "messages" in cache_dict
-                and "params" in cache_dict
-                and "duration" in cache_dict
-            ):
-                # This is a Response object
-                from Chain.result.response import Response
-
-                return Response.from_cache_dict(cache_dict)
-            elif "model" in cache_dict and (
-                "provider" in cache_dict or "messages" in cache_dict
-            ):
-                # This is a Params object
-                from Chain.model.params.params import Params
-
-                return Params.from_cache_dict(cache_dict)
-            elif "messages" in cache_dict and isinstance(cache_dict["messages"], list):
-                # This is a Messages object
-                from Chain.message.messages import Messages
-
-                return Messages.from_cache_dict(cache_dict)
-            elif "message_type" in cache_dict:
-                # This is a specific Message type
-                message_type = cache_dict["message_type"]
-                if message_type == "ImageMessage":
-                    from Chain.message.imagemessage import ImageMessage
-
-                    return ImageMessage.from_cache_dict(cache_dict)
-                elif message_type == "AudioMessage":
-                    from Chain.message.audiomessage import AudioMessage
-
-                    return AudioMessage.from_cache_dict(cache_dict)
-                else:
-                    # Standard Message
-                    from Chain.message.message import Message
-
-                    return Message.from_cache_dict(cache_dict)
-            else:
-                # Unknown structure - return as dict
-                return cache_dict
-
-        except (json.JSONDecodeError, KeyError, ImportError, AttributeError) as e:
-            print(f"Cache deserialization error: {e}")
-            return None
+    def _deserialize_response(self, cached_response: str) -> Response:
+        cache_dict = json.loads(cached_response)
+        response = Response.from_cache_dict(cache_dict)
+        return response
 
     def clear_cache(self):
         """Clear all cached responses."""

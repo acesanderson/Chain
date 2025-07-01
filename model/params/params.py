@@ -165,6 +165,19 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         return
 
     # For Caching
+    def normalize_json(self, obj):
+        """
+        Nested dicts and lists are normalized to ensure consistent ordering.
+        This is crucial for consistent caching and comparison.
+        """
+        if isinstance(obj, dict):
+            return {k: self.normalize_json(obj[k]) for k in sorted(obj)}
+        elif isinstance(obj, list):
+            return [self.normalize_json(item) for item in obj]
+        else:
+            return obj
+
+
     def generate_cache_key(self) -> str:
         """
         Generate a reliable cache key for the Params instance.
@@ -179,7 +192,23 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         schema_str: str = Parser.as_string(self.response_model)  # type: ignore
         # Handle None temperature gracefully
         temp_str = str(self.temperature) if self.temperature is not None else "none"
-        params_str = "|".join([messages_str, self.model, temp_str, schema_str])
+        # Include client_params if they are set; the normalize_json ensures consistent ordering, recursively
+        if self.client_params:
+            client_params_str = json.dumps(
+                self.normalize_json(self.client_params), sort_keys=True
+            )
+        else:
+            client_params_str = "none"
+        params_str = "|".join(
+            [
+                self.model,
+                messages_str,
+                temp_str,
+                schema_str,
+                self.provider or "none",
+                client_params_str,
+            ]
+        )
         return sha256(params_str.encode("utf-8")).hexdigest()
 
     # Dunder methods for string representation
