@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, override
+from typing import Iterator, Optional
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
@@ -19,7 +19,7 @@ class Messages(BaseModel):
         description="List of Message objects (including ImageMessage and AudioMessage)",
     )
 
-    def __init__(self, messages: list[Message] = None, **kwargs):
+    def __init__(self, messages: list[Message] = [], **kwargs):
         """
         Initialize with optional list of messages.
 
@@ -205,8 +205,12 @@ class Messages(BaseModel):
         return self.__repr__()
 
     # Serialization methods
-    def to_cache_dict(self) -> dict:
-        return {"messages": [message.to_cache_dict() for message in self.messages]}
+    def to_cache_dict(self) -> list:
+        """
+        Yes, it's confusing that this returns!
+        But this is a list of dictionaries for each message, ideal for serializing WITHIN a dict / json[.
+        """
+        return [message.to_cache_dict() for message in self.messages]
 
     @classmethod
     def from_cache_dict(cls, cache_dict: dict) -> "Messages":

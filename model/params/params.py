@@ -265,6 +265,11 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             "stream": self.stream,
         }
 
+        # Remove message_type from each Message object
+        for message in base_params["messages"]:
+            if isinstance(message, dict) and "message_type" in message:
+                message.pop("message_type")
+
         # Automatically include all client params
         if self.provider == "ollama":
             if self.client_params:
@@ -367,6 +372,11 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         # Add client_params to base_params
         if self.client_params:
             base_params.update(self.client_params)
+
+        # Remove message_type from each Message object
+        for message in base_params["messages"]:
+            if isinstance(message, dict) and "message_type" in message:
+                message.pop("message_type")
 
         return {
             k: v

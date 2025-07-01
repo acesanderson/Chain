@@ -74,6 +74,10 @@ class AnthropicClientSync(AnthropicClient):
         elif isinstance(result, Stream):
             # Handle streaming response if needed
             return result, usage
+        else:
+            raise ValueError(
+                f"Unexpected result type from Anthropic API: {type(result)}"
+            )
 
 
 class AnthropicClientAsync(AnthropicClient):
@@ -105,3 +109,7 @@ class AnthropicClientAsync(AnthropicClient):
         elif isinstance(result, Stream):
             # Handle streaming response if needed
             return result, usage
+        else:
+            raise ValueError(
+                f"Unexpected result type from Anthropic API: {type(result)}"
+            )
