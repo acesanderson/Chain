@@ -12,7 +12,10 @@ Usage:
 - To add a function, create a method with the prefix "arg_" and decorate it with the cli_arg decorator. The abbreviation for the argument should be passed as an argument to the decorator (like @cli_arg("-m")).
 """
 
-from Chain import MessageStore, Model, Prompt, Chain
+from Chain.message.messagestore import MessageStore
+from Chain.model.model import Model
+from Chain.prompt.prompt import Prompt
+from Chain.chain.chain import Chain
 from Chain.logging.logging_config import get_logger
 from rich.console import Console
 from utils import print_markdown
