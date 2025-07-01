@@ -82,7 +82,11 @@ class ModelAsync(Model):
 
                 query_args = {k: values[k] for k in args if k != "self"}
                 query_args["model"] = self.model
-                params = Params(**query_args)
+                if query_input:
+                    query_args.pop("query_input", None)
+                    params = Params.from_query_input(query_input = query_input, **query_args)
+                else:
+                    params = Params(**query_args)
 
             assert params and isinstance(
                 params, Params

@@ -1,7 +1,6 @@
 from Chain.cache.cache import ChainCache, check_cache, update_cache
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
-from Chain.message.messages import Messages
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
@@ -127,7 +126,7 @@ class Model:
         self,
         # Standard parameters
         query_input: str | list | Message | None = None,
-        parser: Parser | None = None,
+        pydantic_model: type[BaseModel] | None = None,
         cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,
@@ -141,7 +140,6 @@ class Model:
         return_params: bool = False,
         return_error: bool = False,
     ) -> ChainResult | Params | Stream | AnthropicStream:
-
         try:
             # Construct Params object if not provided (majority of cases)
             if not params:
@@ -156,7 +154,11 @@ class Model:
                 query_args = {k: values[k] for k in args if k != "self"}
                 query_args["model"] = self.model
                 cache = query_args.pop("cache", False)
-                params = Params(**query_args)
+                if query_input:
+                    query_args.pop("query_input", None)
+                    params = Params.from_query_input(query_input = query_input, **query_args)
+                else:
+                    params = Params(**query_args)
 
             assert isinstance(
                 params, Params
