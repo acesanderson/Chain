@@ -344,13 +344,13 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     def to_google(self) -> dict:
         if self.client_params:
             assert GoogleParams.model_validate(self.client_params), f"GoogleParams expected for Google client, not {type(self.client_params)}."
-        # Remove "frequency_penalty" key if it exists, as Google does not use it (unlike OpenAI).
-        self.client_params.pop("frequency_penalty", None)
+            # Remove "frequency_penalty" key if it exists, as Google does not use it (unlike OpenAI).
+            self.client_params.pop("frequency_penalty", None)
         return self._to_openai_spec()
 
     def to_perplexity(self) -> dict:
         if self.client_params:
             assert PerplexityParams.model_validate(self.client_params), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
-        # Remove "stop" key if it exists, as Perplexity does not use it (unlike OpenAI).
-        self.client_params.pop("stop", None)
+            # Remove "stop" key if it exists, as Perplexity does not use it (unlike OpenAI).
+            self.client_params.pop("stop", None)
         return self._to_openai_spec()
