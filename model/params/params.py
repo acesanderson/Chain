@@ -2,8 +2,6 @@ from pydantic import BaseModel, Field, ValidationError
 from typing import Optional
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
-from Chain.message.imagemessage import ImageMessage
-from Chain.message.audiomessage import AudioMessage
 from Chain.message.messages import Messages
 from Chain.parser.parser import Parser
 from Chain.progress.verbosity import Verbosity
@@ -11,9 +9,18 @@ from Chain.progress.display_mixins import (
     RichDisplayParamsMixin,
     PlainDisplayParamsMixin,
 )
-from Chain.model.params.clientparams import Provider, ClientParamsModels, OpenAIParams, OllamaParams, AnthropicParams, GoogleParams, PerplexityParams
+from Chain.model.params.clientparams import (
+    Provider,
+    ClientParamsModels,
+    OpenAIParams,
+    OllamaParams,
+    AnthropicParams,
+    GoogleParams,
+    PerplexityParams,
+)
 from Chain.parser.parser import Parser
 from Chain.model.models.models import ModelStore
+
 
 class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     """
@@ -34,10 +41,14 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         description="Temperature for sampling. If None, defaults to provider-specific value.",
     )
     stream: bool = False
-    verbose: Verbosity = Field(default = Verbosity.PROGRESS, exclude=True, description="Verbosity level for logging and progress display.")
+    verbose: Verbosity = Field(
+        default=Verbosity.PROGRESS,
+        exclude=True,
+        description="Verbosity level for logging and progress display.",
+    )
     response_model: type[BaseModel] | dict | None = Field(
         default=None,
-        description="Pydantic model to convert messages to a specific format. If dict, this is a schema for the model for serialization / caching purposes."
+        description="Pydantic model to convert messages to a specific format. If dict, this is a schema for the model for serialization / caching purposes.",
     )
     # Post model init parameters
     provider: Optional[Provider] = Field(
@@ -60,17 +71,26 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         Sets:
         - Provider based on the model
         - Client parameters based on the provider
+        - Messages are converted to a consistent format
         Finally, validates that we have our required parameters.
         """
-        self._validate_model() # Raise error if model is not supported
-        self._set_provider() # Set provider based on model
-        self._validate_temperature() # Raise error if temperature is out of range for provider
-        self._set_client_params() # Set client_params based on provider
+        self._validate_model()  # Raise error if model is not supported
+        self._set_provider()  # Set provider based on model
+        self._validate_temperature()  # Raise error if temperature is out of range for provider
+        self._set_client_params()  # Set client_params based on provider
+        # Convert messages to Messages object if they are a list
+        self.messages = (
+            Messages(self.messages)
+            if isinstance(self.messages, list)
+            else self.messages
+        )
         # Validate the whole lot
         if self.messages is None or len(self.messages) == 0:
             raise ValueError("Messages cannot be empty. Likely a code error.")
         if self.provider == "" or self.provider is None:
-            raise ValueError("Provider must be set based on the model. Likely a code error.")
+            raise ValueError(
+                "Provider must be set based on the model. Likely a code error."
+            )
 
     # Constructor methods
     @classmethod
@@ -79,7 +99,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         If you have a prompt string, input it this way. Intercepts query string and coerces it into Messages.
         """
         messages = kwargs.pop("messages", [])
-        user_message = TextMessage(role = "user", content=query_input)
+        user_message = TextMessage(role="user", content=query_input)
         modified_messages = messages + [user_message]
         kwargs.update({"messages": modified_messages})
         return cls(
@@ -87,7 +107,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         )
 
     # Validation methods
-    def _set_provider(self) -> str:
+    def _set_provider(self):
         for provider in ModelStore.models().keys():
             if self.model in ModelStore.models()[provider]:
                 self.provider = provider
@@ -121,7 +141,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             return
         # Find the temperature range for the provider
         temperature_range: Optional[tuple[float, float]] = None
-        for client_param_type in ClientParamsModels.__args__:
+        for client_param_type in ClientParamsModels:
             if self.provider == client_param_type.provider:
                 temperature_range = client_param_type.temperature_range
         if not temperature_range:
@@ -154,9 +174,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         import json
 
         # Use sort_keys for deterministic JSON ordering
-        messages_str = json.dumps(self.convert_messages(), sort_keys=True)
+        messages_str: str = json.dumps(self.messages.to_cache_dict(), sort_keys=True)  # type: ignore
         # Include parser since it affects response format
-        schema_str = Parser.as_string(self.response_model),
+        schema_str: str = Parser.as_string(self.response_model)  # type: ignore
         # Handle None temperature gracefully
         temp_str = str(self.temperature) if self.temperature is not None else "none"
         params_str = "|".join([messages_str, self.model, temp_str, schema_str])
@@ -179,49 +199,54 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             f"client_params={self.client_params!r}, parser={self.response_model!r})"
         )
 
-    # Serialization methods for different providers
-    def convert_messages(self) -> list[dict]:
-        """
-        Convert messages to a list of dictionaries.
-        This is used by clients to send messages to the API.
-        """
-        # If no messages at all, that's an error
-        if not self.messages:
-            raise ValueError("No messages to convert. Messages list cannot be empty.")
-
-        converted_messages = []
-        for message in self.messages:
-            if isinstance(message, ImageMessage):
-                match self.provider:
-                    case "openai" | "ollama" | "gemini" | "perplexity":
-                        converted_messages.append(message.to_openai().model_dump())
-                    case "anthropic":
-                        converted_messages.append(message.to_anthropic().model_dump())
-            elif isinstance(message, AudioMessage):
-                # Currently we only use GPT for this, specifically the gpt-4o-audio-preview model.
-                if not self.model == "gpt-4o-audio-preview":
-                    raise ValueError(
-                        "AudioMessage can only be used with the gpt-4o-audio-preview model."
-                    )
-                converted_messages.append(message.to_openai().model_dump())
-            elif isinstance(message, TextMessage) and self.provider == "anthropic":
-                # For Anthropic, we need to convert the message to the appropriate format.
-                converted_messages.append(message.model_dump())
-            else:
-                # For other message types, we use the default model_dump method.
-                if not isinstance(message, Message):
-                    raise ValueError(f"Unsupported message type: {type(message)}")
-                converted_messages.append(message.model_dump())
-
-        return converted_messages
-
     # Serialization methods (for Cache, MessageStore, etc.)
     def to_cache_dict(self) -> dict:
-        pass
+        """
+        Required attributes:
+        - model: str
+        - messages: list[dict]
+        - temperature: Optional[float]
+        - response_model: Optional[dict]
+        - provider: Optional[str]
+        - client_params: Optional[dict]
+        - stream: bool
+        - verbose: Verbosity
+        """
+        cache_dict = {
+            "model": self.model,
+            "messages": self.messages.to_cache_dict(),  # type: ignore
+            "temperature": self.temperature,
+            "response_model": (
+                Parser.as_string(self.response_model)
+                if self.response_model and isinstance(self.response_model, type)
+                else None
+            ),
+            "provider": self.provider,
+            "client_params": self.client_params,
+            "stream": self.stream,
+            "verbose": self.verbose,
+        }
+        return cache_dict
 
     @classmethod
     def from_cache_dict(cls, cache_dict: dict) -> "Params":
-        pass
+        model = cache_dict.get("model")
+        messages = cache_dict.get("messages")
+        temperature = cache_dict.get("temperature", None)
+        response_model = cache_dict.get("response_model", None)
+        # Don't need provider, as this is assigned post-init
+        client_params = cache_dict.get("client_params", None)
+        stream = cache_dict.get("stream", False)
+        verbose = cache_dict.get("verbose", Verbosity.PROGRESS)
+        return cls(
+            model=str(model),
+            messages=Messages.from_cache_dict(messages) if messages else [],
+            temperature=temperature,
+            response_model=response_model,
+            client_params=client_params,
+            stream=stream,
+            verbose=verbose,
+        )
 
     # Each customization method first operates on client_params, then constructs base parameters.
     def _to_openai_spec(self) -> dict:
@@ -229,10 +254,12 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         We use OpenAI spec with OpenAI, Gemini, Ollama, and Perplexity clients.
         """
         if self.client_params:
-            assert OpenAIParams.model_validate(self.client_params), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+            assert OpenAIParams.model_validate(
+                self.client_params
+            ), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
         base_params = {
             "model": self.model,
-            "messages": self.convert_messages(),
+            "messages": self.messages.to_cache_dict(),  # type: ignore
             "response_model": self.response_model,
             "temperature": self.temperature,
             "stream": self.stream,
@@ -256,7 +283,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     def to_openai(self) -> dict:
         if self.client_params:
-            assert OpenAIParams.model_validate(self.client_params), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+            assert OpenAIParams.model_validate(
+                self.client_params
+            ), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
         return self._to_openai_spec()
 
     def to_ollama(self) -> dict:
@@ -265,7 +294,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         Recall that Ollama with Instructor/OpenAI spec expects options to be nested under extra_body, so we have a special case within to_openai_spec.
         """
         if self.client_params:
-            assert OllamaParams.model_validate(self.client_params), f"OllamaParams expected for Ollama client, not {type(self.client_params)}."
+            assert OllamaParams.model_validate(
+                self.client_params
+            ), f"OllamaParams expected for Ollama client, not {type(self.client_params)}."
         # Set num_ctx to the maximum context window for the model.
         num_ctx = ModelStore.get_num_ctx(self.model)
         if num_ctx is None:
@@ -287,9 +318,11 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         3. No response_model in the API call params
         """
         if self.client_params:
-            assert AnthropicParams.model_validate(self.client_params), f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
+            assert AnthropicParams.model_validate(
+                self.client_params
+            ), f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
         # Start with converted messages
-        converted_messages = self.convert_messages()
+        converted_messages = self.messages.to_cache_dict()  # type: ignore
 
         # Extract system message if present
         system_content = ""
@@ -343,14 +376,18 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     def to_google(self) -> dict:
         if self.client_params:
-            assert GoogleParams.model_validate(self.client_params), f"GoogleParams expected for Google client, not {type(self.client_params)}."
+            assert GoogleParams.model_validate(
+                self.client_params
+            ), f"GoogleParams expected for Google client, not {type(self.client_params)}."
             # Remove "frequency_penalty" key if it exists, as Google does not use it (unlike OpenAI).
             self.client_params.pop("frequency_penalty", None)
         return self._to_openai_spec()
 
     def to_perplexity(self) -> dict:
         if self.client_params:
-            assert PerplexityParams.model_validate(self.client_params), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
+            assert PerplexityParams.model_validate(
+                self.client_params
+            ), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
             # Remove "stop" key if it exists, as Perplexity does not use it (unlike OpenAI).
             self.client_params.pop("stop", None)
         return self._to_openai_spec()

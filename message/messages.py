@@ -1,11 +1,11 @@
 from typing import Iterator, Optional, override
 from pydantic import BaseModel, Field
 from Chain.message.message import Message
-from Chain.message.audiomessage import AudioMessage
-from Chain.message.imagemessage import ImageMessage
+from Chain.message.textmessage import TextMessage
 from Chain.logging.logging_config import get_logger
 
 logger = get_logger(__name__)
+
 
 class Messages(BaseModel):
     """
@@ -71,14 +71,6 @@ class Messages(BaseModel):
     def reverse(self) -> None:
         """Reverse the messages in place."""
         self.messages.reverse()
-
-    def sort(self, *, key=None, reverse: bool = False) -> None:
-        """Sort the messages in place."""
-        self.messages.sort(key=key, reverse=reverse)
-
-    def copy(self) -> "Messages":
-        """Return a shallow copy of the Messages object."""
-        return Messages(self.messages.copy())
 
     # Dunder methods for list-like behavior
     def __len__(self) -> int:
@@ -167,7 +159,7 @@ class Messages(BaseModel):
         """
         from Chain.message.message import Message
 
-        self.append(Message(role=role, content=content))
+        self.append(TextMessage(role=role, content=content))
 
     def last(self) -> Optional[Message]:
         """
@@ -213,11 +205,9 @@ class Messages(BaseModel):
         return self.__repr__()
 
     # Serialization methods
-    @override
     def to_cache_dict(self) -> dict:
         return {"messages": [message.to_cache_dict() for message in self.messages]}
 
-    @override
     @classmethod
     def from_cache_dict(cls, cache_dict: dict) -> "Messages":
         """
