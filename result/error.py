@@ -1,5 +1,8 @@
 from Chain.logging.logging_config import get_logger
-from Chain.progress.display_mixins import RichDisplayChainErrorMixin, PlainDisplayChainErrorMixin
+from Chain.progress.display_mixins import (
+    RichDisplayChainErrorMixin,
+    PlainDisplayChainErrorMixin,
+)
 from typing import Optional, Any
 from pydantic import BaseModel, Field
 import traceback
@@ -10,24 +13,34 @@ logger = get_logger(__name__)
 
 class ErrorInfo(BaseModel):
     """Simple error information"""
-    
-    code: str = Field(..., description="Error code like 'validation_error', 'api_error', etc.")
+
+    code: str = Field(
+        ..., description="Error code like 'validation_error', 'api_error', etc."
+    )
     message: str = Field(..., description="Human-readable error message")
-    category: str = Field(..., description="Error category: 'client', 'server', 'network', 'parsing'")
+    category: str = Field(
+        ..., description="Error category: 'client', 'server', 'network', 'parsing'"
+    )
     timestamp: datetime = Field(..., description="When the error occurred")
-    
+
     model_config = {"frozen": True}  # Equivalent to dataclass(frozen=True)
 
 
 class ErrorDetail(BaseModel):
     """Detailed error information for debugging"""
-    
-    exception_type: str = Field(..., description="Type of exception like 'ValidationError', 'APIException'")
-    stack_trace: Optional[str] = Field(None, description="Full stack trace if available")
-    raw_response: Optional[Any] = Field(None, description="Original response that caused error")
+
+    exception_type: str = Field(
+        ..., description="Type of exception like 'ValidationError', 'APIException'"
+    )
+    stack_trace: Optional[str] = Field(
+        None, description="Full stack trace if available"
+    )
+    raw_response: Optional[Any] = Field(
+        None, description="Original response that caused error"
+    )
     request_params: Optional[dict] = Field(None, description="Params that led to error")
     retry_count: Optional[int] = Field(None, description="If retries were attempted")
-    
+
     model_config = {"frozen": True}  # Equivalent to dataclass(frozen=True)
 
 
@@ -37,11 +50,11 @@ class ChainError(BaseModel, RichDisplayChainErrorMixin, PlainDisplayChainErrorMi
     Complete error information.
     We mixin our display classes to provide to_plain and to_rich methods in service of our Progress / Verbosity implementation.
     """
-    
+
     info: ErrorInfo = Field(..., description="Core error information")
-    detail: Optional[ErrorDetail] = Field(None, description="Detailed debugging information")
-    
-    model_config = {"frozen": True}  # Equivalent to dataclass(frozen=True)
+    detail: Optional[ErrorDetail] = Field(
+        None, description="Detailed debugging information"
+    )
 
     def __str__(self) -> str:
         """
@@ -58,10 +71,7 @@ class ChainError(BaseModel, RichDisplayChainErrorMixin, PlainDisplayChainErrorMi
     ) -> "ChainError":
         """Create ChainError from an exception with full context"""
         info = ErrorInfo(
-            code=code, 
-            message=str(exc), 
-            category=category, 
-            timestamp=datetime.now()
+            code=code, message=str(exc), category=category, timestamp=datetime.now()
         )
 
         detail = ErrorDetail(
@@ -78,9 +88,13 @@ class ChainError(BaseModel, RichDisplayChainErrorMixin, PlainDisplayChainErrorMi
     def simple(cls, code: str, message: str, category: str) -> "ChainError":
         """Create simple error without exception details"""
         info = ErrorInfo(
-            code=code, 
-            message=message, 
-            category=category, 
-            timestamp=datetime.now()
+            code=code, message=message, category=category, timestamp=datetime.now()
         )
-        return cls(info=info)
+        return cls(info=info, detail=None)
+
+    def to_cache_dict(self) -> dict:
+        return self.model_dump()
+
+    @classmethod
+    def from_cache_dict(cls, cache_dict: dict) -> "ChainError":
+        return cls(**cache_dict)

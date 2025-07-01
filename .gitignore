@@ -14,3 +14,6 @@ ask_wrapper.sh
 *.log
 .DS_Store/
 tests/assets/*
+.pytest_cache/*
+/.pytest_cache/*
+/.pytest_cache/
