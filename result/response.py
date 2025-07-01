@@ -39,38 +39,28 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         Serialize Response to cache-friendly dictionary.
         """
-        # return {
-        #     "messages": self._serialize_messages(),
-        #     "params": self._serialize_params(),
-        #     "duration": self.duration,
-        #     "timestamp": self.timestamp,
-        # }
-        pass
+        return {
+            "message": self.message.to_cache_dict(),
+            "params": self.params.to_cache_dict(),
+            "input_tokens": self.input_tokens,
+            "output_tokens": self.output_tokens,
+            "duration": self.duration,
+            "timestamp": self.timestamp,
+        }
 
     @classmethod
     def from_cache_dict(cls, cache_dict: dict) -> "Response":
         """
         Deserialize Response from cache dictionary.
         """
-        # from Chain.message.messages import Messages  # Import at the top
-        #
-        # # Deserialize messages
-        # messages_list = cls._deserialize_messages(data["messages"])
-        # messages = Messages(messages_list)  # Wrap in Messages object
-        #
-        # # Deserialize params
-        # params = cls._deserialize_params(data["params"])
-        #
-        # # Create instance
-        # instance = cls(
-        #     messages=messages,  # Now it's a Messages object
-        #     params=params,
-        #     duration=data["duration"],
-        #     timestamp=data["timestamp"],
-        # )
-        #
-        # return instance
-        pass
+        return cls(
+            message=Message.from_cache_dict(cache_dict["message"]),
+            params=Params.from_cache_dict(cache_dict["params"]),
+            input_tokens=cache_dict["input_tokens"],
+            output_tokens=cache_dict["output_tokens"],
+            duration=cache_dict["duration"],
+            timestamp=cache_dict.get("timestamp", datetime.now().isoformat()),
+        )
 
     @property
     def prompt(self) -> str | None:
