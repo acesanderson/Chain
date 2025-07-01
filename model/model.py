@@ -126,7 +126,7 @@ class Model:
         self,
         # Standard parameters
         query_input: str | list | Message | None = None,
-        parser: Parser | None = None,
+        pydantic_model: type[BaseModel] | None = None,
         cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,
@@ -156,7 +156,7 @@ class Model:
                 cache = query_args.pop("cache", False)
                 if query_input:
                     query_args.pop("query_input", None)
-                    Params.from_query_input(query_input = query_input, **query_args)
+                    params = Params.from_query_input(query_input = query_input, **query_args)
                 else:
                     params = Params(**query_args)
 
