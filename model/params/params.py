@@ -35,9 +35,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     )
     stream: bool = False
     verbose: Verbosity = Field(default = Verbosity.PROGRESS, exclude=True, description="Verbosity level for logging and progress display.")
-    pydantic_model: Optional[type[BaseModel]] = Field(
+    pydantic_model: type[BaseModel] | dict | None = Field(
         default=None,
-        description="Pydantic model to convert messages to a specific format."
+        description="Pydantic model to convert messages to a specific format. If dict, this is a schema for the model for serialization / caching purposes."
     )
     # Post model init parameters
     provider: Optional[Provider] = Field(
@@ -74,8 +74,6 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             raise ValueError("Messages cannot be empty. Likely a code error.")
         if self.provider == "" or self.provider is None:
             raise ValueError("Provider must be set based on the model. Likely a code error.")
-        if self.client_params is None:
-            raise ValueError("Client parameters must be set based on the provider. Likely a code error.")
 
     # Constructor methods
     @classmethod
@@ -96,19 +94,23 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         for provider in ModelStore.models().keys():
             if self.model in ModelStore.models()[provider]:
                 self.provider = provider
-        raise ValueError(f"Model '{self.model}' is not supported by any provider.")
+                return
+        if not self.provider:
+            raise ValueError(f"Model '{self.model}' is not supported by any provider.")
 
     def _set_client_params(self):
+        """
+        User should add extra client params as a dict called client_params.
+        """
+        # If client_params is already set, we assume it's a dict and validate it.
         if self.client_params is None:
-            for client_param_type in ClientParamsModels.__args__:
-                # Use getattr with a default to safely check for 'provider' on ClassVar
-                if self.provider == getattr(client_param_type, "provider", None):
-                    self.client_params = client_param_type()
-                    break
-            if self.client_params is None:
-                raise ValidationError(
-                    f"ClientParams could not be determined for model provider: {self.provider}. This may indicate an unsupported provider or a missing client_params initialization logic."
-                )
+            return
+        # If client_params is a dict, we need to validate it against the provider's client params.
+        for client_param_type in ClientParamsModels:
+            if self.provider == client_param_type.provider:
+                # Validate the dict against the provider's client params
+                self.client_params = client_param_type.model_validate(self.client_params)
+
 
     def _validate_temperature(self):
         """
@@ -150,7 +152,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         Validate that the model is supported by at least one provider.
         """
         if not ModelStore.is_supported(self.model):
-            raise ValidationError(f"Model '{model}' is not supported.")
+            raise ValidationError(f"Model '{self.model}' is not supported.")
         return
 
     # For Caching
