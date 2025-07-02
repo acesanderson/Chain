@@ -1,4 +1,4 @@
-from Chain.cache.cache import ChainCache, check_cache, update_cache
+from Chain.cache.cache import ChainCache
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
 from Chain.parser.parser import Parser
@@ -182,7 +182,7 @@ class Model:
             # Check cache first
             logger.info("Checking cache for existing results.")
             if cache and self._chain_cache:
-                cached_result = check_cache(self, params)
+                cached_result = self._chain_cache.check_for_model(params)
                 if isinstance(cached_result, ChainResult):
                     return (
                         cached_result  # This should be a Response (part of ChainResult)
@@ -247,7 +247,7 @@ class Model:
             # Update cache after successful query
             logger.info("Updating cache with the new response.")
             if cache and self._chain_cache:
-                update_cache(self, params, response)
+                self._chain_cache.store_for_model(params, response)
 
             return response  # Return Response (part of ChainResult)
 

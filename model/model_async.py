@@ -3,11 +3,10 @@ from Chain.model.models.models import ModelStore
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
-from Chain.message.messages import Messages
 from Chain.message.textmessage import TextMessage
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
-from Chain.cache.cache import check_cache, update_cache
+from Chain.cache.cache import ChainCache
 from Chain.logging.logging_config import get_logger
 from typing import Optional
 from time import time
@@ -19,6 +18,7 @@ logger = get_logger(__name__)
 
 class ModelAsync(Model):
     _async_clients = {}  # Separate from Model._clients
+    _chain_cache: Optional[ChainCache] = None
 
     def _get_client_type(self, model: str) -> tuple:
         """
@@ -102,7 +102,7 @@ class ModelAsync(Model):
 
             # Check cache first
             if cache and self._chain_cache:
-                cached_result = check_cache(self, params)
+                cached_result = self._chain_cache.check_for_model(params)
                 if cached_result is not None:
                     return cached_result  # This should be a Response
 
@@ -138,7 +138,7 @@ class ModelAsync(Model):
 
             # Update cache after successful query
             if cache and self._chain_cache:
-                update_cache(self, params, response)
+                self._chain_cache.store_for_model(params, response)
 
             return response  # Always return Response (part of ChainResult)
 
