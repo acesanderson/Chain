@@ -1,10 +1,13 @@
 from Chain.model.clients.client import Client, Usage
 from Chain.model.clients.load_env import load_env
 from Chain.model.params.params import Params
+from Chain.logging.logging_config import get_logger
 from openai import OpenAI, AsyncOpenAI, Stream
 from pydantic import BaseModel
 import instructor, tiktoken
 
+
+logger = get_logger(__name__)
 
 class OpenAIClient(Client):
     """
@@ -73,7 +76,6 @@ class OpenAIClientSync(OpenAIClient):
             # Handle streaming response if needed
             return result, usage
 
-
 class OpenAIClientAsync(OpenAIClient):
     def _initialize_client(self):
         """
@@ -86,18 +88,26 @@ class OpenAIClientAsync(OpenAIClient):
         self,
         params: Params,
     ) -> tuple:
-        result = await self._client.chat.completions.create(**params.to_openai())
+        structured_response = None
+        if params.response_model is not None:
+            # We want the raw response from OpenAI, so we use `create_with_completion`
+            structured_response, result = await self._client.chat.completions.create_with_completion(
+                **params.to_openai()
+            )
+        else:
+            # Use the standard completion method
+            result = await self._client.chat.completions.create(**params.to_openai())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,
             output_tokens=result.usage.completion_tokens,
         )
-        # First try to get text content from the result
+        if structured_response is not None:
+            # If we have a structured response, return it along with usage
+            return structured_response, usage
         try:
             result = result.choices[0].message.content
             return result, usage
         except AttributeError:
             # If the result is a BaseModel or Stream, handle accordingly
             pass
-        if isinstance(result, BaseModel):
-            return result, usage

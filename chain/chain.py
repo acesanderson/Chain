@@ -57,7 +57,7 @@ class Chain:
     def run(
         self,
         input_variables: dict | None = None,
-        messages: Messages | list[Message] | None = [],
+        messages: Messages | list[Message] | None = None,
         verbose: Verbosity = Verbosity.PROGRESS,
         stream: bool = False,
         cache: bool = True,
@@ -67,7 +67,6 @@ class Chain:
         """
         Executes the Chain, processing the prompt and interacting with the language model.
 
-        This method acts as a central dispatcher, routing the request based on
         whether 'messages' are provided or if a streaming response is requested.
         It renders the prompt with `input_variables` if a `Prompt` object is
         associated with the Chain.
@@ -104,7 +103,7 @@ class Chain:
             ValueError: If neither a prompt nor messages are provided.
             ValueError: If `index` is provided without `total`, or vice-versa.
         """
-        # Render our prompt with the input_variables if variables are passed. Should throw a jinja error if it doesn't match.
+        # Render our prompt with the input_variables if variables are passed.
         if input_variables and self.prompt:
             logger.info("Rendering prompt with input variables: %s", input_variables)
             prompt = self.prompt.render(input_variables=input_variables)
@@ -114,132 +113,54 @@ class Chain:
         else:
             logger.info("No prompt provided, using None.")
             prompt = None
-        # Route a stream request (these don't return Response objects)
+        # Resolve messages: messagestore or user-provided messages.
+        if self._message_store:
+            if messages is not None:
+                raise ValueError(
+                    "Both messages and message store are provided, please use only one."
+                )
+            logger.info("Using message store for messages.")
+            messages = self._message_store.messages
+        # Coerce messages and query_input into a list of Message objects
+        logger.info("Coercing messages and prompt into a list of Message objects.")
+        messages = self._coerce_messages_and_prompt(
+            prompt=prompt, messages=messages
+        )
         # Route input; if string, if message
-        if messages:
-            logger.info("Running with messages.")
-            result = self.run_messages(
-                prompt=prompt,
-                messages=messages,
-                verbose=verbose,
-                cache=cache,
-                index=index,
-                total=total,
-                stream=stream,
-            )
-        elif prompt:
-            logger.info("Running with prompt.")
-            result = self.run_completion(
-                prompt=prompt,
-                verbose=verbose,
-                cache=cache,
-                index=index,
-                total=total,
-                stream=stream,
-            )
-        else:
-            raise ValueError("No prompt or messages passed to Chain.run.")
+        logger.info("Querying model.")
+        result = self.model.query(
+            query_input=messages,
+            verbose=verbose,
+            cache=cache,
+            index=index,
+            total=total,
+            stream=stream,
+        )
+        logger.info(f"Model query completed, return type: {type(result)}.")
+        # Save to messagestore if we have one and if we have a response.
+        if isinstance(result, Response) and self._message_store:
+            logger.info("Saving response to message store.")
+            self._message_store.save_response(result)
         return result
 
-    def run_messages(
-        self,
-        messages: list[Message],
-        prompt: str | None = None,
-        verbose: Verbosity = Verbosity.PROGRESS,
-        cache=True,
-        index: int = 0,
-        total: int = 0,
-        stream: bool = False,
-    ):
+    def _coerce_messages_and_prompt(self, prompt: str | Message | None, messages: Messages | list[Message] | None) -> list[Message] | Messages:
         """
-        Special version of Chain.run that takes a messages object.
-        Converts input + prompt into a message object, appends to messages list, and runs to Model.chat.
-        Input should be a dict with named variables that match the prompt.
+        We want a list of messages to submit to Model.query.
+        If we have a prompt, we want to convert it into a user message and append it to messages.
         """
-        if prompt:
-            logger.info("Using prompt to create a user message.")
-            # Add new query to messages list
-            message = TextMessage(role="user", content=prompt)
-            messages.append(message)
-        # If we have class-level logging
-        if Chain._message_store:
-            logger.info("Adding messages to message store.")
-            Chain._message_store.add(messages)
-        # Run our query
-        if self.parser:
-            logger.info("Using parser for structured output.")
-            result = self.model.query(
-                messages,
-                verbose=verbose,
-                response_model=self.parser.pydantic_model,
-                cache=cache,
-                index=index,
-                total=total,
-            )
+        if not messages:
+            messages = []
+        if isinstance(prompt, Message):
+            # If we have a message, just append it
+            messages.append(prompt)
+        elif isinstance(prompt, str):
+            # If we have a string, convert it to a TextMessage
+            messages.append(TextMessage(role="user", content=prompt))
+        elif prompt is None:
+            # If we have no prompt, do nothing
+            pass
         else:
-            logger.info("Running model query without parser.")
-            result = self.model.query(messages, verbose=verbose, cache=cache)
-        # Convert result to a Message object
-        assistant_message = TextMessage(role="assistant", content=result)
-        # If we have class-level logging
-        if Chain._message_store:
-            logger.info("Adding assistant message to message store.")
-            Chain._message_store.add(assistant_message)
-        messages.append(assistant_message)
-        # Return a response object
-        logger.info("Returning messages from run_messages.")
+            raise ValueError(f"Unsupported query_input type: {type(query_input)}")
+
         return messages
 
-    # In chain/chain.py - update run_completion method
-    def run_completion(
-        self,
-        prompt: str,
-        verbose: Verbosity = Verbosity.PROGRESS,
-        stream=False,
-        cache=True,
-        index: int = 0,
-        total: int = 0,
-    ):
-        logger.info("Running completion with prompt: %s", prompt)
-        user_message = TextMessage(role="user", content=prompt)
-
-        if Chain._message_store:
-            logger.info("Adding user message to message store.")
-            Chain._message_store.add(user_message)
-
-        if stream:
-            logger.info("Streaming response requested.")
-            # For streaming, return the stream object directly
-            if self.parser:
-                # Streaming with structured output is complex - disable for now
-                raise ValueError("Streaming is not supported with parsers yet")
-
-            stream_response = self.model.query(
-                prompt, verbose=verbose, cache=cache, stream=True
-            )
-            logger.info("Returning streaming response.")
-            return stream_response  # Return raw stream object
-        else:
-            # Non-streaming path (existing logic)
-            logger.info("Non-streaming response requested.")
-            if self.parser:
-                logger.info("Using parser for structured output.")
-                result = self.model.query(
-                    prompt,
-                    verbose=verbose,
-                    response_model=self.parser.pydantic_model,
-                    cache=cache,
-                    index=index,
-                    total=total,
-                )
-            else:
-                logger.info("Running model query without parser.")
-                result = self.model.query(prompt, verbose=verbose, cache=cache)
-
-            assistant_message = TextMessage(role="assistant", content=result)
-            if Chain._message_store:
-                logger.info("Adding assistant message to message store.")
-                Chain._message_store.add(assistant_message)
-
-            logger.info("Returning response object.")
-            return result

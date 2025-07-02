@@ -95,5 +95,5 @@ def test_audiomessage_to_openai():
     )
     
     openai_msg = audio_msg.to_openai()
-    assert openai_msg.role == "user"
-    assert len(openai_msg.content) == 2  # Text + audio content
+    assert openai_msg["role"] == "user"
+    assert len(openai_msg["content"]) == 2  # Text + audio content

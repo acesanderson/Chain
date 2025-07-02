@@ -5,15 +5,12 @@ Our Message class is inherited from specialized types like AudioMessage, ImageMe
 
 from Chain.prompt.prompt import Prompt
 from Chain.logging.logging_config import get_logger
-from Chain.message.message import Message, MessageType
+from Chain.message.message import Message, MessageType, Role
 from pydantic import BaseModel, Field
 from typing import Literal
 
 
 logger = get_logger(__name__)
-
-# Useful type aliases
-Role = Literal["user", "assistant", "system"]
 
 class TextMessage(Message):
     """
@@ -35,6 +32,7 @@ class TextMessage(Message):
         """
         return getattr(self, key)
 
+    # Serialization methods 
     def to_cache_dict(self) -> dict:
         """
         Serializes the message to a dictionary for caching.
@@ -105,6 +103,8 @@ class TextMessage(Message):
                     raise ValueError(f"Error deserializing {class_name}: {e}. There maybe version conflicts with the response model.")
         logger.error(f"Unknown class name: {class_name}")
         raise ValueError(f"Unknown class name: {class_name}. Please check the response models in Parser._response_model.")
+
+    # API compatibility methods -- these are inherited from Message so no need to override here.
         
 
 # Some helpful functions

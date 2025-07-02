@@ -23,8 +23,8 @@ dir_path = Path(__file__).resolve().parent
 
 import logging
 
-logger = configure_logging(level=logging.INFO)
-# logger = get_logger(__name__)
+# logger = configure_logging(level=logging.INFO)
+logger = get_logger(__name__)
 
 
 class Model:

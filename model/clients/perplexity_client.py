@@ -73,12 +73,23 @@ class PerplexityClientSync(PerplexityClient):
         self,
         params: Params,
     ) -> tuple:
-        result = self._client.chat.completions.create(**params.to_perplexity())
+        structured_response = None
+        if params.response_model is not None:
+            # We want the raw response from OpenAI, so we use `create_with_completion`
+            structured_response, result = self._client.chat.completions.create_with_completion(
+                **params.to_perplexity()
+            )
+        else:
+            # Use the standard completion method
+            result = self._client.chat.completions.create(**params.to_perplexity())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,
             output_tokens=result.usage.completion_tokens,
         )
+        if structured_response is not None:
+            # If we have a structured response, return it along with usage
+            return structured_response, usage
         if isinstance(result, ChatCompletion):
             # Construct a PerplexityContent object from the response
             citations = result.search_results

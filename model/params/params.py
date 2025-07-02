@@ -94,17 +94,39 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     # Constructor methods
     @classmethod
-    def from_query_input(cls, query_input: str, **kwargs) -> "Params":
+    def from_query_input(cls, query_input: str | Message | list[Message], **kwargs) -> "Params":
         """
-        If you have a prompt string, input it this way. Intercepts query string and coerces it into Messages.
+        Create Params from various input types.
+        
+        Args:
+            query_input: Can be:
+                - str: Creates a TextMessage with this content
+                - Message: Uses the Message directly (AudioMessage, ImageMessage, etc.)
+                - list[Message]: Uses the list of messages directly
         """
         messages = kwargs.pop("messages", [])
-        user_message = TextMessage(role="user", content=query_input)
-        modified_messages = messages + [user_message]
+        
+        # Handle different input types
+        if isinstance(query_input, str):
+            # Original behavior - create TextMessage from string
+            user_message = TextMessage(role="user", content=query_input)
+            modified_messages = messages + [user_message]
+            
+        elif isinstance(query_input, Message):
+            # ✅ NEW: Handle Message objects directly (AudioMessage, ImageMessage, etc.)
+            modified_messages = messages + [query_input]
+            
+        elif isinstance(query_input, list) and all(isinstance(msg, Message) for msg in query_input):
+            # ✅ NEW: Handle list of Message objects
+            modified_messages = messages + query_input
+            
+        else:
+            raise ValueError(
+                f"query_input must be str, Message, or list[Message], got {type(query_input)}"
+            )
+        
         kwargs.update({"messages": modified_messages})
-        return cls(
-            **kwargs,
-        )
+        return cls(**kwargs)
 
     # Validation methods
     def _set_provider(self):
@@ -274,7 +296,6 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                 for model_class in Parser._response_models:
                     if model_class.__name__ == title:
                         response_model = model_class
-                        break
                 else:
                     # If not found, set to None to avoid validation error
                     response_model = None
@@ -304,18 +325,30 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             assert OpenAIParams.model_validate(
                 self.client_params
             ), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+
+        # Convert messages to OpenAI format based on the provider
+        match self.provider:
+            case "openai":
+                converted_messages = self.messages.to_openai()  # type: ignore
+            case "ollama":
+                converted_messages = self.messages.to_ollama()  # type: ignore
+            case "google":
+                converted_messages = self.messages.to_google()  # type: ignore
+            case "perplexity":
+                converted_messages = self.messages.to_perplexity()  # type: ignore
+            case _:
+                raise ValueError(
+                    f"Unsupported provider '{self.provider}' for OpenAI spec conversion."
+                )
+        assert len(converted_messages) > 0, "converted_messages is empty. Unable to convert to OpenAI spec."
+
         base_params = {
             "model": self.model,
-            "messages": self.messages.to_cache_dict(),  # type: ignore
+            "messages": converted_messages,
             "response_model": self.response_model,
             "temperature": self.temperature,
             "stream": self.stream,
         }
-
-        # Remove message_type from each Message object
-        for message in base_params["messages"]:
-            if isinstance(message, dict) and "message_type" in message:
-                message.pop("message_type")
 
         # Automatically include all client params
         if self.provider == "ollama":
@@ -374,7 +407,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                 self.client_params
             ), f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
         # Start with converted messages
-        converted_messages = self.messages.to_cache_dict()  # type: ignore
+        converted_messages = self.messages.to_anthropic()  # type: ignore
 
         # Extract system message if present
         system_content = ""
@@ -408,6 +441,11 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         if system_content:
             base_params["system"] = system_content
 
+        # Remove message_type as it's not used in Anthropic API
+        for message in filtered_messages:
+            if message.get("message_type"):
+                message.pop("message_type")
+
         # Add temperature if specified and validate range
         if self.temperature is not None:
             if not (0 <= self.temperature <= 1):
@@ -419,11 +457,6 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         # Add client_params to base_params
         if self.client_params:
             base_params.update(self.client_params)
-
-        # Remove message_type from each Message object
-        for message in base_params["messages"]:
-            if isinstance(message, dict) and "message_type" in message:
-                message.pop("message_type")
 
         return {
             k: v

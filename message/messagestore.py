@@ -183,6 +183,24 @@ class MessageStore(Messages):
         message = TextMessage(role=role, content=content)
         self.append(message)  # This will handle persistence and logging
 
+    def add_response(self, response: "Response") -> None:
+        """
+        Update the store for a successful Response.
+        This adds two messages: one for the user and one for the assistant.
+        """
+        if not isinstance(response.params.messages[-1], Message):
+            raise ValueError("Last message in params.messages must be a Message object.")
+        last_user_message = response.params.messages[-1]  # Last user message
+        if last_user_message.role != "user":
+            raise ValueError("Last message in params.message must be a user message.")
+        last_assistant_message = response.message  # Last assistant message
+        if last_assistant_message.role != "assistant":
+            raise ValueError("Last message in response must be an assistant message.")
+        # Add the messages
+        self.append(last_user_message)
+        self.append(last_assistant_message)
+
+
     def write_to_log(self, item: str | BaseModel) -> None:
         """
         Writes a log to the log file.

@@ -274,19 +274,9 @@ class ImageMessage(Message):
             mime_type=data["mime_type"]
         )
 
-    # Construction methods for specific provider implementations.
-    def to_anthropic(self) -> AnthropicImageMessage:
-        """Converts the ImageMessage to the Anthropic format."""
-        image_source = AnthropicImageSource(
-            type="base64", media_type=self.mime_type, data=self.image_content
-        )
-        image_content = AnthropicImageContent(source=image_source)
-        text_content = AnthropicTextContent(text=self.text_content)
-        return AnthropicImageMessage(
-            role=self.role, content=[image_content, text_content]
-        )
-
-    def to_openai(self) -> OpenAIImageMessage:
+    # API compatibility methods. These are overridden in AudioMessage, ImageMessage, and other specialized message types (TBD).
+    @override
+    def to_openai(self) -> dict:
         """Converts the ImageMessage to the OpenAI format."""
         # Create the nested URL object
         image_url_obj = OpenAIImageUrl(
@@ -299,7 +289,42 @@ class ImageMessage(Message):
         # Create text content
         text_content = OpenAITextContent(text=self.text_content)
 
-        return OpenAIImageMessage(
+        openaiimagemessage = OpenAIImageMessage(
             role=self.role,
             content=[text_content, image_content],  # Note: text first, then image
         )
+        return openaiimagemessage.model_dump()
+
+    @override
+    def to_anthropic(self) -> dict:
+        """Converts the ImageMessage to the Anthropic format."""
+        image_source = AnthropicImageSource(
+            type="base64", media_type=self.mime_type, data=self.image_content
+        )
+        image_content = AnthropicImageContent(source=image_source)
+        text_content = AnthropicTextContent(text=self.text_content)
+        anthropicimagemessage = AnthropicImageMessage(
+            role=self.role, content=[image_content, text_content]
+        )
+        return anthropicimagemessage.model_dump()
+
+    @override
+    def to_google(self) -> dict:
+        """
+        Defaults to OpenAI format for Google Gemini.
+        """
+        return self.to_openai()
+
+    @override
+    def to_ollama(self) -> dict:
+        """
+        Defaults to OpenAI format for Ollama.
+        """
+        return self.to_openai()
+
+    @override
+    def to_perplexity(self) -> dict:
+        """
+        Convert message to Perplexity API format.
+        """
+        raise NotImplementedError("Perplexity API does not support image messages.")

@@ -57,12 +57,21 @@ class AnthropicClientSync(AnthropicClient):
         self,
         params: Params,
     ) -> tuple:
-        result = self._client.chat.completions.create(**params.to_anthropic())
+        structured_response = None
+        if params.response_model is not None:
+            structured_response, result = self._client.chat.completions.create_with_completion(
+                **params.to_anthropic(),
+            )
+        else:
+            result = self._client.chat.completions.create(**params.to_anthropic())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.input_tokens,
             output_tokens=result.usage.output_tokens,
         )
+        if structured_response is not None:
+            # If we have a structured response, return it along with usage
+            return structured_response, usage
         # First try to get text content from the result
         try:
             result = result.content[0].text
@@ -92,12 +101,21 @@ class AnthropicClientAsync(AnthropicClient):
         self,
         params: Params,
     ) -> tuple:
-        result = await self._client.chat.completions.create(**params.to_anthropic())
+        structured_response = None
+        if params.response_model is not None:
+            structured_response, result = await self._client.chat.completions.create_with_completion(
+                **params.to_anthropic(),
+            )
+        else:
+            result = await self._client.chat.completions.create(**params.to_anthropic())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.input_tokens,
             output_tokens=result.usage.output_tokens,
         )
+        if structured_response is not None:
+            # If we have a structured response, return it along with usage
+            return structured_response, usage
         # First try to get text content from the result
         try:
             result = result.content[0].text

@@ -207,10 +207,13 @@ class Messages(BaseModel):
     # Serialization methods
     def to_cache_dict(self) -> list:
         """
-        Yes, it's confusing that this returns!
-        But this is a list of dictionaries for each message, ideal for serializing WITHIN a dict / json[.
+        This differs from our usual serialization to_cache_dict method in two ways:
+        - It returns a list of dictionaries, one for each message (not a dict)
+        - It requires a provider argument, which is used to determine how to serialize the messages.
+
+        This is because audio and image messages may have different serialization requirements per provider.
         """
-        return [message.to_cache_dict() for message in self.messages]
+        return [msg.to_cache_dict() for msg in self.messages]
 
     @classmethod
     def from_cache_dict(cls, cache_dict: list) -> "Messages":
@@ -230,3 +233,19 @@ class Messages(BaseModel):
         # If this assertion breaks, we are deserializing a full Messages object, not a list of messages.
         assert message_dicts is not None, "Message dicts cannot be None; code error." 
         return cls(messages=message_dicts)
+
+    # API compatibility methods
+    def to_openai(self) -> list[dict]:
+        return [msg.to_openai() for msg in self.messages]
+
+    def to_anthropic(self) -> list[dict]:
+        return [msg.to_anthropic() for msg in self.messages]
+
+    def to_google(self) -> list[dict]:
+        return [msg.to_google() for msg in self.messages]
+
+    def to_ollama(self) -> list[dict]:
+        return [msg.to_ollama() for msg in self.messages]
+
+    def to_perplexity(self) -> list[dict]:
+        return [msg.to_perplexity() for msg in self.messages]

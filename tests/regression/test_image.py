@@ -96,8 +96,8 @@ def test_imagemessage_to_openai():
     )
     
     openai_msg = img_msg.to_openai()
-    assert openai_msg.role == "user"
-    assert len(openai_msg.content) == 2  # Text + image content
+    assert openai_msg["role"] == "user"
+    assert len(openai_msg["content"]) == 2  # Text + image content
 
 def test_imagemessage_to_anthropic():
     """Test ImageMessage Anthropic format conversion"""
@@ -108,5 +108,5 @@ def test_imagemessage_to_anthropic():
     )
     
     anthropic_msg = img_msg.to_anthropic()
-    assert anthropic_msg.role == "user"
-    assert len(anthropic_msg.content) == 2  # Image + text content
+    assert anthropic_msg["role"] == "user"
+    assert len(anthropic_msg["content"]) == 2  # Image + text content

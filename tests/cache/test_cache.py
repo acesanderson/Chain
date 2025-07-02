@@ -113,14 +113,15 @@ def test_model_cache_audio_message(cache_db, sample_audio_message):
     Model._chain_cache = cache_db
     
     model = Model("gpt-4o-audio-preview")
+    # model = Model("gemini")
     
     # First query
-    response1 = model.query(sample_audio_message, cache=True)
+    response1 = model.query(query_input = [sample_audio_message], cache=True)
     assert isinstance(response1, Response)
     
     # Second query - should hit cache
     start_time = time.time()
-    response2 = model.query(sample_audio_message, cache=True)
+    response2 = model.query(query_input = [sample_audio_message], cache=True)
     duration = time.time() - start_time
     
     assert isinstance(response2, Response)
