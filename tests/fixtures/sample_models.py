@@ -4,13 +4,13 @@ class MyTestPydanticContent(BaseModel):
     value: str
     number: int
 
-class TestAnimal(BaseModel):
+class PydanticTestAnimal(BaseModel):
     name: str
     species: str
     age: int
     habitat: str
 
-class TestFrog(BaseModel):
+class PydanticTestFrog(BaseModel):
     species: str
     name: str
     legs: int

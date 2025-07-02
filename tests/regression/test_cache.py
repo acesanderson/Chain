@@ -6,7 +6,7 @@ from Chain import Model, ModelAsync, Chain, AsyncChain, Prompt, Parser, Response
 from Chain.message.audiomessage import AudioMessage
 from Chain.message.imagemessage import ImageMessage
 from Chain.cache.cache import ChainCache
-from Chain.tests.fixtures.sample_models import TestFrog
+from Chain.tests.fixtures.sample_models import PydanticTestFrog
 from pytest import fixture
 from pathlib import Path
 import tempfile
@@ -91,21 +91,21 @@ def test_model_cache_with_parser(cache_db):
     Model._chain_cache = cache_db
     
     model = Model("gpt")
-    parser = Parser(TestFrog)
+    parser = Parser(PydanticTestFrog)
     query = "Create a frog"
     
     # First query
-    response1 = model.query(query, response_model=TestFrog, cache=True)
+    response1 = model.query(query, response_model=PydanticTestFrog, cache=True)
     assert isinstance(response1, Response)
-    assert isinstance(response1.content, TestFrog)
+    assert isinstance(response1.content, PydanticTestFrog)
     
     # Second query - should hit cache
     start_time = time.time()
-    response2 = model.query(query, response_model=TestFrog, cache=True)
+    response2 = model.query(query, response_model=PydanticTestFrog, cache=True)
     duration = time.time() - start_time
     
     assert isinstance(response2, Response)
-    assert isinstance(response2.content, TestFrog)
+    assert isinstance(response2.content, PydanticTestFrog)
     assert duration < 0.1  # Cache hit
 
 def test_model_cache_audio_message(cache_db, sample_audio_message):
@@ -200,13 +200,13 @@ def test_chain_cache_with_parser(cache_db):
     
     model = Model("gpt3")
     prompt = Prompt("Create a frog")
-    parser = Parser(TestFrog)
+    parser = Parser(PydanticTestFrog)
     chain = Chain(model=model, prompt=prompt, parser=parser)
     
     # First run
     response1 = chain.run(cache=True)
     assert isinstance(response1, Response)
-    assert isinstance(response1.content, TestFrog)
+    assert isinstance(response1.content, PydanticTestFrog)
     
     # Second run - should hit cache
     start_time = time.time()
@@ -214,7 +214,7 @@ def test_chain_cache_with_parser(cache_db):
     duration = time.time() - start_time
     
     assert isinstance(response2, Response)
-    assert isinstance(response2.content, TestFrog)
+    assert isinstance(response2.content, PydanticTestFrog)
     assert duration < 0.1  # Cache hit
 
 def test_chain_cache_with_messages(cache_db, sample_image_message):
@@ -299,7 +299,7 @@ def test_asyncchain_cache_with_parser(cache_db):
     ModelAsync._chain_cache = cache_db
     
     model = ModelAsync("gpt3")
-    parser = Parser(TestFrog)
+    parser = Parser(PydanticTestFrog)
     chain = AsyncChain(model=model, parser=parser)
     
     prompt_strings = ["Create a green frog"]
@@ -309,7 +309,7 @@ def test_asyncchain_cache_with_parser(cache_db):
     assert isinstance(responses1, list)
     assert len(responses1) == 1
     assert isinstance(responses1[0], Response)
-    assert isinstance(responses1[0].content, TestFrog)
+    assert isinstance(responses1[0].content, PydanticTestFrog)
     
     # Second run - should hit cache
     start_time = time.time()
@@ -319,7 +319,7 @@ def test_asyncchain_cache_with_parser(cache_db):
     assert isinstance(responses2, list)
     assert len(responses2) == 1
     assert isinstance(responses2[0], Response)
-    assert isinstance(responses2[0].content, TestFrog)
+    assert isinstance(responses2[0].content, PydanticTestFrog)
     assert duration < 0.5  # Cache hit should be faster
 
 def test_asyncchain_cache_multiple_queries(cache_db):

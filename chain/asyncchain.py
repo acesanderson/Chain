@@ -243,7 +243,7 @@ class AsyncChain(Chain):
                 if semaphore:
                     async with semaphore:
                         return await self.model.query_async(
-                            input=self.prompt.render(input_variables=input_variables),
+                            query_input=self.prompt.render(input_variables=input_variables),
                             response_model=parser.pydantic_model if parser else None,
                             cache=cache,
                             verbose=verbose,
@@ -251,8 +251,8 @@ class AsyncChain(Chain):
                         )
                 else:
                     return await self.model.query_async(
-                        input=self.prompt.render(input_variables=input_variables),
-                        parser=self.parser,
+                        query_input=self.prompt.render(input_variables=input_variables),
+                        response_model = parser.pydantic_model if parser else None,
                         cache=cache,
                         verbose=verbose,
                         print_response=print_response,

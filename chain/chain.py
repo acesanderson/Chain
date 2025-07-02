@@ -58,6 +58,7 @@ class Chain:
         self,
         input_variables: dict | None = None,
         messages: Messages | list[Message] | None = None,
+        parser: Parser | None = None,
         verbose: Verbosity = Verbosity.PROGRESS,
         stream: bool = False,
         cache: bool = True,
@@ -79,6 +80,7 @@ class Chain:
                 representing a conversation history or a single message. If
                 provided, the Chain will operate in chat mode. Defaults to an
                 empty list.
+            parser: (Parser | None): A parser to process the model's output.
             verbose (bool): If True, displays progress information during the
                 model query. This is managed by the `progress_display` decorator
                 on the underlying `Model.query` call. Defaults to True.
@@ -130,6 +132,7 @@ class Chain:
         logger.info("Querying model.")
         result = self.model.query(
             query_input=messages,
+            response_model = self.parser.pydantic_model if self.parser else None,
             verbose=verbose,
             cache=cache,
             index=index,
