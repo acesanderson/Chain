@@ -130,7 +130,7 @@ class Model:
         self,
         # Standard parameters
         query_input: str | list | Message | None = None,
-        pydantic_model: type[BaseModel] | None = None,
+        response_model: type[BaseModel] | None = None,
         cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,

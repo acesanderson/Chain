@@ -187,9 +187,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         import json
 
         # Use sort_keys for deterministic JSON ordering
-        messages_str: str = json.dumps(self.messages.to_cache_dict(), sort_keys=True)  # type: ignore
+        messages_str: str = json.dumps(self.messages.to_cache_dict(), sort_keys=True) 
         # Include parser since it affects response format
-        schema_str: str = Parser.as_string(self.response_model)  # type: ignore
+        schema_str: str = Parser.as_string(self.response_model) if self.response_model else "none"
         # Handle None temperature gracefully
         temp_str = str(self.temperature) if self.temperature is not None else "none"
         # Include client_params if they are set; the normalize_json ensures consistent ordering, recursively
@@ -225,7 +225,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         return (
             f"Params(model={self.model!r}, messages={self.messages!r}, "
             f"temperature={self.temperature!r}, provider={self.provider!r}, "
-            f"client_params={self.client_params!r}, parser={self.response_model!r})"
+            f"client_params={self.client_params!r}, response_model={self.response_model!r})"
         )
 
     # Serialization methods (for Cache, MessageStore, etc.)
@@ -243,7 +243,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         """
         cache_dict = {
             "model": self.model,
-            "messages": self.messages.to_cache_dict(),  # type: ignore
+            "messages": self.messages.to_cache_dict(),  
             "temperature": self.temperature,
             "response_model": (
                 Parser.as_string(self.response_model)
@@ -253,7 +253,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             "provider": self.provider,
             "client_params": self.client_params,
             "stream": self.stream,
-            "verbose": self.verbose,
+            "verbose": self.verbose.value,
         }
         return cache_dict
 
@@ -263,10 +263,28 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         messages = cache_dict.get("messages")
         temperature = cache_dict.get("temperature", None)
         response_model = cache_dict.get("response_model", None)
-        # Don't need provider, as this is assigned post-init
+        if response_model and isinstance(response_model, str):
+        # Find the matching Pydantic class in Parser._response_models
+            import json
+            
+            try:
+                schema_dict = json.loads(response_model)
+                title = schema_dict.get("title")
+                
+                for model_class in Parser._response_models:
+                    if model_class.__name__ == title:
+                        response_model = model_class
+                        break
+                else:
+                    # If not found, set to None to avoid validation error
+                    response_model = None
+            except (json.JSONDecodeError, KeyError):
+                response_model = None
+    
         client_params = cache_dict.get("client_params", None)
         stream = cache_dict.get("stream", False)
         verbose = cache_dict.get("verbose", Verbosity.PROGRESS)
+        
         return cls(
             model=str(model),
             messages=Messages.from_cache_dict(messages) if messages else [],

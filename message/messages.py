@@ -213,9 +213,9 @@ class Messages(BaseModel):
         return [message.to_cache_dict() for message in self.messages]
 
     @classmethod
-    def from_cache_dict(cls, cache_dict: dict) -> "Messages":
+    def from_cache_dict(cls, cache_dict: list) -> "Messages":
         """
-        Deserialize from a dictionary.
+        Deserialize from a dictionary. Note: in most cases we have serialized to a list of dictionaries, though this can also handle a single dictionary (i.e. the full Messages object).
 
         Args:
             cache_dict: Dictionary containing cached messages
@@ -223,9 +223,10 @@ class Messages(BaseModel):
         Returns:
             Messages object
         """
-        if "messages" not in cache_dict:
-            logger.error("Cache dict must contain 'messages' key")
-            raise KeyError("Cache dict must contain 'messages' key")
-        messages = cache_dict["messages"]
-        message_dicts = [Message.from_cache_dict(msg) for msg in messages]
+        message_dicts = None
+        if isinstance(cache_dict, list):
+            # If you're debugging this line, I'm sorry, this is not great design.
+            message_dicts = [Message.from_cache_dict(msg) for msg in cache_dict]
+        # If this assertion breaks, we are deserializing a full Messages object, not a list of messages.
+        assert message_dicts is not None, "Message dicts cannot be None; code error." 
         return cls(messages=message_dicts)

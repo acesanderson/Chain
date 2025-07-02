@@ -43,12 +43,23 @@ class OpenAIClientSync(OpenAIClient):
         self,
         params: Params,
     ) -> tuple:
-        result = self._client.chat.completions.create(**params.to_openai())
+        structured_response = None
+        if params.response_model is not None:
+            # We want the raw response from OpenAI, so we use `create_with_completion`
+            structured_response, result = self._client.chat.completions.create_with_completion(
+                **params.to_openai()
+            )
+        else:
+            # Use the standard completion method
+            result = self._client.chat.completions.create(**params.to_openai())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,
             output_tokens=result.usage.completion_tokens,
         )
+        if structured_response is not None:
+            # If we have a structured response, return it along with usage
+            return structured_response, usage
         # First try to get text content from the result
         try:
             result = result.choices[0].message.content

@@ -90,18 +90,18 @@ def test_model_cache_with_parser(cache_db):
     """Test Model caching with structured output"""
     Model._chain_cache = cache_db
     
-    model = Model("gpt3")
+    model = Model("gpt")
     parser = Parser(TestFrog)
     query = "Create a frog"
     
     # First query
-    response1 = model.query(query, pydantic_model=TestFrog, cache=True)
+    response1 = model.query(query, response_model=TestFrog, cache=True)
     assert isinstance(response1, Response)
     assert isinstance(response1.content, TestFrog)
     
     # Second query - should hit cache
     start_time = time.time()
-    response2 = model.query(query, pydantic_model=TestFrog, cache=True)
+    response2 = model.query(query, response_model=TestFrog, cache=True)
     duration = time.time() - start_time
     
     assert isinstance(response2, Response)

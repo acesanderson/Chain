@@ -1,6 +1,5 @@
 from Chain.model.model import Model
 from Chain.model.models.models import ModelStore
-from Chain.parser.parser import Parser
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
@@ -12,7 +11,7 @@ from Chain.cache.cache import check_cache, update_cache
 from Chain.logging.logging_config import get_logger
 from typing import Optional
 from time import time
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
 import importlib
 
 logger = get_logger(__name__)
@@ -62,7 +61,7 @@ class ModelAsync(Model):
         # Standard params
         query_input: str | list,
         verbose: Verbosity = Verbosity.PROGRESS,
-        parser: Parser | None = None,
+        response_model: type[BaseModel] | None = None,
         raw=False,
         cache=False,
         print_response=False,

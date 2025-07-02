@@ -171,7 +171,7 @@ class Chain:
             result = self.model.query(
                 messages,
                 verbose=verbose,
-                parser=self.parser,
+                response_model=self.parser.pydantic_model,
                 cache=cache,
                 index=index,
                 total=total,
@@ -227,7 +227,7 @@ class Chain:
                 result = self.model.query(
                     prompt,
                     verbose=verbose,
-                    parser=self.parser,
+                    response_model=self.parser.pydantic_model,
                     cache=cache,
                     index=index,
                     total=total,
