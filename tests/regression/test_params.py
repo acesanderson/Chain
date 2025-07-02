@@ -20,7 +20,6 @@ anthropic_params = {
 # Google client params - inherits OpenAI spec but with safety settings
 google_params = {
     "max_tokens": 200,
-    "frequency_penalty": 0.2,
     "presence_penalty": 0.1,
     "stop": ["\n\n", "END"],
     }
