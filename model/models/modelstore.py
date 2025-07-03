@@ -1,7 +1,9 @@
 from Chain.model.models.providerstore import ProviderStore
 from Chain.model.models.provider import Provider
 from Chain.model.models.modelspec import ModelSpec
-from Chain.model.models.modelspecs_CRUD import get_modelspec_by_name, get_all_modelspecs, delete_modelspec, create_modelspec
+from Chain.model.models.modelspecs_CRUD import get_modelspec_by_name, get_all_modelspecs, delete_modelspec, get_all_model_names
+from Chain.model.models.research_models import create_modelspec
+from Chain.logs.logging_config import get_logger
 from pathlib import Path
 import json, itertools
 
@@ -9,6 +11,7 @@ dir_path = Path(__file__).parent
 models_path = dir_path / "models.json"
 aliases_path = dir_path / "aliases.json"
 ollama_context_sizes_path = dir_path / "ollama_context_sizes.json"
+logger = get_logger(__name__)
 
 class ModelStore:
     """
@@ -26,6 +29,18 @@ class ModelStore:
         """Definitive list of providers supported by Chain library."""
         providers = ProviderStore.get_all_providers()
         return [provider.provider for provider in providers]
+
+    @classmethod
+    def identify_provider(cls, model: str) -> Provider:
+        """
+        Identify the provider for a given model.
+        Returns the Provider object if found, raises ValueError otherwise.
+        """
+        models = cls.models()
+        for provider, model_list in models.items():
+            if model in model_list:
+                return provider
+        raise ValueError(f"Provider not found for model: {model}")
 
     @classmethod
     def aliases(cls):
@@ -74,9 +89,7 @@ class ModelStore:
             if ollama_model in context_sizes:
                 return context_sizes[ollama_model]
             else:
-                print(
-                    f"WARNING: Model {ollama_model} not found in context sizes file. Using default value of {default_value}."
-                )
+                logger.warning(f"Model {ollama_model} not found in context sizes file. Using default value of {default_value}.")
                 return default_value  # Default context size if not specified -- may throw an error for smaller models
         else:
             raise FileNotFoundError(
@@ -132,29 +145,38 @@ class ModelStore:
         Delete objects that don't have their model name in models.json; and create new ModelSpec objects if they are not in db.
         """
         if not cls._is_consistent():
-            print("Model specifications are not consistent with models.json. Updating...")
+            print("INCONSISTENT")
+            logger.info("Model specifications are not consistent with models.json. Updating...")
             cls._update_models()
         else:
-            print("Model specifications are consistent with models.json. No update needed.")
+            print("CONSISTENT")
+            logger.info("Model specifications are consistent with models.json. No update needed.")
 
     @classmethod
     def _update_models(cls):
-        raise NotImplementedError(
-            "This method should be implemented to update model specifications in the database."
-        )
-        models_not_in_model_list = []
-        models_not_in_modelspec_db = []
-
+        # Get all ModelSpec objects from the database
+        modelspec_db_names = set(get_all_model_names())
+        # Create a set of model names from the models.json file
+        models = cls.models()
+        models_json_names = set(itertools.chain.from_iterable(models.values()))
+        # Find models that are in models.json but not in the database
+        models_not_in_modelspec_db = models_json_names - modelspec_db_names
+        # Find models that are in the database but not in models.json
+        models_not_in_model_list = modelspec_db_names - models_json_names
+        logger.info(f"Found {len(models_not_in_modelspec_db)} models not in the database.")
+        logger.info(f"Found {len(models_not_in_model_list)} models not in models.json.")
         # Delete all ModelSpec objects that are not in models.json
+        logger.info(f"Deleting {len(models_not_in_model_list)} models not in models.json.")
         [delete_modelspec(model) for model in models_not_in_model_list]
         # Create all Modelspec objects that are in models.json but not in the database
+        logger.info(f"Creating {len(models_not_in_modelspec_db)} models not in the database.")
         [create_modelspec(model) for model in models_not_in_modelspec_db]
         if cls._is_consistent():
-            print("Model specifications are consistent with models.json. No update needed.")
+            logger.info("Model specifications are now consistent with models.json. Update complete.")
             return
         else:
             raise ValueError(
-                "Model specifications are not consistent with models.json. Please check your code."
+                "Model specifications are not consistent with models.json, after running .update()."
             )
         
 
@@ -172,13 +194,19 @@ class ModelStore:
         
         # Create a set of model names from the models.json file
         model_names = set(itertools.chain.from_iterable(models.values()))
-        
+       
+        consistent = True
         # Check if all ModelSpec names are in the models.json file
         for model_spec in model_specs:
             if model_spec.model not in model_names:
-                return False
+                consistent = False
+        # Check if all models in models.json have a corresponding ModelSpec object
+        for _, model_list in models.items():
+            for model in model_list:
+                if not any(model_spec.model == model for model_spec in model_specs):
+                    consistent = False
         
-        return True
+        return consistent
 
     # Getters
     @classmethod

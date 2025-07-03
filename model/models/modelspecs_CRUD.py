@@ -32,6 +32,8 @@ def add_modelspec(model_spec: ModelSpec) -> None:
     """
     db.insert(model_spec.model_dump())
 
+def create_modelspec(model_spec: ModelSpec) -> None: t
+
 def get_all_modelspecs() -> list[ModelSpec]:
     """
     Retrieve all ModelSpecs from the database.
@@ -48,6 +50,14 @@ def get_modelspec_by_name(model: str) -> ModelSpec:
         return ModelSpec(**item[0])
     else:
         raise ValueError(f"ModelSpec with name '{model}' not found.")
+
+def get_all_model_names() -> list[str]:
+    """
+    Retrieve all model names from the database.
+    """
+    ModelQuery = Query()
+    return [item['model'] for item in db.all()]
+
 
 def update_modelspec(model: str, updated_spec: ModelSpec) -> None:
     """

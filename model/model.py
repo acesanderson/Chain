@@ -5,11 +5,10 @@ from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
 from Chain.model.params.params import Params
-from Chain.model.models.modelstore import ModelStore
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
 from Chain.result.error import ChainError
-from Chain.logging.logging_config import get_logger, configure_logging
+from Chain.logs.logging_config import get_logger, configure_logging
 from pydantic import ValidationError, BaseModel
 from typing import Optional
 from pathlib import Path
@@ -43,10 +42,12 @@ class Model:
         Returns a dictionary of available models.
         This is useful for introspection and debugging.
         """
+        from Chain.model.models.modelstore import ModelStore
         return ModelStore.models()
 
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
+        from Chain.model.models.modelstore import ModelStore
         self.model = ModelStore._validate_model(model)
         self._client_type = self._get_client_type(self.model)
         self._client = self.__class__._get_client(self._client_type)
@@ -98,6 +99,7 @@ class Model:
         Setting client_type for Model object is necessary for loading the correct client in the query functions.
         Returns a tuple with client type (which informs the module title) and the client class name (which is used to instantiate the client).
         """
+        from Chain.model.models.modelstore import ModelStore
         model_list = ModelStore.models()
         if model in model_list["openai"]:
             return "openai", "OpenAIClientSync"
@@ -109,8 +111,6 @@ class Model:
             return "ollama", "OllamaClientSync"
         elif model in model_list["groq"]:
             return "groq", "GroqClientSync"
-        elif model in model_list["deepseek"]:
-            return "deepseek", "DeepSeekClient"
         elif model in model_list["perplexity"]:
             return "perplexity", "PerplexityClientSync"
         else:

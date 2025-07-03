@@ -1,7 +1,7 @@
 from Chain.model.model import Model
 from Chain.prompt.prompt import Prompt
 from Chain.chain.chain import Chain
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from typing import Callable
 import inspect, re
 

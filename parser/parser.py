@@ -12,7 +12,7 @@ Three purposes for this class:
 
 from typing import Union, Type
 from pydantic import BaseModel
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 
 logger = get_logger(__name__)
 

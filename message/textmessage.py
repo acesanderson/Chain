@@ -4,10 +4,9 @@ Our Message class is inherited from specialized types like AudioMessage, ImageMe
 """
 
 from Chain.prompt.prompt import Prompt
-from Chain.logging.logging_config import get_logger
-from Chain.message.message import Message, MessageType, Role
+from Chain.logs.logging_config import get_logger
+from Chain.message.message import Message, MessageType
 from pydantic import BaseModel, Field
-from typing import Literal
 
 
 logger = get_logger(__name__)

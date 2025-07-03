@@ -3,7 +3,7 @@ Enhanced progress handlers with verbosity support.
 Maintains backwards compatibility while adding verbosity-aware methods.
 """
 
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from Chain.progress.verbosity import Verbosity
 from datetime import datetime
 import time

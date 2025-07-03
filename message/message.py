@@ -21,7 +21,7 @@ to_google()
 """
 
 from abc import abstractmethod, ABC
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from pydantic import BaseModel
 from typing import Literal, Any
 

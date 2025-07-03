@@ -9,7 +9,7 @@ We have a basic ImageMessage class, which is a wrapper for the OpenAI and Anthro
 from pydantic import BaseModel, Field
 from Chain.message.message import Message, MessageType, Role
 from Chain.message.convert_image import convert_image, convert_image_file
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from pathlib import Path
 from typing import override
 import re

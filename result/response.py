@@ -5,7 +5,7 @@ A successful Result.
 from Chain.message.message import Message
 from Chain.message.messages import Messages
 from Chain.model.params.params import Params
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from Chain.progress.display_mixins import (
     RichDisplayResponseMixin,
     PlainDisplayResponseMixin,

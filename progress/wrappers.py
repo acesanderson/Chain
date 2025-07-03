@@ -3,7 +3,7 @@ Enhanced progress wrappers with verbosity support.
 Maintains backwards compatibility while adding new verbosity parameter.
 """
 
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from Chain.progress.verbosity import Verbosity
 from functools import wraps
 import time, sys, inspect

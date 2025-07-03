@@ -16,7 +16,7 @@ from Chain.message.messagestore import MessageStore
 from Chain.model.model import Model
 from Chain.prompt.prompt import Prompt
 from Chain.chain.chain import Chain
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from rich.console import Console
 from utils import print_markdown
 from inspect import signature

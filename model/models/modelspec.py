@@ -57,7 +57,10 @@ class ModelSpec(BaseModel):
         table.add_column("Capability", justify="left", style="cyan")
         table.add_column("Supported", justify="center", style="green")
         table.add_column("Description", justify="left", style="white")
-        table.add_row("Temperature Range", f"{self.temperature_range[0]} to {self.temperature_range[1]}", "The range of temperature values supported by the model")
+        if self.temperature_range:
+            table.add_row("Temperature Range", f"{self.temperature_range[0]} to {self.temperature_range[1]}", "The range of temperature values supported by the model")
+        else:
+            table.add_row("Temperature Range", "Unknown", "The range of temperature values supported by the model")
         table.add_row("Context Window", str(self.context_window), "The maximum number of tokens the model can process in a single request")
         table.add_row("Parameter Count", self.parameter_count or "Unknown", "The number of parameters in the model")
         table.add_row("Knowledge Cutoff", self.knowledge_cutoff or "Unknown", "The date when the model's knowledge was last updated")

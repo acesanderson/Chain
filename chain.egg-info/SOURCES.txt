@@ -20,7 +20,6 @@ message/imagemessage.py
 message/message.py
 message/messages.py
 message/messagestore.py
-message/test_audio.py
 message/textmessage.py
 message/videomessage.py
 progress/__init__.py

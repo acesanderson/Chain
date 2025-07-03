@@ -1,4 +1,4 @@
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from Chain.progress.display_mixins import (
     RichDisplayChainErrorMixin,
     PlainDisplayChainErrorMixin,

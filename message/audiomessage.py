@@ -1,6 +1,6 @@
 from Chain.message.message import Message, MessageType, Role
 from Chain.message.imagemessage import OpenAITextContent
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from pydantic import BaseModel, Field
 from typing import Literal, override
 from pathlib import Path

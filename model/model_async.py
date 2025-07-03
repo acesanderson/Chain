@@ -1,5 +1,4 @@
 from Chain.model.model import Model
-from Chain.model.models.modelstore import ModelStore
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
@@ -7,7 +6,7 @@ from Chain.message.textmessage import TextMessage
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
 from Chain.cache.cache import ChainCache
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from typing import Optional
 from time import time
 from pydantic import ValidationError, BaseModel
@@ -24,6 +23,7 @@ class ModelAsync(Model):
         """
         Overrides the parent method to return the async version of each client type.
         """
+        from Chain.model.models.modelstore import ModelStore
         model_list = ModelStore.models()
         if model in model_list["openai"]:
             return "openai", "OpenAIClientAsync"

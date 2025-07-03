@@ -30,7 +30,7 @@ from Chain.message.message import Message
 from Chain.message.messages import Messages
 from Chain.message.textmessage import Message
 from Chain.cache.cache import ChainCache
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException

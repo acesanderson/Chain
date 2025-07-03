@@ -1,7 +1,7 @@
 from Chain.chain.chain import Chain, Prompt
 from Chain.model.model_async import ModelAsync
 from Chain.result.response import Response
-from Chain.logging.logging_config import configure_logging, logging
+from Chain.logs.logging_config import configure_logging, logging
 from Chain.parser.parser import Parser
 from Chain.progress.verbosity import Verbosity
 from Chain.message.messagestore import MessageStore

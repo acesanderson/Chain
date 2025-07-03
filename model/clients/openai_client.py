@@ -1,7 +1,7 @@
 from Chain.model.clients.client import Client, Usage
 from Chain.model.clients.load_env import load_env
 from Chain.model.params.params import Params
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from openai import OpenAI, AsyncOpenAI, Stream
 from pydantic import BaseModel
 import instructor, tiktoken

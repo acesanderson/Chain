@@ -20,7 +20,6 @@ def disable_logging():
 def enable_debug_logging():
     set_log_level(logging.DEBUG)
 
-
 # Imports
 from Chain.chain.chain import Chain
 from Chain.chain.asyncchain import AsyncChain
@@ -41,10 +40,13 @@ __all__ = [
     "Prompt",
     "Model",
     "ModelAsync",
+    "ModelStore",
     "Parser",
     "Response",
     "ChainError",
     "ChainResult",
-    "ModelStore",
     "Verbosity",
+    "set_log_level",
+    "disable_logging",
+    "enable_debug_logging"
 ]

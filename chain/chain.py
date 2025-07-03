@@ -16,7 +16,7 @@ from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
 from Chain.message.messagestore import MessageStore
 from Chain.progress.verbosity import Verbosity
-from Chain.logging.logging_config import configure_logging, logging
+from Chain.logs.logging_config import configure_logging, logging
 from typing import TYPE_CHECKING, Optional
 
 # Our TYPE_CHECKING imports, these ONLY load for IDEs, so you can still lazy load in production.

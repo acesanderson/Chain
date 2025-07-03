@@ -1,4 +1,4 @@
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Protocol

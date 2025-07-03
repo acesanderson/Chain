@@ -19,7 +19,6 @@ from Chain.model.params.clientparams import (
 )
 from Chain.model.models.provider import Provider
 from Chain.parser.parser import Parser
-from Chain.model.models.modelstore import ModelStore
 
 
 class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
@@ -130,6 +129,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     # Validation methods
     def _set_provider(self):
+        from Chain.model.models.modelstore import ModelStore
         for provider in ModelStore.models().keys():
             if self.model in ModelStore.models()[provider]:
                 self.provider = provider

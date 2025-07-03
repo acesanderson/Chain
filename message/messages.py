@@ -2,7 +2,7 @@ from typing import Iterator, Optional
 from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
-from Chain.logging.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 
 logger = get_logger(__name__)
 
