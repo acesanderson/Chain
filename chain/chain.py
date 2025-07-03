@@ -8,6 +8,8 @@ Chains are immutable, treat them like tuples.
 from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
 from Chain.result.response import Response
+from Chain.result.error import ChainError
+from Chain.result.result import ChainResult
 from Chain.parser.parser import Parser
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
@@ -27,7 +29,6 @@ logger = configure_logging(
     # level=logging.DEBUG,
     level=logging.CRITICAL,
 )
-
 
 class Chain:
     """
@@ -64,7 +65,7 @@ class Chain:
         cache: bool = True,
         index: int = 0,
         total: int = 0,
-    ) -> Response:
+    ) -> ChainResult:
         """
         Executes the Chain, processing the prompt and interacting with the language model.
 
@@ -116,20 +117,23 @@ class Chain:
             logger.info("No prompt provided, using None.")
             prompt = None
         # Resolve messages: messagestore or user-provided messages.
-        if self._message_store:
+        if Chain._message_store:
             if messages is not None:
                 raise ValueError(
                     "Both messages and message store are provided, please use only one."
                 )
             logger.info("Using message store for messages.")
-            messages = self._message_store.messages
+            messages = Chain._message_store.messages
         # Coerce messages and query_input into a list of Message objects
         logger.info("Coercing messages and prompt into a list of Message objects.")
         messages = self._coerce_messages_and_prompt(
             prompt=prompt, messages=messages
         )
+        assert len(messages) > 0, "No messages provided, cannot run chain."
         # Route input; if string, if message
         logger.info("Querying model.")
+        # Save this for later
+        user_message = messages[-1]
         result = self.model.query(
             query_input=messages,
             response_model = self.parser.pydantic_model if self.parser else None,
@@ -141,9 +145,16 @@ class Chain:
         )
         logger.info(f"Model query completed, return type: {type(result)}.")
         # Save to messagestore if we have one and if we have a response.
-        if isinstance(result, Response) and self._message_store:
-            logger.info("Saving response to message store.")
-            self._message_store.save_response(result)
+        if Chain._message_store:
+            if isinstance(result, Response):
+                logger.info("Saving response to message store.")
+                Chain._message_store.append(user_message)
+                Chain._message_store.append(result.message)
+            elif isinstance(result, ChainError):
+                logger.error("ChainError encountered, not saving to message store.")
+                Chain._message_store.query_failed() # Remove the last message if it was a query failure.
+        if not isinstance(result, ChainResult):
+            logger.warning("Result is not a Response or ChainError: type {type(result)}.")
         return result
 
     def _coerce_messages_and_prompt(self, prompt: str | Message | None, messages: Messages | list[Message] | None) -> list[Message] | Messages:

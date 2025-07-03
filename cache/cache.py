@@ -1,7 +1,7 @@
 from Chain.result.response import Response
-import sqlite3
-import json
 from typing import Optional, Any
+from pathlib import Path
+import sqlite3, json
 
 class ChainCache:
     """
@@ -9,14 +9,14 @@ class ChainCache:
     Automatically handles serialization/deserialization of Response and Params objects.
     """
 
-    def __init__(self, db_path: str = "chain_cache.db"):
+    def __init__(self, db_path: str | Path = "chain_cache.db"):
         """
         Initialize cache with SQLite database.
 
         Args:
             db_path: Path to SQLite database file
         """
-        self.db_path = db_path
+        self.db_path = str(db_path)
         self._connection = None
         self._create_table()
 

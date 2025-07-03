@@ -4,15 +4,23 @@ from Chain.result.response import Response
 from Chain.logging.logging_config import configure_logging, logging
 from Chain.parser.parser import Parser
 from Chain.progress.verbosity import Verbosity
+from Chain.message.messagestore import MessageStore
 from typing import Optional
+from typing import TYPE_CHECKING, Optional
 import asyncio
+
+# Our TYPE_CHECKING imports, these ONLY load for IDEs, so you can still lazy load in production.
+if TYPE_CHECKING:
+    from rich.console import Console
 
 logger = configure_logging(
     level=logging.INFO,
 )
 
-
 class AsyncChain(Chain):
+    _message_store: Optional[MessageStore] = None
+    # If you want rich progress reporting, add a rich.console.Console object to Chain. (also can be added at Model level)
+    _console: Optional["Console"] = None
 
     def __init__(
         self,

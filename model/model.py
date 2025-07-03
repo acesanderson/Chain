@@ -45,6 +45,14 @@ class Model:
         self._console = console
 
     @property
+    def models(self) -> dict:
+        """
+        Returns a dictionary of available models.
+        This is useful for introspection and debugging.
+        """
+        return ModelStore.models()
+
+    @property
     def console(self):
         """
         Returns the effective console (hierarchy: instance -> Model class -> Chain/AsyncChain class -> None)

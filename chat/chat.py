@@ -28,21 +28,24 @@ from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore
 from Chain.message.message import Message
 from Chain.message.messages import Messages
-from Chain.message.imagemessage import ImageMessage
+from Chain.message.textmessage import Message
+from Chain.cache.cache import ChainCache
 from Chain.logging.logging_config import get_logger
 from rich.console import Console
 from rich.markdown import Markdown
 from instructor.exceptions import InstructorRetryException
 from functools import partial
 from typing import Callable, Optional
-import sys
-import inspect
 from pathlib import Path
-import readline  # Enables completion in the console
+import sys, inspect, readline  # Enables completion in the console
 
-logger = get_logger(__name__)
-_ = readline.get_current_history_length()
-
+# Constants
+dir_path = Path(__file__).parent
+_ = readline.get_current_history_length() # Gaming the type hints.
+logger = get_logger(__name__) # Our logger
+Chain._console = Console() # Allow rich text for query progress.
+Model._chain_cache = ChainCache(db_path = dir_path / ".chat_cache.db") # Caching set up.
+Chain._message_store = MessageStore(pruning=True) # Non-persistant, but we should prune
 
 class Chat:
     """
@@ -51,9 +54,9 @@ class Chat:
 
     def __init__(
         self,
-        model: Model = Model("gpt"),
-        messagestore: Optional[MessageStore] = None,
-        console: Optional[Console] = None,
+        model: Model = Model("laude-3-5-haiku-20241022"),
+        messagestore: Optional[MessageStore] = Chain._message_store,
+        console: Optional[Console] = Chain._console,
     ):
         """
         User can inject their own messagestore, console, and model, otherwise defaults are used.
@@ -63,7 +66,7 @@ class Chat:
             self.console = Console(width=120)
         else:
             self.console = console
-        self.messagestore = messagestore  # This will be initialized in the chat method.
+        self.messagestore = messagestore
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
         self.system_message: Message | None = None
         self.commands = self.get_commands()
@@ -140,9 +143,19 @@ class Chat:
             )
         self.console.print(help_message)
 
+    def command_clear_history(self):
+        """
+        Clear the message history.
+        """
+        if self.messagestore:
+            self.messagestore.clear()
+            self.console.print("Message history cleared.", style="green")
+        else:
+            self.console.print("No message store available.", style="red")
+
     def command_clear(self):
         """
-        Clear the chat history.
+        Clear the screen.
         """
         self.console.clear()
 
@@ -173,13 +186,14 @@ class Chat:
             self.model = Model(param)
             self.console.print(f"Set model to {param}", style="green")
         except ValueError:
-            self.console.print("Invalid model.", style="red")
+            self.console.print(f"Invalid model: {param}", style="red")
 
     def command_paste_image(self):
         """
         Use this when you have an image in clipboard that you want to submit as context for LLM.
         This gets saved as self.clipboard_image.
         """
+        from Chain.message.imagemessage import ImageMessage
         import os
 
         if "SSH_CLIENT" in os.environ or "SSH_TTY" in os.environ:
@@ -232,11 +246,11 @@ class Chat:
             self.console.print("No image to delete.", style="red")
 
     # Main query method
-    def query_model(self, input: list[Message] | Messages) -> str | None:
+    def query_model(self, query_input: list[Message] | Messages) -> str | None:
         """
         Takes either a string or a list of Message objects.
         """
-        response = str(self.model.query(input, verbose=False))
+        response = str(self.model.query(query_input, verbose=True))
         if self.messagestore:
             self.messagestore.add_new(role="assistant", content=str(response))
         return response
@@ -246,11 +260,6 @@ class Chat:
         self.console.clear()
         self.console.print(self.welcome_message)
         # If user passed a messagestore already, use that, otherwise declare a new one.
-        if not self.messagestore:
-            self.messagestore = MessageStore(
-                console=self.console, log_file=self.log_file
-            )
-        Chain._message_store = self.messagestore
         if self.system_message:
             self.messagestore.append(self.system_message)
         try:

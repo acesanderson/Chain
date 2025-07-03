@@ -70,13 +70,6 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         return self.params.messages[-1].content
 
     @property
-    def message(self) -> Message:
-        """
-        Return last message (good for messagestore handling).
-        """
-        return self.message
-
-    @property
     def messages(self) -> Messages:
         return Messages(messages=self.params.messages + [self.message])
 

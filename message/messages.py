@@ -1,11 +1,10 @@
 from typing import Iterator, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
 from Chain.logging.logging_config import get_logger
 
 logger = get_logger(__name__)
-
 
 class Messages(BaseModel):
     """
@@ -30,11 +29,45 @@ class Messages(BaseModel):
             super().__init__(messages=messages, **kwargs)
         else:
             super().__init__(**kwargs)
+        # Validate the turn order of messages
+        self._validate_turn_order()
+
+    # Validation methods
+    def _validate_turn_order(self):
+        """
+        Validate that the message history meets the following conditions:
+        (1) only one system message
+        (2) messages alternate between user and assistant roles
+
+        This is called on init and whenever messages are added.
+        """
+        if not self.messages:
+            return True
+
+        def create_dialog_signature(messages: list[Message]) -> str:
+            """
+            Create a signature string for the message order.
+            """
+            return "".join(msg.role[0].lower() for msg in messages)
+
+        dialog_signature = create_dialog_signature(self.messages)
+        # Check for exactly one system message
+        if dialog_signature.count("s") > 1:
+            raise ValidationError(
+                "Only one 'system' message is allowed in the conversation history."
+            )
+        # Check for alternating user and assistant messages
+        if "uu" in dialog_signature or "aa" in dialog_signature:
+            raise ValidationError(
+                "Messages must alternate between 'user' and 'assistant' roles."
+            )
+        return True
 
     # List-like interface methods
     def append(self, message: Message) -> None:
         """Add a message to the end of the list."""
         self.messages.append(message)
+        self._validate_turn_order()
 
     def extend(self, messages: list[Message]) -> None:
         """Extend the list with multiple messages."""

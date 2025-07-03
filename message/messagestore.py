@@ -375,6 +375,10 @@ class MessageStore(Messages):
             # Don't copy persistence settings - new object manages its own state
         )
 
+    def __bool__(self) -> bool:
+        """Override; while Messages should be false if empty, MessageStore should be true if it exists."""
+        return True
+
     def __repr__(self) -> str:
         """Enhanced representation showing persistence status."""
         persistent_info = f"persistent={self.persistent}"
