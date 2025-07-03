@@ -1,7 +1,7 @@
 from Chain.model.models.providerstore import ProviderStore
 from Chain.model.models.provider import Provider
 from Chain.model.models.modelspec import ModelSpec
-from Chain.model.models.modelspecs_CRUD import get_modelspec_by_name, get_all_modelspecs
+from Chain.model.models.modelspecs_CRUD import get_modelspec_by_name, get_all_modelspecs, delete_modelspec, create_modelspec
 from pathlib import Path
 import json, itertools
 
@@ -123,6 +123,62 @@ class ModelStore:
                 target_column.append(f"  {model}\n", style="white")
         
         console.print(Columns([left_column, middle_column, right_column], equal=True, expand=True))
+
+    # Consistency
+    @classmethod
+    def update(cls):
+        """
+        Compare model list from models.json, and make sure there are corresponding ModelSpec objects in database.
+        Delete objects that don't have their model name in models.json; and create new ModelSpec objects if they are not in db.
+        """
+        if not cls._is_consistent():
+            print("Model specifications are not consistent with models.json. Updating...")
+            cls._update_models()
+        else:
+            print("Model specifications are consistent with models.json. No update needed.")
+
+    @classmethod
+    def _update_models(cls):
+        raise NotImplementedError(
+            "This method should be implemented to update model specifications in the database."
+        )
+        models_not_in_model_list = []
+        models_not_in_modelspec_db = []
+
+        # Delete all ModelSpec objects that are not in models.json
+        [delete_modelspec(model) for model in models_not_in_model_list]
+        # Create all Modelspec objects that are in models.json but not in the database
+        [create_modelspec(model) for model in models_not_in_modelspec_db]
+        if cls._is_consistent():
+            print("Model specifications are consistent with models.json. No update needed.")
+            return
+        else:
+            raise ValueError(
+                "Model specifications are not consistent with models.json. Please check your code."
+            )
+        
+
+    @classmethod
+    def _is_consistent(cls) -> bool:
+        """
+        Check if the model specifications in the database are consistent with the models.json file.
+        Returns True if consistent, False otherwise.
+        """
+        # Get list of models from models.json
+        models = cls.models()
+        
+        # Get all ModelSpec objects from the database
+        model_specs = get_all_modelspecs()
+        
+        # Create a set of model names from the models.json file
+        model_names = set(itertools.chain.from_iterable(models.values()))
+        
+        # Check if all ModelSpec names are in the models.json file
+        for model_spec in model_specs:
+            if model_spec.model not in model_names:
+                return False
+        
+        return True
 
     # Getters
     @classmethod
