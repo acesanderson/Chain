@@ -3,7 +3,7 @@ Prompt class -- coordinates templates, input variables, and rendering.
 """
 
 from jinja2 import Environment, StrictUndefined, meta
-from Chain.prompts.logging_config import get_logger
+from Chain.logs.logging_config import get_logger
 
 logger = get_logger(__name__)
 

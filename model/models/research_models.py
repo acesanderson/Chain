@@ -1,5 +1,5 @@
 from Chain.model.models.modelspec import ModelSpecList, ModelSpec
-from Chain.model.models.modelspecs_CRUD import create_modelspecs_from_scratch, add_modelspec, get_all_modelspecs, get_modelspec_by_name, update_modelspec, delete_modelspec, in_db
+from Chain.model.models.modelspecs_CRUD import create_modelspecs_from_scratch, add_modelspec, get_all_modelspecs, in_db
 from Chain.model.model import Model
 from Chain.chain.chain import Chain
 from Chain.prompt.prompt import Prompt
@@ -121,7 +121,6 @@ def get_capabilities_by_model(provider: str, model: str) -> ModelSpec:
     """
     Get capabilities for a specific model.
     """
-    breakpoint()
     model_obj = Model("sonar-pro")
     prompt = Prompt(individual_prompt_str)
     parser = Parser(ModelSpec)

@@ -145,11 +145,11 @@ class ModelStore:
         Delete objects that don't have their model name in models.json; and create new ModelSpec objects if they are not in db.
         """
         if not cls._is_consistent():
-            print("INCONSISTENT")
+            print("Model specifications are not consistent with models.json. Updating...")
             logger.info("Model specifications are not consistent with models.json. Updating...")
             cls._update_models()
         else:
-            print("CONSISTENT")
+            print("Model specifications are consistent with models.json. No update needed.")
             logger.info("Model specifications are consistent with models.json. No update needed.")
 
     @classmethod

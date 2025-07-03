@@ -29,20 +29,11 @@ class ModelSpec(BaseModel):
     video_gen: bool = Field(..., description="The ability to create or generate video content from text descriptions or other inputs, e.g. gemini-2.5-pro-preview-05-06")
     reasoning: bool = Field(..., description="The capability to perform logical reasoning, problem-solving, and complex analytical tasks, e.g. o1-preview")
 
-
-    @property
-    def provider(self) -> Provider:
-        """
-        Returns the provider of the model.
-        """
-        return self.provider
-
     def __str__(self):
         return f"{self.model} ({self.provider})"
 
     def __repr__(self):
         return f"ModelSpec(model={self.model}, provider={self.provider})"
-
 
     @property
     def card(self):

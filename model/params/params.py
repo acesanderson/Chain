@@ -182,6 +182,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         """
         Validate that the model is supported by at least one provider.
         """
+        from Chain.model.models.modelstore import ModelStore
         if not ModelStore.is_supported(self.model):
             raise ValidationError(f"Model '{self.model}' is not supported.")
         return
@@ -378,6 +379,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         We should set num_ctx so we have maximal context window.
         Recall that Ollama with Instructor/OpenAI spec expects options to be nested under extra_body, so we have a special case within to_openai_spec.
         """
+        from Chain.model.models.modelstore import ModelStore
         if self.client_params:
             assert OllamaParams.model_validate(
                 self.client_params

@@ -16,10 +16,11 @@ log_cli_level = "INFO"
 # log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [project.scripts]
+update = "Chain.scripts.update_modelstore:main"
 update_ollama = "Chain.scripts.update_ollama_list:main"
+models = "Chain.scripts.models_cli:main"
 chat = "Chain.chat.chat:main"
 chainserver = "Chain.api.server.run:main"
-models = "Chain.model.models.models_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["Chain*"]
