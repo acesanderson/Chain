@@ -1,6 +1,6 @@
 [project]
 name = "chain"
-version = "0.1.0"
+version = "3.0.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -14,3 +14,12 @@ log_cli = true
 log_cli_level = "INFO"
 # log_cli_format = "%(asctime)s [%(levelname)8s] %(name)s: %(message)s"
 # log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+[project.scripts]
+update_ollama = "Chain.scripts.update_ollama_list:main"
+chat = "Chain.chat.chat:main"
+chainserver = "Chain.api.server.run:main"
+models = "Chain.model.models.models_cli:main"
+
+[tool.setuptools.packages.find]
+include = ["Chain*"]

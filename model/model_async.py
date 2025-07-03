@@ -1,5 +1,5 @@
 from Chain.model.model import Model
-from Chain.model.models.models import ModelStore
+from Chain.model.models.modelstore import ModelStore
 from Chain.model.params.params import Params
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity

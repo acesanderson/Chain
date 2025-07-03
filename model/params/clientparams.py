@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Any, ClassVar, Literal
+from Chain.model.models.provider import Provider
+from typing import Optional, ClassVar
 
-Provider = Literal["openai", "ollama", "anthropic", "google", "perplexity"]
 
 class ClientParams(BaseModel):
     """

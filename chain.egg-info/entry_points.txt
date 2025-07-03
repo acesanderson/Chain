@@ -1,0 +1,5 @@
+[console_scripts]
+chainserver = Chain.api.server.run:main
+chat = Chain.chat.chat:main
+models = Chain.model.models.models_cli:main
+update_ollama = Chain.scripts.update_ollama_list:main

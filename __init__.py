@@ -27,7 +27,7 @@ from Chain.chain.asyncchain import AsyncChain
 from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
 from Chain.model.model_async import ModelAsync
-from Chain.model.models.models import ModelStore
+from Chain.model.models.modelstore import ModelStore
 from Chain.result.response import Response
 from Chain.result.error import ChainError
 from Chain.result.result import ChainResult

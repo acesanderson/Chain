@@ -5,7 +5,7 @@ from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
 from Chain.model.params.params import Params
-from Chain.model.models.models import ModelStore
+from Chain.model.models.modelstore import ModelStore
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
 from Chain.result.error import ChainError
@@ -37,20 +37,20 @@ class Model:
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
 
+    @classmethod
+    def models(cls) -> dict:
+        """
+        Returns a dictionary of available models.
+        This is useful for introspection and debugging.
+        """
+        return ModelStore.models()
+
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
         self.model = ModelStore._validate_model(model)
         self._client_type = self._get_client_type(self.model)
         self._client = self.__class__._get_client(self._client_type)
         self._console = console
-
-    @property
-    def models(self) -> dict:
-        """
-        Returns a dictionary of available models.
-        This is useful for introspection and debugging.
-        """
-        return ModelStore.models()
 
     @property
     def console(self):

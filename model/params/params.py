@@ -10,7 +10,6 @@ from Chain.progress.display_mixins import (
     PlainDisplayParamsMixin,
 )
 from Chain.model.params.clientparams import (
-    Provider,
     ClientParamsModels,
     OpenAIParams,
     OllamaParams,
@@ -18,8 +17,9 @@ from Chain.model.params.clientparams import (
     GoogleParams,
     PerplexityParams,
 )
+from Chain.model.models.provider import Provider
 from Chain.parser.parser import Parser
-from Chain.model.models.models import ModelStore
+from Chain.model.models.modelstore import ModelStore
 
 
 class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):

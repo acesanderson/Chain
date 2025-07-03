@@ -25,7 +25,7 @@ class OllamaClient(Client):
     """
 
     # Load Ollama context sizes from the JSON file
-    with open(dir_path / "ollama_context_sizes.json") as f:
+    with open(dir_path.parent / "models" / "ollama_context_sizes.json") as f:
         _ollama_context_data = json.load(f)
 
     # Use defaultdict to set default context size to 4096 if not specified
@@ -55,10 +55,10 @@ class OllamaClient(Client):
         """
         # Lazy load ollama module
         ollama_models = [m["model"] for m in ollama.list()["models"]]
-        with open(dir_path / "models.json", "r") as f:
+        with open(dir_path.parent / "models" / "models.json", "r") as f:
             model_list = json.load(f)
         model_list["ollama"] = ollama_models
-        with open(dir_path / "models.json", "w") as f:
+        with open(dir_path.parent / "models" / "models.json", "w") as f:
             json.dump(model_list, f)
 
     def tokenize(self, model: str, text: str) -> int:
