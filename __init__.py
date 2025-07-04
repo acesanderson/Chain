@@ -27,6 +27,9 @@ from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
 from Chain.model.model_async import ModelAsync
 from Chain.model.models.modelstore import ModelStore
+from Chain.message.messagestore import MessageStore
+from Chain.message.textmessage import create_system_message
+from Chain.cache.cache import ChainCache
 from Chain.result.response import Response
 from Chain.result.error import ChainError
 from Chain.result.result import ChainResult
@@ -48,5 +51,8 @@ __all__ = [
     "Verbosity",
     "set_log_level",
     "disable_logging",
-    "enable_debug_logging"
+    "enable_debug_logging",
+    "MessageStore",
+    "ChainCache",
+    "create_system_message"
 ]

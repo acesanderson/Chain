@@ -7,6 +7,7 @@ from Chain.logs.logging_config import get_logger
 from pathlib import Path
 import json, itertools
 
+# Our data stores
 dir_path = Path(__file__).parent
 models_path = dir_path / "models.json"
 aliases_path = dir_path / "aliases.json"
@@ -25,7 +26,18 @@ class ModelStore:
             return json.load(f)
 
     @classmethod
-    def providers(cls) -> list[str]:
+    def list_models(cls) -> list[str]:
+        """List of all models supported by Chain library."""
+        models = cls.models()
+        return list(itertools.chain.from_iterable(models.values()))
+
+    @classmethod
+    def list_model_types(cls) -> list[str]:
+        """List of model types supported by Chain library."""
+        return ["image_analysis", "image_gen", "audio_analysis", "audio_gen", "video_analysis", "video_gen", "reasoning", "text_completion"]
+
+    @classmethod
+    def list_providers(cls) -> list[str]:
         """Definitive list of providers supported by Chain library."""
         providers = ProviderStore.get_all_providers()
         return [provider.provider for provider in providers]
@@ -229,66 +241,94 @@ class ModelStore:
 
     ## Get subsets of models by provider
     @classmethod
-    def by_provider(cls, provider: Provider) -> list[str]:
+    def by_provider(cls, provider: Provider) -> list[ModelSpec]:
         """
         Get a list of models for a specific provider.
         """
-        models = cls.models()
-        return models.get(provider, [])
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.provider == provider]
+
+    ## Get subsets of models by type
+    @classmethod
+    def by_type(cls, model_type: str) -> list[ModelSpec]:
+        """
+        Get a list of models by type.
+        Raises ValueError if the model type is not valid.
+        """
+        if model_type not in cls.list_model_types():
+            raise ValueError(f"Invalid model type: {model_type}. Must be one of: {', '.join(cls.list_model_types())}.")
+        match model_type:
+            case "image_analysis":
+                return cls.image_analysis_models()
+            case "image_gen":
+                return cls.image_gen_models()
+            case "audio_analysis":
+                return cls.audio_analysis_models()
+            case "audio_gen":
+                return cls.audio_gen_models()
+            case "video_analysis":
+                return cls.video_analysis_models()
+            case "video_gen":
+                return cls.video_gen_models()
+            case "reasoning":
+                return cls.reasoning_models()
+            case "text_completion":
+                return cls.text_completion_models()
+            case _:
+                raise ValueError(f"Invalid model type: {model_type}. Must be one of: {', '.join(cls.list_model_types())}.")
 
     ## Get lists of models by capability
     @classmethod
-    def image_analysis_models(cls) -> list[str]:
+    def image_analysis_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support image analysis.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("image_analysis", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.image_analysis]
 
     @classmethod
-    def image_gen_models(cls) -> list[str]:
+    def image_gen_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support image generation.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("image_gen", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.image_gen]
 
     @classmethod
-    def audio_analysis_models(cls) -> list[str]:
+    def audio_analysis_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support audio analysis.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("audio_analysis", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.audio_analysis]
 
     @classmethod
-    def audio_gen_models(cls) -> list[str]:
+    def audio_gen_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support audio generation.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("audio_gen", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.audio_gen]
 
     @classmethod
-    def video_analysis_models(cls) -> list[str]:
+    def video_analysis_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support video analysis.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("video_analysis", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.video_analysis]
 
     @classmethod
-    def video_gen_models(cls) -> list[str]:
+    def video_gen_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support video generation.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("video_gen", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.video_gen]
 
     @classmethod
-    def reasoning_models(cls) -> list[str]:
+    def reasoning_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support reasoning.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("reasoning", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.reasoning]
 
     @classmethod
-    def text_completion_models(cls) -> list[str]:
+    def text_completion_models(cls) -> list[ModelSpec]:
         """
         Get a list of models that support text completion.
         """
-        return [model for model, capabilities in cls.models().items() if capabilities.get("text_completion", False)]
+        return [modelspec for modelspec in cls.get_all_models() if modelspec.text_completion]

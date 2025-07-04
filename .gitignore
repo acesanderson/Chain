@@ -16,3 +16,4 @@ ask_wrapper.sh
 tests/assets/*
 .pytest_cache/
 *.db
+tts/asset/*
