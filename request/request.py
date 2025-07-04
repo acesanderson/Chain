@@ -9,7 +9,7 @@ from Chain.progress.display_mixins import (
     RichDisplayParamsMixin,
     PlainDisplayParamsMixin,
 )
-from Chain.model.params.clientparams import (
+from Chain.request.clientparams import (
     ClientParamsModels,
     OpenAIParams,
     OllamaParams,
@@ -21,7 +21,7 @@ from Chain.model.models.provider import Provider
 from Chain.parser.parser import Parser
 
 
-class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
+class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     """
     Parameters that are constructed by Model and are sent to Clients.
     Note: we mixin our DisplayParamsMixin classes to provide rich and plain display methods.
@@ -93,10 +93,12 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     # Constructor methods
     @classmethod
-    def from_query_input(cls, query_input: str | Message | list[Message], **kwargs) -> "Params":
+    def from_query_input(
+        cls, query_input: str | Message | list[Message], **kwargs
+    ) -> "Request":
         """
-        Create Params from various input types.
-        
+        Create a Request from various input types.
+
         Args:
             query_input: Can be:
                 - str: Creates a TextMessage with this content
@@ -104,32 +106,35 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                 - list[Message]: Uses the list of messages directly
         """
         messages = kwargs.pop("messages", [])
-        
+
         # Handle different input types
         if isinstance(query_input, str):
             # Original behavior - create TextMessage from string
             user_message = TextMessage(role="user", content=query_input)
             modified_messages = messages + [user_message]
-            
+
         elif isinstance(query_input, Message):
             # ✅ NEW: Handle Message objects directly (AudioMessage, ImageMessage, etc.)
             modified_messages = messages + [query_input]
-            
-        elif isinstance(query_input, list) and all(isinstance(msg, Message) for msg in query_input):
+
+        elif isinstance(query_input, list) and all(
+            isinstance(msg, Message) for msg in query_input
+        ):
             # ✅ NEW: Handle list of Message objects
             modified_messages = messages + query_input
-            
+
         else:
             raise ValueError(
                 f"query_input must be str, Message, or list[Message], got {type(query_input)}"
             )
-        
+
         kwargs.update({"messages": modified_messages})
         return cls(**kwargs)
 
     # Validation methods
     def _set_provider(self):
         from Chain.model.models.modelstore import ModelStore
+
         for provider in ModelStore.models().keys():
             if self.model in ModelStore.models()[provider]:
                 self.provider = provider
@@ -183,6 +188,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         Validate that the model is supported by at least one provider.
         """
         from Chain.model.models.modelstore import ModelStore
+
         if not ModelStore.is_supported(self.model):
             raise ValidationError(f"Model '{self.model}' is not supported.")
         return
@@ -200,19 +206,20 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         else:
             return obj
 
-
     def generate_cache_key(self) -> str:
         """
-        Generate a reliable cache key for the Params instance.
+        Generate a reliable cache key for the Request instance.
         Only includes fields that would affect the LLM response.
         """
         from hashlib import sha256
         import json
 
         # Use sort_keys for deterministic JSON ordering
-        messages_str: str = json.dumps(self.messages.to_cache_dict(), sort_keys=True) 
+        messages_str: str = json.dumps(self.messages.to_cache_dict(), sort_keys=True)
         # Include parser since it affects response format
-        schema_str: str = Parser.as_string(self.response_model) if self.response_model else "none"
+        schema_str: str = (
+            Parser.as_string(self.response_model) if self.response_model else "none"
+        )
         # Handle None temperature gracefully
         temp_str = str(self.temperature) if self.temperature is not None else "none"
         # Include client_params if they are set; the normalize_json ensures consistent ordering, recursively
@@ -237,16 +244,16 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     # Dunder methods for string representation
     def __str__(self) -> str:
         """
-        Generate a string representation of the Params instance.
+        Generate a string representation of the Request instance.
         """
-        return f"Params(model={self.model}, messages={self.messages}, temperature={self.temperature}, provider={self.provider})"
+        return f"Request(model={self.model}, messages={self.messages}, temperature={self.temperature}, provider={self.provider})"
 
     def __repr__(self) -> str:
         """
-        Generate a detailed string representation of the Params instance.
+        Generate a detailed string representation of the Request instance.
         """
         return (
-            f"Params(model={self.model!r}, messages={self.messages!r}, "
+            f"Request(model={self.model!r}, messages={self.messages!r}, "
             f"temperature={self.temperature!r}, provider={self.provider!r}, "
             f"client_params={self.client_params!r}, response_model={self.response_model!r})"
         )
@@ -266,7 +273,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         """
         cache_dict = {
             "model": self.model,
-            "messages": self.messages.to_cache_dict(),  
+            "messages": self.messages.to_cache_dict(),
             "temperature": self.temperature,
             "response_model": (
                 Parser.as_string(self.response_model)
@@ -281,19 +288,19 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         return cache_dict
 
     @classmethod
-    def from_cache_dict(cls, cache_dict: dict) -> "Params":
+    def from_cache_dict(cls, cache_dict: dict) -> "Request":
         model = cache_dict.get("model")
         messages = cache_dict.get("messages")
         temperature = cache_dict.get("temperature", None)
         response_model = cache_dict.get("response_model", None)
         if response_model and isinstance(response_model, str):
-        # Find the matching Pydantic class in Parser._response_models
+            # Find the matching Pydantic class in Parser._response_models
             import json
-            
+
             try:
                 schema_dict = json.loads(response_model)
                 title = schema_dict.get("title")
-                
+
                 for model_class in Parser._response_models:
                     if model_class.__name__ == title:
                         response_model = model_class
@@ -302,11 +309,11 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                     response_model = None
             except (json.JSONDecodeError, KeyError):
                 response_model = None
-    
+
         client_params = cache_dict.get("client_params", None)
         stream = cache_dict.get("stream", False)
         verbose = cache_dict.get("verbose", Verbosity.PROGRESS)
-        
+
         return cls(
             model=str(model),
             messages=Messages.from_cache_dict(messages) if messages else [],
@@ -341,7 +348,9 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                 raise ValueError(
                     f"Unsupported provider '{self.provider}' for OpenAI spec conversion."
                 )
-        assert len(converted_messages) > 0, "converted_messages is empty. Unable to convert to OpenAI spec."
+        assert (
+            len(converted_messages) > 0
+        ), "converted_messages is empty. Unable to convert to OpenAI spec."
 
         base_params = {
             "model": self.model,
@@ -380,6 +389,7 @@ class Params(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         Recall that Ollama with Instructor/OpenAI spec expects options to be nested under extra_body, so we have a special case within to_openai_spec.
         """
         from Chain.model.models.modelstore import ModelStore
+
         if self.client_params:
             assert OllamaParams.model_validate(
                 self.client_params

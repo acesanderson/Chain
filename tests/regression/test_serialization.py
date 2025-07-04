@@ -14,10 +14,10 @@ from Chain.message.textmessage import TextMessage
 from Chain.message.audiomessage import AudioMessage
 from Chain.message.imagemessage import ImageMessage
 from Chain.message.messages import Messages
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from Chain.result.response import Response
 from Chain.result.error import ChainError, ErrorInfo, ErrorDetail
-from Chain.tests.fixtures.sample_models import TestFrog
+from Chain.tests.fixtures.sample_models import PydanticTestFrog
 import json
 
 
@@ -50,8 +50,10 @@ def test_message_pydantic():
     # Add pydantic class to Parser._response_models
     from Chain import Parser
 
-    _ = Parser(TestFrog)
-    frog = TestFrog(species="Rana temporaria", name="Freddy", legs=4, color="green")
+    _ = Parser(PydanticTestFrog)
+    frog = PydanticTestFrog(
+        species="Rana temporaria", name="Freddy", legs=4, color="green"
+    )
     original = TextMessage(role="user", content=frog)
 
     # Serialize
@@ -77,10 +79,12 @@ def test_message_list_pydantic():
     # Add pydantic class to Parser._response_models
     from Chain import Parser
 
-    _ = Parser(TestFrog)
+    _ = Parser(PydanticTestFrog)
     frogs = [
-        TestFrog(species="Rana temporaria", name="Freddy", legs=4, color="green"),
-        TestFrog(species="Bufo bufo", name="Benny", legs=4, color="brown"),
+        PydanticTestFrog(
+            species="Rana temporaria", name="Freddy", legs=4, color="green"
+        ),
+        PydanticTestFrog(species="Bufo bufo", name="Benny", legs=4, color="brown"),
     ]
     original = TextMessage(role="user", content=frogs)
 
@@ -187,24 +191,24 @@ def test_messages():
     print("✅ Messages passed")
 
 
-def test_params():
-    print("Testing Params...")
+def test_request():
+    print("Testing Request...")
 
     # Create original
     messages = Messages([TextMessage(role="user", content="Test")])
-    original = Params(model="gpt-4o", messages=messages, temperature=0.7)
+    original = Request(model="gpt-4o", messages=messages, temperature=0.7)
 
     # Serialize
     cache_dict = original.to_cache_dict()
 
     # Deserialize
-    restored = Params.from_cache_dict(cache_dict)
+    restored = Request.from_cache_dict(cache_dict)
 
     # Check
     assert restored.model == original.model
     assert restored.temperature == original.temperature
     assert len(restored.messages) == len(original.messages)
-    print("✅ Params passed")
+    print("✅ Request passed")
 
 
 def test_response():
@@ -217,10 +221,10 @@ def test_response():
             TextMessage(role="assistant", content="4"),
         ]
     )
-    params = Params(model="gpt-4o", messages=messages)
+    request = Request(model="gpt-4o", messages=messages)
     original = Response(
         message=messages[0],  # type: ignore
-        params=params,
+        request=request,
         duration=1.23,
         input_tokens=60,
         output_tokens=120,
@@ -234,7 +238,7 @@ def test_response():
 
     # Check
     assert restored.duration == original.duration
-    assert restored.params.model == original.params.model
+    assert restored.request.model == original.request.model
     assert len(restored.messages) == len(original.messages)
     print("✅ Response passed")
 
@@ -253,7 +257,7 @@ def test_chainerror():
         exception_type="ValueError",
         stack_trace="test stack trace",
         raw_response=None,
-        request_params={"test": "params"},
+        request_params={"test": "request"},
         retry_count=0,
     )
     original = ChainError(info=error_info, detail=error_detail)
@@ -282,7 +286,7 @@ def main():
         test_audiomessage()
         test_imagemessage()
         test_messages()
-        test_params()
+        test_request()
         test_response()
         test_chainerror()
 

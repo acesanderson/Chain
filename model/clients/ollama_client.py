@@ -7,7 +7,7 @@ We define preferred defaults for context sizes in a separate json file.
 """
 
 from Chain.model.clients.client import Client, Usage
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from pydantic import BaseModel
 from openai import OpenAI, AsyncOpenAI, Stream
 from pathlib import Path
@@ -87,17 +87,19 @@ class OllamaClientSync(OllamaClient):
 
     def query(
         self,
-        params: Params,
+        request: Request,
     ) -> tuple:
         structured_response = None
-        if params.response_model is not None:
+        if request.response_model is not None:
             # We want the raw response from OpenAI, so we use `create_with_completion`
-            structured_response, result = self._client.chat.completions.create_with_completion(
-                **params.to_openai()
+            structured_response, result = (
+                self._client.chat.completions.create_with_completion(
+                    **request.to_openai()
+                )
             )
         else:
             # Use the standard completion method
-            result = self._client.chat.completions.create(**params.to_openai())
+            result = self._client.chat.completions.create(**request.to_openai())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,
@@ -132,17 +134,19 @@ class OllamaClientAsync(OllamaClient):
 
     async def query(
         self,
-        params: Params,
+        request: Request,
     ) -> tuple:
         structured_response = None
-        if params.response_model is not None:
+        if request.response_model is not None:
             # We want the raw response from Ollama, so we use `create_with_completion`
-            structured_response, result = await self._client.chat.completions.create_with_completion(
-                **params.to_openai()
+            structured_response, result = (
+                await self._client.chat.completions.create_with_completion(
+                    **request.to_openai()
+                )
             )
         else:
             # Use the standard completion method
-            result = await self._client.chat.completions.create(**params.to_openai())
+            result = await self._client.chat.completions.create(**request.to_openai())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,

@@ -4,7 +4,7 @@ from Chain.message.textmessage import TextMessage
 from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from Chain.result.result import ChainResult
 from Chain.result.response import Response
 from Chain.result.error import ChainError
@@ -43,11 +43,13 @@ class Model:
         This is useful for introspection and debugging.
         """
         from Chain.model.models.modelstore import ModelStore
+
         return ModelStore.models()
 
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
         from Chain.model.models.modelstore import ModelStore
+
         self.model = ModelStore._validate_model(model)
         self._client_type = self._get_client_type(self.model)
         self._client = self.__class__._get_client(self._client_type)
@@ -100,6 +102,7 @@ class Model:
         Returns a tuple with client type (which informs the module title) and the client class name (which is used to instantiate the client).
         """
         from Chain.model.models.modelstore import ModelStore
+
         model_list = ModelStore.models()
         if model in model_list["openai"]:
             return "openai", "OpenAIClientSync"
@@ -146,17 +149,17 @@ class Model:
         verbose: Verbosity = Verbosity.PROGRESS,
         index: int = 0,
         total: int = 0,
-        # If we're hand-constructing Params, we can pass them in directly
-        params: Optional[Params] = None,
+        # If we're hand-constructing Request params, we can pass them in directly
+        request: Optional[Request] = None,
         # Options for debugging
-        return_params: bool = False,
+        return_request: bool = False,
         return_error: bool = False,
-    ) -> ChainResult | Params | Stream | AnthropicStream:
+    ) -> ChainResult | Request | Stream | AnthropicStream:
         try:
-            # Construct Params object if not provided (majority of cases)
-            if not params:
+            # Construct Request object if not provided (majority of cases)
+            if not request:
                 logger.info(
-                    "Constructing Params object from query_input and other parameters."
+                    "Constructing Request object from query_input and other parameters."
                 )
                 import inspect
 
@@ -168,19 +171,19 @@ class Model:
                 cache = query_args.pop("cache", False)
                 if query_input:
                     query_args.pop("query_input", None)
-                    params = Params.from_query_input(
+                    request = Request.from_query_input(
                         query_input=query_input, **query_args
                     )
                 else:
-                    params = Params(**query_args)
+                    request = Request(**query_args)
 
             assert isinstance(
-                params, Params
-            ), f"params must be an instance of Params or None, got {type(params)}"
+                request, Request
+            ), f"Request must be an instance of Request or None, got {type(request)}"
 
-            # For debug, return params if requested
-            if return_params:
-                return params
+            # For debug, return Request if requested
+            if return_request:
+                return request
             # For debug, return error if requested
             if return_error:
                 from Chain.tests.fixtures import sample_error
@@ -190,7 +193,7 @@ class Model:
             # Check cache first
             logger.info("Checking cache for existing results.")
             if cache and self._chain_cache:
-                cached_result = self._chain_cache.check_for_model(params)
+                cached_result = self._chain_cache.check_for_model(request)
                 if isinstance(cached_result, ChainResult):
                     return (
                         cached_result  # This should be a Response (part of ChainResult)
@@ -208,7 +211,7 @@ class Model:
             # Execute the query
             logger.info("Executing query with client.")
             start_time = time()
-            result, usage = self._client.query(params)
+            result, usage = self._client.query(request)
             stop_time = time()
             logger.info(f"Query executed in {stop_time - start_time:.2f} seconds.")
 
@@ -239,7 +242,7 @@ class Model:
 
                 response = Response(
                     message=assistant_message,
-                    params=params,
+                    request=request,
                     duration=stop_time - start_time,
                     input_tokens=usage.input_tokens,
                     output_tokens=usage.output_tokens,
@@ -255,7 +258,7 @@ class Model:
             # Update cache after successful query
             logger.info("Updating cache with the new response.")
             if cache and self._chain_cache:
-                self._chain_cache.store_for_model(params, response)
+                self._chain_cache.store_for_model(request, response)
 
             return response  # Return Response (part of ChainResult)
 
@@ -264,7 +267,7 @@ class Model:
                 e,
                 code="validation_error",
                 category="client",
-                request_params=params.model_dump() if params else {},
+                request_request=request.model_dump() if request else {},
             )
             logger.error(f"Validation error: {chainerror}")
             return chainerror
@@ -273,7 +276,7 @@ class Model:
                 e,
                 code="query_error",
                 category="client",
-                request_params=params.model_dump() if params else {},
+                request_request=request.model_dump() if request else {},
             )
             logger.error(f"Error during query: {chainerror}")
             return chainerror

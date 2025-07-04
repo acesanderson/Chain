@@ -7,7 +7,7 @@ TODO: implement a class SDK as a protocol for all the library clients (openai, o
 """
 
 from abc import ABC, abstractmethod
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from pydantic import BaseModel
 
 
@@ -45,10 +45,10 @@ class Client(ABC):
         pass
 
     @abstractmethod
-    def query(self, params: Params) -> tuple:
+    def query(self, request: Request) -> tuple:
         """
         All client subclasses must have a query function that can take:
-        - a Params object, which contains all the parameters needed for the query
+        - a Request object, which contains all the parameters needed for the query
 
         And returns
         - A tuple of

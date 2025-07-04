@@ -8,7 +8,7 @@ For this reason, we define a Pydantic class as our framework is fine with BaseMo
 
 from Chain.model.clients.client import Client, Usage
 from Chain.model.clients.load_env import load_env
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from openai import OpenAI, AsyncOpenAI, Stream
 from openai.types.chat.chat_completion import ChatCompletion
 from typing import Optional
@@ -71,17 +71,19 @@ class PerplexityClientSync(PerplexityClient):
 
     def query(
         self,
-        params: Params,
+        request: Request,
     ) -> tuple:
         structured_response = None
-        if params.response_model is not None:
+        if request.response_model is not None:
             # We want the raw response from OpenAI, so we use `create_with_completion`
-            structured_response, result = self._client.chat.completions.create_with_completion(
-                **params.to_perplexity()
+            structured_response, result = (
+                self._client.chat.completions.create_with_completion(
+                    **request.to_perplexity()
+                )
             )
         else:
             # Use the standard completion method
-            result = self._client.chat.completions.create(**params.to_perplexity())
+            result = self._client.chat.completions.create(**request.to_perplexity())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,
@@ -119,9 +121,9 @@ class PerplexityClientAsync(PerplexityClient):
 
     async def query(
         self,
-        params: Params,
+        request: Request,
     ) -> tuple:
-        result = await self._client.chat.completions.create(**params.to_perplexity())
+        result = await self._client.chat.completions.create(**request.to_perplexity())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,

@@ -1,5 +1,5 @@
 from Chain.model.model import Model
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
 from Chain.message.textmessage import TextMessage
@@ -24,6 +24,7 @@ class ModelAsync(Model):
         Overrides the parent method to return the async version of each client type.
         """
         from Chain.model.models.modelstore import ModelStore
+
         model_list = ModelStore.models()
         if model in model_list["openai"]:
             return "openai", "OpenAIClientAsync"
@@ -65,15 +66,15 @@ class ModelAsync(Model):
         raw=False,
         cache=False,
         print_response=False,
-        # If hand-rolling params, you can just pass the object directly.
-        params: Optional[Params] = None,
-        # For debug: return Params, or an example Error
-        return_params: bool = False,
+        # If hand-rolling Request params, you can just pass the object directly.
+        request: Optional[Request] = None,
+        # For debug: return Request, or an example Error
+        return_request: bool = False,
         return_error: bool = False,
     ) -> ChainResult:
 
         try:
-            if params == None:
+            if request == None:
                 import inspect
 
                 frame = inspect.currentframe()
@@ -83,17 +84,19 @@ class ModelAsync(Model):
                 query_args["model"] = self.model
                 if query_input:
                     query_args.pop("query_input", None)
-                    params = Params.from_query_input(query_input = query_input, **query_args)
+                    request = Request.from_query_input(
+                        query_input=query_input, **query_args
+                    )
                 else:
-                    params = Params(**query_args)
+                    request = Request(**query_args)
 
-            assert params and isinstance(
-                params, Params
-            ), f"params should be a Params object, not {type(params)}"
+            assert request and isinstance(
+                request, Request
+            ), f"request should be a Request object, not {type(request)}"
 
-            # For debug, return Params if requested
-            if return_params:
-                return params
+            # For debug, return Request if requested
+            if return_request:
+                return request
             # For debug, return error if requested
             if return_error:
                 from Chain.tests.fixtures import sample_error
@@ -102,13 +105,13 @@ class ModelAsync(Model):
 
             # Check cache first
             if cache and self._chain_cache:
-                cached_result = self._chain_cache.check_for_model(params)
+                cached_result = self._chain_cache.check_for_model(request)
                 if cached_result is not None:
                     return cached_result  # This should be a Response
 
             # Execute the query
             start_time = time()
-            result, usage = await self._client.query(params)
+            result, usage = await self._client.query(request)
             stop_time = time()
 
             # Create Response object
@@ -119,7 +122,7 @@ class ModelAsync(Model):
 
                 response = Response(
                     message=assistant_message,
-                    params=params,
+                    request=request,
                     duration=stop_time - start_time,
                     input_tokens=usage.input_tokens,
                     output_tokens=usage.output_tokens,
@@ -130,7 +133,7 @@ class ModelAsync(Model):
 
                 response = Response(
                     message=assistant_message,
-                    params=params,
+                    request=request,
                     duration=stop_time - start_time,
                     input_tokens=usage.input_tokens,
                     output_tokens=usage.output_tokens,
@@ -138,7 +141,7 @@ class ModelAsync(Model):
 
             # Update cache after successful query
             if cache and self._chain_cache:
-                self._chain_cache.store_for_model(params, response)
+                self._chain_cache.store_for_model(request, response)
 
             return response  # Always return Response (part of ChainResult)
 
@@ -149,7 +152,7 @@ class ModelAsync(Model):
                 e,
                 code="validation_error",
                 category="client",
-                request_params=params.model_dump() if params else {},
+                request_request=request.model_dump() if request else {},
             )
         except Exception as e:
             from Chain.result.error import ChainError
@@ -158,5 +161,5 @@ class ModelAsync(Model):
                 e,
                 code="async_query_error",
                 category="client",
-                request_params=params.model_dump() if params else {},
+                request_request=request.model_dump() if request else {},
             )

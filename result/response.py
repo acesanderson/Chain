@@ -4,7 +4,7 @@ A successful Result.
 
 from Chain.message.message import Message
 from Chain.message.messages import Messages
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from Chain.logs.logging_config import get_logger
 from Chain.progress.display_mixins import (
     RichDisplayResponseMixin,
@@ -24,7 +24,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
 
     # Core attributes
     message: Message
-    params: Params
+    request: Request
     input_tokens: int
     output_tokens: int
     duration: float
@@ -41,7 +41,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         return {
             "message": self.message.to_cache_dict(),
-            "params": self.params.to_cache_dict(),
+            "request": self.request.to_cache_dict(),
             "input_tokens": self.input_tokens,
             "output_tokens": self.output_tokens,
             "duration": self.duration,
@@ -55,7 +55,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         return cls(
             message=Message.from_cache_dict(cache_dict["message"]),
-            params=Params.from_cache_dict(cache_dict["params"]),
+            request=Request.from_cache_dict(cache_dict["request"]),
             input_tokens=cache_dict["input_tokens"],
             output_tokens=cache_dict["output_tokens"],
             duration=cache_dict["duration"],
@@ -67,11 +67,11 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         This is the last user message.
         """
-        return self.params.messages[-1].content
+        return self.request.messages[-1].content
 
     @property
     def messages(self) -> Messages:
-        return Messages(messages=self.params.messages + [self.message])
+        return Messages(messages=self.request.messages + [self.message])
 
     @property
     def total_tokens(self) -> int:
@@ -89,7 +89,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         This is the model used for the response.
         """
-        return self.params.model
+        return self.request.model
 
     def __repr__(self):
         attributes = ", ".join(

@@ -4,7 +4,7 @@ TBD: implement streaming support.
 """
 
 from Chain.model.clients.client import Client, Usage
-from Chain.model.params.params import Params
+from Chain.request.request import Request
 from Chain.model.clients.load_env import load_env
 from anthropic import Anthropic, AsyncAnthropic, Stream
 from pydantic import BaseModel
@@ -55,15 +55,17 @@ class AnthropicClientSync(AnthropicClient):
 
     def query(
         self,
-        params: Params,
+        request: Request,
     ) -> tuple:
         structured_response = None
-        if params.response_model is not None:
-            structured_response, result = self._client.chat.completions.create_with_completion(
-                **params.to_anthropic(),
+        if request.response_model is not None:
+            structured_response, result = (
+                self._client.chat.completions.create_with_completion(
+                    **request.to_anthropic(),
+                )
             )
         else:
-            result = self._client.chat.completions.create(**params.to_anthropic())
+            result = self._client.chat.completions.create(**request.to_anthropic())
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.input_tokens,
@@ -99,15 +101,19 @@ class AnthropicClientAsync(AnthropicClient):
 
     async def query(
         self,
-        params: Params,
+        request: Request,
     ) -> tuple:
         structured_response = None
-        if params.response_model is not None:
-            structured_response, result = await self._client.chat.completions.create_with_completion(
-                **params.to_anthropic(),
+        if request.response_model is not None:
+            structured_response, result = (
+                await self._client.chat.completions.create_with_completion(
+                    **request.to_anthropic(),
+                )
             )
         else:
-            result = await self._client.chat.completions.create(**params.to_anthropic())
+            result = await self._client.chat.completions.create(
+                **request.to_anthropic()
+            )
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.input_tokens,

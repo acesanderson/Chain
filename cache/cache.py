@@ -3,10 +3,11 @@ from typing import Optional, Any
 from pathlib import Path
 import sqlite3, json
 
+
 class ChainCache:
     """
     SQLite-based cache for Chain responses using JSON serialization.
-    Automatically handles serialization/deserialization of Response and Params objects.
+    Automatically handles serialization/deserialization of Response and Request objects.
     """
 
     def __init__(self, db_path: str | Path = "chain_cache.db"):
@@ -35,13 +36,15 @@ class ChainCache:
                     self._connection.close()
                 except:
                     pass
-                self._connection = sqlite3.connect(self.db_path, check_same_thread=False)
-        
+                self._connection = sqlite3.connect(
+                    self.db_path, check_same_thread=False
+                )
+
         return self._connection
 
     def close(self):
         """Properly close the database connection"""
-        if hasattr(self, '_connection') and self._connection:
+        if hasattr(self, "_connection") and self._connection:
             try:
                 self._connection.close()
             except:
@@ -75,7 +78,9 @@ class ChainCache:
         """
         try:
             cursor = self.connection.cursor()
-            cursor.execute("SELECT response_data FROM cache WHERE cache_key = ?", (cache_key,))
+            cursor.execute(
+                "SELECT response_data FROM cache WHERE cache_key = ?", (cache_key,)
+            )
             result = cursor.fetchone()  # Use SAME cursor
             if result:
                 response_data = result[0]
@@ -107,28 +112,28 @@ class ChainCache:
         self.connection.commit()
 
     # INTEGRATED CACHE METHODS - no need for external functions
-    def check_for_model(self, params):
+    def check_for_model(self, Request):
         """
-        Check if response exists in cache for the given params.
-        
+        Check if response exists in cache for the given Request.
+
         Args:
-            params: Params object containing request parameters
-            
+            Request: Request object containing request parameters
+
         Returns:
             Cached Response object or None if not found
         """
-        cache_key = params.generate_cache_key()
+        cache_key = Request.generate_cache_key()
         return self.get(cache_key)
 
-    def store_for_model(self, params, response):
+    def store_for_model(self, Request, response):
         """
-        Store response in cache for the given params.
-        
+        Store response in cache for the given Request.
+
         Args:
-            params: Params object containing request parameters
+            Request: Request object containing request parameters
             response: Response object to cache
         """
-        cache_key = params.generate_cache_key()
+        cache_key = Request.generate_cache_key()
         self.set(cache_key, response)
 
     def _serialize_response(self, response: Response) -> str:
