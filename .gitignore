@@ -1,4 +1,4 @@
-/vectordbs/
+vectordbs/
 *.pyc
 __pycache__/
 Chain.egg-info/
@@ -16,5 +16,5 @@ ask_wrapper.sh
 tests/assets/*
 .pytest_cache/
 *.db
-tts/asset/*
+multimodal/tts/asset/*
 *.npz
