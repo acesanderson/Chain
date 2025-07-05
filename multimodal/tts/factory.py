@@ -108,7 +108,8 @@ if __name__ == "__main__":
     from tts_chatTTS import tts_chatTTS
     from tts_gemini import tts_gemini
     from tts_openai import tts_openai
-    tts_functions = [tts_gemini, tts_openai, tts_chatTTS, tts_elevenlabs]
+    from tts_chatterbox import tts_chatterbox
+    tts_functions = [tts_chatterbox, tts_gemini, tts_openai, tts_chatTTS, tts_elevenlabs]
     for tts_function in tts_functions:
         pipeline(tts_function, STANDARD_TEXT)
 

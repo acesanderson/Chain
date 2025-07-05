@@ -148,7 +148,6 @@ class Chain:
         if Chain._message_store:
             if isinstance(result, Response):
                 logger.info("Saving response to message store.")
-                Chain._message_store.append(user_message)
                 Chain._message_store.append(result.message)
             elif isinstance(result, ChainError):
                 logger.error("ChainError encountered, not saving to message store.")
