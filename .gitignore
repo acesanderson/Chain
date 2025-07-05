@@ -18,3 +18,4 @@ tests/assets/*
 *.db
 multimodal/tts/asset/*
 *.npz
+multimodal/tts/audio_files/*
