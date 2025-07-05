@@ -26,10 +26,16 @@ import os
 
 class MessageStore(Messages):
     """
-    A Messages object with persistence and logging capabilities.
-    Inherits all list-like behavior from Messages while adding database storage.
+    A Messages object with automatic persistence.
+    
+    ⚠️  MUTATION WARNING: All list operations (append, extend, etc.) 
+        will automatically persist to database if history_file was provided.
+    
+    Side Effects:
+        - append() → database write (if persistent=True)
+        - extend() → multiple database writes
+        - clear() → database truncation
     """
-
     # Add Pydantic fields (Messages inherits from BaseModel)
     console: Optional[Console] = Field(default=None, exclude=True, repr=False)
     auto_save: bool = Field(default=True, exclude=True)
