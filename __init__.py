@@ -27,6 +27,7 @@ from Chain.prompt.prompt import Prompt
 from Chain.model.model import Model
 from Chain.model.model_async import ModelAsync
 from Chain.model.models.modelstore import ModelStore
+from Chain.message.message import Message
 from Chain.message.messagestore import MessageStore
 from Chain.message.textmessage import create_system_message
 from Chain.cache.cache import ChainCache
@@ -53,6 +54,7 @@ __all__ = [
     "set_log_level",
     "disable_logging",
     "enable_debug_logging",
+    "Message",
     "MessageStore",
     "ChainCache",
     "create_system_message",

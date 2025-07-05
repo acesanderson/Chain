@@ -4,7 +4,26 @@ from typing import Callable
 from pathlib import Path
 
 # Standard text for all TTS models
-STANDARD_TEXT = "I have become Death, Destroyer of Worlds"
+STANDARD_TEXT = """
+"Oh no!" Sarah gasped as thunder crashed overhead. The weatherman had predicted sunshine, but now
+heavy raindrops were pelting her umbrella. She quickened her pace, her heels clicking rhythmically
+on the wet pavement—click, click, click.
+
+Suddenly, she heard a tiny mewing sound. Behind a rusty dumpster, a small kitten sat shivering.
+"Well, hello there, little one," she whispered gently, crouching down. The kitten's eyes sparkled
+like emeralds.
+
+"Are you hungry?" she asked, pulling out her tuna sandwich. The kitten purred—a soft, rumbling
+vibration that made Sarah smile. "There you go, sweetie."
+
+As the storm passed, golden sunlight broke through the clouds. Sarah laughed with joy, realizing
+this unexpected detour had brightened her entire day. Sometimes the most beautiful moments come from
+life's surprises.
+
+"Come on, little friend," she said cheerfully, "let's find you a warm home." Together, they walked
+toward the rainbow stretching across the clearing sky, their footsteps creating a gentle symphony on
+the glistening street.
+""".strip()
 
 # Main pipeline
 def pipeline(tts_function: Callable, text = STANDARD_TEXT):
@@ -105,11 +124,11 @@ def combine_wav_bytes(wav_bytes_list: list) -> bytes:
 
 if __name__ == "__main__":
     from tts_elevenlabs import tts_elevenlabs
-    from tts_chatTTS import tts_chatTTS
+    # from tts_chatTTS import tts_chatTTS
     from tts_gemini import tts_gemini
     from tts_openai import tts_openai
-    from tts_chatterbox import tts_chatterbox
-    tts_functions = [tts_chatterbox, tts_gemini, tts_openai, tts_chatTTS, tts_elevenlabs]
+    # from tts_chatterbox import tts_chatterbox
+    tts_functions = [tts_gemini, tts_openai, tts_elevenlabs]
     for tts_function in tts_functions:
         pipeline(tts_function, STANDARD_TEXT)
 
