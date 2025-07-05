@@ -160,6 +160,7 @@ class Chain:
         """
         We want a list of messages to submit to Model.query.
         If we have a prompt, we want to convert it into a user message and append it to messages.
+        WARNING: This function will mutate its inputs. If messages = a MessageStore, you might see doubled messages if you don't take this into account. We are taking advantage of mutability and inheritance here but beware -- especially if MessageStore is persistent, as this can also kick off database writes.
         """
         if not messages:
             messages = []
