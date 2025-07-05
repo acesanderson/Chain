@@ -54,7 +54,7 @@ class Chat:
 
     def __init__(
         self,
-        model: Model = Model("laude-3-5-haiku-20241022"),
+        model: Model = Model("claude-3-5-haiku-20241022"),
         messagestore: Optional[MessageStore] = Chain._message_store,
         console: Optional[Console] = Chain._console,
     ):

@@ -13,17 +13,6 @@ class Messages(BaseModel):
     Supports Message, ImageMessage, and AudioMessage objects (all inherit from Message).
     class MessageStore(Messages):
     """
-    A Messages object with automatic persistence.
-    
-    ⚠️  MUTATION WARNING: All list operations (append, extend, etc.) 
-        will automatically persist to database if history_file was provided.
-    
-    Side Effects:
-        - append() → database write (if persistent=True)
-        - extend() → multiple database writes
-        - clear() → database truncation
-    """
-    """
 
     messages: list[Message] = Field(
         default_factory=list,

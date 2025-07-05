@@ -35,6 +35,7 @@ from Chain.result.error import ChainError
 from Chain.result.result import ChainResult
 from Chain.parser.parser import Parser
 from Chain.progress.verbosity import Verbosity
+from Chain.chat.chat import Chat
 
 
 __all__ = [
@@ -54,5 +55,6 @@ __all__ = [
     "enable_debug_logging",
     "MessageStore",
     "ChainCache",
-    "create_system_message"
+    "create_system_message",
+    "Chat"
 ]
