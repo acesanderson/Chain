@@ -74,23 +74,27 @@ class CLI:
             """
             arg_name = arg_func.__name__[4:]
             arg_doc = arg_func.__doc__
-            # Capture the default arg
-            if len(signature(arg_func).parameters) == 1 and arg_func.abbreviation == "":  # type: ignore
+            param_count = len(signature(arg_func).parameters)
+            abbreviation = getattr(arg_func, 'abbreviation', '')
+            
+            # Default positional argument (empty abbreviation and takes parameter)
+            if param_count == 1 and abbreviation == "":
                 _parser.add_argument(arg_name, nargs="*", help=arg_doc)
 
-            # Transitive functions
-            elif len(signature(arg_func).parameters) == 1:
-                arg_abbreviation = arg_func.abbreviation  # type: ignore
+            # Optional arguments with parameters (non-empty abbreviation and takes parameter)
+            elif param_count == 1 and abbreviation != "" and abbreviation:
                 _parser.add_argument(
-                    arg_abbreviation, type=str, nargs="?", dest=arg_name, help=arg_doc
+                    abbreviation, type=str, nargs="?", dest=arg_name, help=arg_doc
                 )
 
-            # Next, intransitive functions
-            elif len(signature(arg_func).parameters) == 0:
-                arg_abbreviation = arg_func.abbreviation  # type: ignore
+            # Flag arguments (no parameters beyond self)
+            elif param_count == 0 and abbreviation != "" and abbreviation:
                 _parser.add_argument(
-                    arg_abbreviation, action="store_true", dest=arg_name, help=arg_doc
+                    abbreviation, action="store_true", dest=arg_name, help=arg_doc
                 )
+            else:
+                print(f"Warning: Skipping {arg_name} - unhandled case: params={param_count}, abbrev='{abbreviation}'")
+                
             return arg_name
 
         methods = [method for method in dir(self) if method.startswith("arg_")]
@@ -115,7 +119,12 @@ class CLI:
             ## Then the remaining args
             for arg in parsed_args:
                 if parsed_args[arg] and arg not in ["raw"]:
-                    self.catalog[arg]()
+                    func = self.catalog[arg]
+                    # Check if function expects parameters (remember, signature doesn't count 'self')
+                    if len(signature(func).parameters) > 0:  # Has parameters beyond 'self'
+                        func(parsed_args[arg])
+                    else:
+                        func()
             # TBD: the above is a hack that reflects the fact that some arguments are just flags, and should not be executed. One potential implementation would be to have TWO decorators; a flag and the arg decorator, where flags are not executed but rather accessed by the actual arg functions.
             sys.exit()
 
@@ -140,7 +149,8 @@ class ChainCLI(CLI):
         # Inherit super
         super().__init__(name=name)
         self.preferred_model = Model("claude")
-        self.messagestore = MessageStore(self.console, history_file, log_file, pruning)
+        self.messagestore = MessageStore(console=self.console, history_file=history_file, pruning=True)
+        Chain._message_store = self.messagestore
         if history_file:
             self.messagestore.load()
 
@@ -150,14 +160,12 @@ class ChainCLI(CLI):
         """
         Send a message.
         """
-        # This is the default argument. Should suppress this if inherited class has its own "" argument.
+        # This is the default argument. Override in subclasses if needed.
         query = " ".join(param)
-        self.messagestore.add_new(role="user", content=query)
         prompt = Prompt(query)
         chain = Chain(prompt=prompt, model=self.preferred_model)
         response = chain.run()
         if response.content:
-            self.messagestore.add_new(role="assistant", content=str(response.content))
             if self.raw:
                 print(response)
             else:
@@ -233,3 +241,4 @@ class ChainCLI(CLI):
 if __name__ == "__main__":
     c = ChainCLI(name="Chain Chat", history_file=".cli_history.log")
     c.run()
+
