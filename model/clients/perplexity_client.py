@@ -8,23 +8,12 @@ For this reason, we define a Pydantic class as our framework is fine with BaseMo
 
 from Chain.model.clients.client import Client, Usage
 from Chain.model.clients.load_env import load_env
+from Chain.model.clients.perplexity_content import PerplexityContent, PerplexityCitation
 from Chain.request.request import Request
-from openai import OpenAI, AsyncOpenAI, Stream
+from openai import OpenAI, AsyncOpenAI
 from openai.types.chat.chat_completion import ChatCompletion
-from typing import Optional
 from pydantic import BaseModel
 import instructor, tiktoken
-
-
-class PerplexityCitation(BaseModel):
-    title: str
-    url: str
-    date: Optional[str]
-
-
-class PerplexityContent(BaseModel):
-    text: str
-    citations: list[PerplexityCitation]
 
 
 class PerplexityClient(Client):
