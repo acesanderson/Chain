@@ -5,9 +5,7 @@ Add more commands by extending the commands list + defining a "command_" method.
 TODO:
 - more commands
     - [x] dynamic registration of new command methods
-    - allow getting a message from history
-    - allow branching from somewhere in history
-    - allow pruning of history
+    - allow getting a message from history allow branching from somewhere in history allow pruning of history
     - allow saving history, saving a message
     - allow capturing screenshots for vision-based queries
 - Leviathan extension
@@ -27,6 +25,7 @@ from Chain.chain.chain import Chain
 from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore
 from Chain.message.textmessage import TextMessage
+from Chain.message.message import Message
 from Chain.message.messages import Messages
 from Chain.cache.cache import ChainCache
 from Chain.logs.logging_config import get_logger
@@ -42,7 +41,9 @@ import sys, inspect, readline  # Enables completion in the console
 dir_path = Path(__file__).parent
 _ = readline.get_current_history_length() # Gaming the type hints.
 logger = get_logger(__name__) # Our logger
-Chain._console = Console() # Allow rich text for query progress.
+console = Console()
+Chain._console = console
+Model._console = console
 Model._chain_cache = ChainCache(db_path = dir_path / ".chat_cache.db") # Caching set up.
 Chain._message_store = MessageStore(pruning=True) # Non-persistant, but we should prune
 
@@ -249,7 +250,7 @@ class Chat:
         """
         Takes either a string or a list of Message objects.
         """
-        response = str(self.model.query(query_input, verbose=True))
+        response = str(self.model.query(query_input, verbose="v"))
         if self.messagestore:
             self.messagestore.add_new(role="assistant", content=str(response))
         return response
@@ -285,18 +286,15 @@ class Chat:
                     else:
                         # Process query
                         try:
-                            with self.console.status(
-                                "[green]Thinking[/green]...", spinner="dots"
-                            ):
-                                if self.messagestore:
-                                    self.messagestore.add_new(
-                                        role="user", content=user_input
-                                    )
-                                    response = self.query_model(self.messagestore.messages)
-                                else:
-                                    response = self.query_model(
-                                        [TextMessage(role="user", content=user_input)]
-                                    )
+                            if self.messagestore:
+                                self.messagestore.add_new(
+                                    role="user", content=user_input
+                                )
+                                response = self.query_model(self.messagestore.messages)
+                            else:
+                                response = self.query_model(
+                                    [TextMessage(role="user", content=user_input)]
+                                )
                             self.console.print(
                                 Markdown(str(response) + "\n"), style="blue"
                             )
