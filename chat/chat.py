@@ -26,9 +26,8 @@ TODO:
 from Chain.chain.chain import Chain
 from Chain.model.model import Model
 from Chain.message.messagestore import MessageStore
-from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
-from Chain.message.textmessage import Message
 from Chain.cache.cache import ChainCache
 from Chain.logs.logging_config import get_logger
 from rich.console import Console
@@ -68,7 +67,7 @@ class Chat:
             self.console = console
         self.messagestore = messagestore
         self.welcome_message = "[green]Hello! Type /exit to exit.[/green]"
-        self.system_message: Message | None = None
+        self.system_message: TextMessage | None = None
         self.commands = self.get_commands()
         self.log_file: str | Path = ""  # Off by default, but can be initialized.
 
@@ -293,10 +292,10 @@ class Chat:
                                     self.messagestore.add_new(
                                         role="user", content=user_input
                                     )
-                                    response = self.query_model(self.messagestore)
+                                    response = self.query_model(self.messagestore.messages)
                                 else:
                                     response = self.query_model(
-                                        [Message(role="user", content=user_input)]
+                                        [TextMessage(role="user", content=user_input)]
                                     )
                             self.console.print(
                                 Markdown(str(response) + "\n"), style="blue"
@@ -321,7 +320,7 @@ class Chat:
 
 
 def main():
-    c = Chat(Model("gpt"))
+    c = Chat(Model("llama3.1:latest"))
     c.chat()
 
 
