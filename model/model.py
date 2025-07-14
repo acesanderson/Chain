@@ -1,35 +1,35 @@
-from Chain.cache.cache import ChainCache
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
-from Chain.parser.parser import Parser
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
 from Chain.request.request import Request
 from Chain.result.result import ChainResult
-from Chain.result.response import Response
 from Chain.result.error import ChainError
-from Chain.logs.logging_config import get_logger, configure_logging
+from Chain.logs.logging_config import get_logger
 from pydantic import ValidationError, BaseModel
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from pathlib import Path
 from time import time
 import importlib
-from openai import Stream
-from anthropic import Stream as AnthropicStream
-from rich.console import Console
 
+# Load only if type checking
+if TYPE_CHECKING:
+    from openai import Stream
+    from anthropic import Stream as AnthropicStream
+    from rich.console import Console
+    from pydantic import BaseModel
+    from Chain.cache.cache import ChainCache
+
+
+# Constants
 dir_path = Path(__file__).resolve().parent
-
-import logging
-
-# logger = configure_logging(level=logging.INFO)
 logger = get_logger(__name__)
 
 
 class Model:
     # Class singletons
     _clients = {}  # Store lazy-loaded client instances at the class level
-    _chain_cache: Optional[ChainCache] = (
+    _chain_cache: Optional["ChainCache"] = (
         None  # If you want to add a cache, add it at class level as a singleton.
     )
     _console: Optional["Console"] = (
@@ -141,7 +141,7 @@ class Model:
         self,
         # Standard parameters
         query_input: str | list | Message | None = None,
-        response_model: type[BaseModel] | None = None,
+        response_model: type["BaseModel"] | None = None,
         cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,
@@ -154,7 +154,7 @@ class Model:
         # Options for debugging
         return_request: bool = False,
         return_error: bool = False,
-    ) -> ChainResult | Request | Stream | AnthropicStream:
+    ) -> "ChainResult | Request | Stream | AnthropicStream":
         try:
             # Construct Request object if not provided (majority of cases)
             if not request:
@@ -216,6 +216,9 @@ class Model:
             logger.info(f"Query executed in {stop_time - start_time:.2f} seconds.")
 
             # Handle streaming responses
+            from Chain.model.clients.openai_client import Stream
+            from Chain.model.clients.anthropic_client import Stream as AnthropicStream
+
             if isinstance(result, Stream) or isinstance(result, AnthropicStream):
                 if stream:
                     logger.info("Returning streaming response.")
@@ -231,6 +234,9 @@ class Model:
                     )
 
             # Construct Response object
+            from Chain.result.response import Response
+            from pydantic import BaseModel
+
             if isinstance(result, Response):
                 logger.info("Returning existing Response object.")
                 response = result
