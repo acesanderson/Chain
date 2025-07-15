@@ -102,7 +102,16 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         We want to pass as string when possible.
         Allow json objects (dict) to be pretty printed.
         """
-        return str(self.content) if self.content is not None else ""
+        content = self.content
+        if content == None or content == "":
+            return ""
+        if content.__class__.__name__ == "PerplexityContent":
+            output = content.text + "\n\n"
+            for index, citation in enumerate(content.citations):
+                output += f"{index+1}. - [{citation.title}]({citation.url})\n"
+        else:
+            output = content
+        return output
 
     def __len__(self):
         """
