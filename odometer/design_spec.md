@@ -29,8 +29,6 @@ Token data is emitted from `Response.__init__()` when successful queries complet
 
 ### Three-Tier Tracking System
 
-#### 1. Conversation Odometer
-
 - **Scope**: Individual MessageStore instances
 - **Lifecycle**: Created/destroyed with MessageStore
 - **Purpose**: Real-time context window monitoring
