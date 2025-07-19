@@ -16,8 +16,9 @@ from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
 from Chain.message.messagestore import MessageStore
 from Chain.progress.verbosity import Verbosity
-from Chain.logs.logging_config import configure_logging, logging
+from Chain.logs.logging_config import configure_logging
 from typing import TYPE_CHECKING, Optional
+import logging
 
 # Our TYPE_CHECKING imports, these ONLY load for IDEs, so you can still lazy load in production.
 if TYPE_CHECKING:
@@ -29,6 +30,7 @@ logger = configure_logging(
     # level=logging.DEBUG,
     level=logging.CRITICAL,
 )
+
 
 class Chain:
     """
@@ -126,9 +128,7 @@ class Chain:
             messages = Chain._message_store.messages
         # Coerce messages and query_input into a list of Message objects
         logger.info("Coercing messages and prompt into a list of Message objects.")
-        messages = self._coerce_messages_and_prompt(
-            prompt=prompt, messages=messages
-        )
+        messages = self._coerce_messages_and_prompt(prompt=prompt, messages=messages)
         assert len(messages) > 0, "No messages provided, cannot run chain."
         # Route input; if string, if message
         logger.info("Querying model.")
@@ -136,7 +136,7 @@ class Chain:
         user_message = messages[-1]
         result = self.model.query(
             query_input=messages,
-            response_model = self.parser.pydantic_model if self.parser else None,
+            response_model=self.parser.pydantic_model if self.parser else None,
             verbose=verbose,
             cache=cache,
             index=index,
@@ -151,12 +151,16 @@ class Chain:
                 Chain._message_store.append(result.message)
             elif isinstance(result, ChainError):
                 logger.error("ChainError encountered, not saving to message store.")
-                Chain._message_store.query_failed() # Remove the last message if it was a query failure.
+                Chain._message_store.query_failed()  # Remove the last message if it was a query failure.
         if not isinstance(result, ChainResult):
-            logger.warning("Result is not a Response or ChainError: type {type(result)}.")
+            logger.warning(
+                "Result is not a Response or ChainError: type {type(result)}."
+            )
         return result
 
-    def _coerce_messages_and_prompt(self, prompt: str | Message | None, messages: Messages | list[Message] | None) -> list[Message] | Messages:
+    def _coerce_messages_and_prompt(
+        self, prompt: str | Message | None, messages: Messages | list[Message] | None
+    ) -> list[Message] | Messages:
         """
         We want a list of messages to submit to Model.query.
         If we have a prompt, we want to convert it into a user message and append it to messages.
@@ -177,4 +181,3 @@ class Chain:
             raise ValueError(f"Unsupported query_input type: {type(query_input)}")
 
         return messages
-

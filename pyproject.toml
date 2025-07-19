@@ -11,7 +11,7 @@ requires-python = ">=3.12"
 dependencies = [
     # Core dependencies
     "pydantic",
-    "jinja2", 
+    "jinja2",
     "rich",
     "tiktoken",
     "instructor",
@@ -19,7 +19,7 @@ dependencies = [
     "python-dotenv",
     # LLM Provider SDKs
     "openai",
-    "anthropic", 
+    "anthropic",
     "google-generativeai",
     "ollama",
     # Audio/Image Processing
@@ -27,7 +27,7 @@ dependencies = [
     "pillow",
     "soundfile",
     # Machine Learning/AI
-    "torch==2.7.1",  # Pinned for your GPU setup
+    "torch==2.7.1", # Pinned for your GPU setup
     "transformers",
     "huggingface_hub",
     # Web/HTTP
@@ -36,6 +36,8 @@ dependencies = [
     "uvicorn",
     # Data Processing
     "numpy",
+    "ruff>=0.12.4",
+    "ty>=0.0.1a15",
 ]
 
 [project.optional-dependencies]

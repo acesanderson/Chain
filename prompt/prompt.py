@@ -4,6 +4,10 @@ Prompt class -- coordinates templates, input variables, and rendering.
 
 from jinja2 import Environment, StrictUndefined, meta
 from Chain.logs.logging_config import get_logger
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logger = get_logger(__name__)
 
@@ -42,6 +46,40 @@ class Prompt:
         """
         parsed_content = env.parse(self.prompt_string)
         return meta.find_undeclared_variables(parsed_content)
+
+    @classmethod
+    def from_file(cls, filename: "str | Path") -> "Prompt":
+        """
+        Creates a Prompt object from a file containing the prompt string.
+        """
+        from pathlib import Path
+
+        # Coerce to Path object
+        if not isinstance(filename, str):
+            try:
+                filename = Path(filename)
+            except TypeError as e:
+                logger.error(f"Invalid filename type: {type(filename)}")
+                raise e
+
+        assert isinstance(filename, Path), "filename must be a Path object"
+
+        # Confirm file exists
+        if not filename.exists():
+            raise FileNotFoundError(f"Prompt file {filename} does not exist.")
+
+        # Confirm file is .jinja2 or .jinja
+        if filename.suffix not in {".jinja2", ".jinja"}:
+            raise ValueError(
+                f"Prompt file {filename} must be a .jinja2 or .jinja file."
+            )
+
+        # Read the file content
+        with filename.open("r", encoding="utf-8") as file:
+            prompt_string = file.read()
+
+        # Create and return a Prompt object
+        return cls(prompt_string)
 
     def __repr__(self):
         attributes = ", ".join(
