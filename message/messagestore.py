@@ -27,15 +27,16 @@ import os
 class MessageStore(Messages):
     """
     A Messages object with automatic persistence.
-    
-    ⚠️  MUTATION WARNING: All list operations (append, extend, etc.) 
+
+    ⚠️  MUTATION WARNING: All list operations (append, extend, etc.)
         will automatically persist to database if history_file was provided.
-    
+
     Side Effects:
         - append() → database write (if persistent=True)
         - extend() → multiple database writes
         - clear() → database truncation
     """
+
     # Add Pydantic fields (Messages inherits from BaseModel)
     console: Optional[Console] = Field(default=None, exclude=True, repr=False)
     auto_save: bool = Field(default=True, exclude=True)
@@ -195,7 +196,9 @@ class MessageStore(Messages):
         This adds two messages: one for the user and one for the assistant.
         """
         if not isinstance(response.params.messages[-1], Message):
-            raise ValueError("Last message in params.messages must be a Message object.")
+            raise ValueError(
+                "Last message in params.messages must be a Message object."
+            )
         last_user_message = response.params.messages[-1]  # Last user message
         if last_user_message.role != "user":
             raise ValueError("Last message in params.message must be a user message.")
@@ -205,7 +208,6 @@ class MessageStore(Messages):
         # Add the messages
         self.append(last_user_message)
         self.append(last_assistant_message)
-
 
     def write_to_log(self, item: str | BaseModel) -> None:
         """
@@ -346,7 +348,7 @@ class MessageStore(Messages):
             if message:
                 content = str(message.content)[:50].replace("\n", " ")
                 self.console.print(
-                    f"[green]{index+1}.[/green] [bold white]{message.role}:[/bold white] [yellow]{content}[/yellow]"
+                    f"[green]{index + 1}.[/green] [bold white]{message.role}:[/bold white] [yellow]{content}[/yellow]"
                 )
 
     def clear_logs(self):
