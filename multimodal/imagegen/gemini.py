@@ -2,8 +2,7 @@ from Chain.message.imagemessage import ImageMessage
 from openai import OpenAI
 import os
 
-gemini_api_key = os.getenv("GEMINI_API_KEY")
-assert api_key
+gemini_api_key = os.getenv("GOOGLE_API_KEY")
 
 client = OpenAI(
     api_key=gemini_api_key,

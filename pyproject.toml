@@ -38,6 +38,7 @@ dependencies = [
     "numpy",
     "ruff>=0.12.4",
     "ty>=0.0.1a15",
+    "diffusers>=0.34.0",
 ]
 
 [project.optional-dependencies]
