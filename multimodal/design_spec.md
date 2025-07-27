@@ -2,15 +2,15 @@
 
 ## Overview
 
-This specification extends the Chain framework to support image generation and text-to-speech (TTS) capabilities through the existing client architecture. The implementation maintains consistency with current patterns while adding multimodal generation support for OpenAI, Google, and Ollama providers.
+This specification extends the Chain framework to support image generation and text-to-speech (TTS) capabilities through the existing client architecture. The implementation maintains consistency with current patterns while adding multimodal generation support for OpenAI, Google, and HuggingFace providers.
 
 ## Core Design Principles
 
-1. **Extend existing clients** rather than creating separate multimodal clients
-2. **Leverage existing Request/Response flow** with new request types
-3. **Maintain provider-agnostic interface** through Request class orchestration
-4. **Auto-generate appropriate Message objects** (ImageMessage/AudioMessage)
-5. **Preserve caching and serialization** capabilities
+[x] 1. **Extend existing clients** rather than creating separate multimodal clients
+[x] 2. **Leverage existing Request/Response flow** with new request types
+[x] 3. **Maintain provider-agnostic interface** through Request class orchestration
+[x] 4. **Auto-generate appropriate Message objects** (ImageMessage/AudioMessage)
+[x] 5. **Preserve caching and serialization** capabilities
 
 ## Implementation Requirements
 
@@ -20,36 +20,8 @@ This specification extends the Chain framework to support image generation and t
 ```python
 class Request(BaseModel, ...):
     # NEW: Request type discrimination
-    request_type: Literal["text", "image_gen", "audio_gen"] = "text"
-    
-    # NEW: Generation-specific content
-    generation_prompt: Optional[str] = None  # For image generation
-    tts_text: Optional[str] = None  # For TTS input
+    output_type: Literal["text", "image", "audio"]
 ```
-
-#### New Constructor Methods
-```python
-@classmethod
-def for_image_generation(
-    cls, 
-    model: str, 
-    prompt: str,
-    client_params: Optional[dict] = None,
-    **kwargs
-) -> "Request":
-    """Create Request for image generation"""
-
-@classmethod  
-def for_tts(
-    cls,
-    model: str,
-    text: str,
-    client_params: Optional[dict] = None,
-    **kwargs
-) -> "Request":
-    """Create Request for TTS generation"""
-```
-
 #### Updated Format Methods
 Extend existing `to_openai()`, `to_google()`, `to_ollama()` methods to handle generation request types with provider-specific parameter mapping.
 
@@ -82,7 +54,7 @@ class GoogleParams(OpenAIParams):
     # (Google image generation parameters TBD based on actual API)
 ```
 
-#### OllamaParams
+#### HuggingFaceParams
 ```python
 class OllamaParams(OpenAIParams):
     # Inherits OpenAI params for compatibility
@@ -91,21 +63,12 @@ class OllamaParams(OpenAIParams):
 
 ### 3. Client Method Extensions
 
-#### New Methods for All Clients
-```python
-def generate_image(self, request: Request) -> tuple[ImageMessage, Usage]:
-    """Generate image from text prompt"""
-
-def generate_speech(self, request: Request) -> tuple[AudioMessage, Usage]:
-    """Generate speech from text input"""
-```
-
 #### Implementation Pattern
-- Validate `request.request_type` matches method
-- Convert request to provider-specific format
-- Call provider API
-- Create appropriate Message object with generated content
-- Return `(Message, Usage)` tuple
+[ ] - Validate model capabilities vs. modelspec
+[ ] - Convert request to provider-specific format
+[ ] - Call provider API
+[x] - Create appropriate Message object with generated content
+[x] - Return `(Message, Usage)` tuple
 
 ### 4. Model Class Integration
 
@@ -124,10 +87,27 @@ response = model.query(request=request)
 
 #### Future Enhancement (TBD)
 ```python
+# Currently, you set "output_type" to either "audio" or "image" for tts/imagegen (query_input string is the prompt, naturally)
+model = Model("flux1")
+response = model.query(query_input = "a red car", output_type = "image")
+response.message.display()
+
 # Convenience methods on Model class
+## .generate_image
 model = Model("dall-e-3")
 response = model.generate_image("a red car", size="1024x1024")
+response.message.display()
+
+## .generate_audio
+model = Model("openai/whisper-base")
+response = model.generate_audio("i am the very model of a modern major general")
+response.message.play()
+
+# Convenience methods on Response class
+response.play()
+response.display()
 ```
+
 
 ### 5. Provider-Specific Implementation Notes
 
@@ -141,9 +121,12 @@ response = model.generate_image("a red car", size="1024x1024")
 - **Image Models**: (TBD - likely through Gemini models)
 - **Integration**: Through existing Google client using OpenAI SDK compatibility
 
-#### Ollama
-- **Models**: (TBD - depends on pulled local models with generation capabilities)
-- **Integration**: Through existing Ollama client using OpenAI SDK compatibility
+#### HuggingFace
+- **Models**: openai/whisper-base, others
+- **Integration**: Through HuggingFaceClient which will be an interesting mess of custom pipelines
+
+#### Others
+- **Find on GitHub**
 
 ### 6. Response Integration
 
@@ -155,16 +138,6 @@ No changes required to caching system. Generated content will be cached through 
 - Request cache keys include generation parameters
 - ImageMessage/AudioMessage serialization already implemented
 - Cache validation works through existing hash comparison
-
-## Implementation Order
-
-1. **Extend ClientParams classes** with generation parameters
-2. **Add Request class fields and constructors** for generation types  
-3. **Update Request format methods** (to_openai, to_google, to_ollama)
-4. **Implement client generation methods** starting with OpenAI
-5. **Update Model.query()** to handle generation request types
-6. **Test integration** with existing Response/caching systems
-7. **Extend to Google and Ollama** clients
 
 ## Validation & Error Handling
 
