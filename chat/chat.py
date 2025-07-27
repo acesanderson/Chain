@@ -37,15 +37,6 @@ from typing import Callable, Optional
 from pathlib import Path
 import sys, inspect, readline  # Enables completion in the console
 
-# Constants
-dir_path = Path(__file__).parent
-_ = readline.get_current_history_length() # Gaming the type hints.
-logger = get_logger(__name__) # Our logger
-console = Console()
-Chain._console = console
-Model._console = console
-Model._chain_cache = ChainCache(db_path = dir_path / ".chat_cache.db") # Caching set up.
-Chain._message_store = MessageStore(pruning=True) # Non-persistant, but we should prune
 
 class Chat:
     """
@@ -318,6 +309,20 @@ class Chat:
 
 
 def main():
+    # Constants
+    dir_path = Path(__file__).parent
+    _ = readline.get_current_history_length()  # Gaming the type hints.
+    logger = get_logger(__name__)  # Our logger
+    console = Console()
+    Chain._console = console
+    Model._console = console
+    Model._chain_cache = ChainCache(
+        db_path=dir_path / ".chat_cache.db"
+    )  # Caching set up.
+    Chain._message_store = MessageStore(
+        pruning=True
+    )  # Non-persistant, but we should prune
+
     c = Chat(Model("llama3.1:latest"))
     c.chat()
 

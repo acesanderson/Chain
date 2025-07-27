@@ -1,11 +1,11 @@
 from Chain.message.message import Message
-from Chain.message.textmessage import TextMessage
 from Chain.progress.wrappers import progress_display
 from Chain.progress.verbosity import Verbosity
 from Chain.request.request import Request
 from Chain.result.result import ChainResult
 from Chain.result.error import ChainError
 from Chain.logs.logging_config import get_logger
+from Chain.request.outputtype import OutputType
 from pydantic import ValidationError, BaseModel
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
@@ -116,6 +116,8 @@ class Model:
             return "groq", "GroqClientSync"
         elif model in model_list["perplexity"]:
             return "perplexity", "PerplexityClientSync"
+        elif model in model_list["huggingface"]:
+            return "huggingface", "HuggingFaceClientSync"
         else:
             raise ValueError(f"Model {model} not found in models")
 
@@ -145,6 +147,7 @@ class Model:
         cache=True,
         temperature: Optional[float] = None,
         stream: bool = False,
+        output_type: OutputType = "text",
         # For progress reporting decorator
         verbose: Verbosity = Verbosity.PROGRESS,
         index: int = 0,
@@ -177,9 +180,9 @@ class Model:
                 else:
                     request = Request(**query_args)
 
-            assert isinstance(
-                request, Request
-            ), f"Request must be an instance of Request or None, got {type(request)}"
+            assert isinstance(request, Request), (
+                f"Request must be an instance of Request or None, got {type(request)}"
+            )
 
             # For debug, return Request if requested
             if return_request:
@@ -244,7 +247,35 @@ class Model:
                 logger.info(
                     "Constructing Response object from result string or BaseModel."
                 )
-                assistant_message = TextMessage(role="assistant", content=result)
+                # Construct relevant Message type per requested output_type
+                match output_type:
+                    case "text":  # result is a string
+                        from Chain.message.textmessage import TextMessage
+
+                        assistant_message = TextMessage(
+                            role="assistant", content=result
+                        )
+                    case "image":  # result is a base64 string of an image
+                        assert isinstance(result, str), (
+                            "Image generation request should not return a BaseModel; we need base64 string."
+                        )
+                        from Chain.message.imagemessage import ImageMessage
+
+                        assistant_message = ImageMessage.from_base64(
+                            role="assistant", text_content="", image_content=result
+                        )
+                    case "audio":  # result is a base64 string of an audio
+                        assert isinstance(result, str), (
+                            "Audio generation (TTS) request should not return a BaseModel; we need base64 string."
+                        )
+                        from Chain.message.audiomessage import AudioMessage
+
+                        assistant_message = AudioMessage.from_base64(
+                            role="assistant",
+                            audio_content=result,
+                            text_content="",
+                            format="mp3",
+                        )
 
                 response = Response(
                     message=assistant_message,

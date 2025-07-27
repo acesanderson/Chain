@@ -17,8 +17,8 @@ from Chain.request.clientparams import (
     GoogleParams,
     PerplexityParams,
 )
+from Chain.request.outputtype import OutputType
 from Chain.model.models.provider import Provider
-from Chain.parser.parser import Parser
 
 
 class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
@@ -28,6 +28,9 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
     """
 
     # Core parameters
+    output_type: OutputType = Field(
+        default="text", description="Desired output: 'text', 'image', 'audio'"
+    )
     model: str = Field(..., description="The model identifier to use for inference.")
     messages: Messages | list[Message] = Field(
         default_factory=list,
@@ -330,9 +333,9 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         We use OpenAI spec with OpenAI, Gemini, Ollama, and Perplexity clients.
         """
         if self.client_params:
-            assert OpenAIParams.model_validate(
-                self.client_params
-            ), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+            assert OpenAIParams.model_validate(self.client_params), (
+                f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+            )
 
         # Convert messages to OpenAI format based on the provider
         match self.provider:
@@ -348,9 +351,9 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
                 raise ValueError(
                     f"Unsupported provider '{self.provider}' for OpenAI spec conversion."
                 )
-        assert (
-            len(converted_messages) > 0
-        ), "converted_messages is empty. Unable to convert to OpenAI spec."
+        assert len(converted_messages) > 0, (
+            "converted_messages is empty. Unable to convert to OpenAI spec."
+        )
 
         base_params = {
             "model": self.model,
@@ -378,9 +381,9 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     def to_openai(self) -> dict:
         if self.client_params:
-            assert OpenAIParams.model_validate(
-                self.client_params
-            ), f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+            assert OpenAIParams.model_validate(self.client_params), (
+                f"OpenAIParams expected for OpenAI client, not {type(self.client_params)}."
+            )
         return self._to_openai_spec()
 
     def to_ollama(self) -> dict:
@@ -391,9 +394,9 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         from Chain.model.models.modelstore import ModelStore
 
         if self.client_params:
-            assert OllamaParams.model_validate(
-                self.client_params
-            ), f"OllamaParams expected for Ollama client, not {type(self.client_params)}."
+            assert OllamaParams.model_validate(self.client_params), (
+                f"OllamaParams expected for Ollama client, not {type(self.client_params)}."
+            )
         # Set num_ctx to the maximum context window for the model.
         num_ctx = ModelStore.get_num_ctx(self.model)
         if num_ctx is None:
@@ -415,9 +418,9 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         3. No response_model in the API call params
         """
         if self.client_params:
-            assert AnthropicParams.model_validate(
-                self.client_params
-            ), f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
+            assert AnthropicParams.model_validate(self.client_params), (
+                f"AnthropicParams expected for Anthropic client, not {type(self.client_params)}."
+            )
         # Start with converted messages
         converted_messages = self.messages.to_anthropic()  # type: ignore
 
@@ -478,18 +481,18 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
 
     def to_google(self) -> dict:
         if self.client_params:
-            assert GoogleParams.model_validate(
-                self.client_params
-            ), f"GoogleParams expected for Google client, not {type(self.client_params)}."
+            assert GoogleParams.model_validate(self.client_params), (
+                f"GoogleParams expected for Google client, not {type(self.client_params)}."
+            )
             # Remove "frequency_penalty" key if it exists, as Google does not use it (unlike OpenAI).
             self.client_params.pop("frequency_penalty", None)
         return self._to_openai_spec()
 
     def to_perplexity(self) -> dict:
         if self.client_params:
-            assert PerplexityParams.model_validate(
-                self.client_params
-            ), f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
+            assert PerplexityParams.model_validate(self.client_params), (
+                f"PerplexityParams expected for Perplexity client, not {type(self.client_params)}."
+            )
             # Remove "stop" key if it exists, as Perplexity does not use it (unlike OpenAI).
             self.client_params.pop("stop", None)
         return self._to_openai_spec()

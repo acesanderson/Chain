@@ -47,22 +47,27 @@ class OpenAIAudioMessage(BaseModel):
     Gemini AudioMessage should have a single AudioContent and a single TextContent object.
     NOTE: since we are using the OpenAI SDK, we use OpenAITextContent for text.
     """
+
     role: Role = Field(default="user", description="The role of the message sender.")
     content: list[OpenAIAudioContent | OpenAITextContent]  # type: ignore
+
 
 class AudioMessage(Message):
     """
     AudioMessage is a message that contains audio content.
     It can be created from an audio file and contains both the audio content in base64 format
     """
-    message_type: MessageType = Field(default = "audio", exclude=True, repr=False)
+
+    message_type: MessageType = Field(default="audio", exclude=True, repr=False)
     content: list[str] = Field(default_factory=list)
     text_content: str = Field(exclude=True, repr=False)
-    audio_content: str = Field(exclude=True, repr=False) 
+    audio_content: str = Field(exclude=True, repr=False)
     format: Literal["wav", "mp3"] = Field(exclude=True, repr=False)
-    
+
     @classmethod
-    def from_audio_file(cls, audio_file: str | Path, text_content: str, role: str = "user") -> "AudioMessage":
+    def from_audio_file(
+        cls, audio_file: str | Path, text_content: str, role: str = "user"
+    ) -> "AudioMessage":
         """
         Create AudioMessage from audio file.
 
@@ -75,16 +80,49 @@ class AudioMessage(Message):
         audio_file = Path(audio_file)
         if not audio_file.exists():
             raise FileNotFoundError(f"Audio file {audio_file} does not exist.")
-        
+
         audio_content = cls._convert_audio_to_base64(audio_file)
         format = audio_file.suffix.lower()[1:]  # "mp3" or "wav"
-        
+
         return cls(
             role=role,
             content=[audio_content, text_content],
             text_content=text_content,
             audio_content=audio_content,
-            format=format
+            format=format,
+        )
+
+    @classmethod
+    def from_base64(
+        cls,
+        audio_content: str,
+        text_content: str,
+        format: str = "mp3",
+        role: str = "user",
+    ) -> "AudioMessage":
+        """
+        Create ImageMessage from base64 image data.
+
+        Args:
+            audio_content: Base64-encoded audio data
+            text_content: Text prompt/question about the audio (empty string for tts)
+            format: either "mp3" or "wav"
+            role: Message role (default: "user")
+
+        Returns:
+            AudioMessage with processed audio content.
+        """
+        # Validate base64
+        if not is_base64_simple(audio_content):
+            raise ValueError("Invalid base64 image data")
+        # TBD: optional conversion logic
+        # Construct the AudioMessage object
+        return cls(
+            text_content=text_content,
+            audio_content=audio_content,
+            format=format,
+            role=role,
+            content=[audio_content, text_content],
         )
 
     @classmethod
@@ -112,15 +150,15 @@ class AudioMessage(Message):
 
         # Decode base64 to bytes
         audio_bytes = base64.b64decode(self.audio_content)
-        
+
         # Create a file-like object from bytes
         audio_buffer = io.BytesIO(audio_bytes)
-        
+
         # Load audio from the buffer
         audio = AudioSegment.from_file(audio_buffer, format=self.format)
-        
+
         # Play the audio
-        play(audio)    # Serialization methods
+        play(audio)  # Serialization methods
 
     @override
     def to_cache_dict(self) -> dict:
@@ -133,7 +171,7 @@ class AudioMessage(Message):
             "content": self.content,
             "text_content": self.text_content,
             "audio_content": self.audio_content,
-            "format": self.format
+            "format": self.format,
         }
 
     @override
@@ -147,7 +185,7 @@ class AudioMessage(Message):
             content=cache_dict["content"],
             text_content=cache_dict["text_content"],
             audio_content=cache_dict["audio_content"],
-            format=cache_dict["format"]
+            format=cache_dict["format"],
         )
 
     # API compatibility methods
@@ -185,4 +223,3 @@ class AudioMessage(Message):
     @override
     def to_perplexity(self):
         raise NotImplementedError("Perplexity API does not support audio messages.")
-
