@@ -45,15 +45,7 @@ class HuggingFaceClientSync(HuggingFaceClient):
         print("HUGGINGFACE REQUEST DETECTED")
         match request.output_type:
             case "image":
-                from Chain.tests.fixtures.sample_objects import sample_image_message
-
-                result = (
-                    sample_image_message.image_content
-                )  # base64 data of a generated image
-                usage = Usage(
-                    input_tokens=100, output_tokens=100
-                )  # dummy usage data, for now
-                return result, usage
+                return self._generate_image(request)
             case "audio":
                 from Chain.tests.fixtures.sample_objects import sample_audio_message
 
@@ -64,6 +56,44 @@ class HuggingFaceClientSync(HuggingFaceClient):
                     input_tokens=100, output_tokens=100
                 )  # dummy usage data, for now
                 return result, usage
+
+    def _generate_image(self, request):
+        import torch
+        from diffusers import FluxPipeline
+
+        # pipe = FluxPipeline.from_pretrained(
+        #     "black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16
+        # )
+        #
+
+        pipe = FluxPipeline.from_pretrained(
+            "Jlonge4/flux-dev-fp8", torch_dtype=torch.bfloat16
+        )
+
+        # pipe.enable_model_cpu_offload()  # save some VRAM by offloading the model to CPU. Remove this if you have enough GPU power
+        pipe.enable_sequential_cpu_offload()
+
+        image = pipe(
+            request.messages[-1].content,
+            height=1024,
+            width=1024,
+            guidance_scale=3.5,
+            num_inference_steps=50,
+            max_sequence_length=512,
+            generator=torch.Generator("cpu").manual_seed(0),
+        ).images[0]
+
+        import io
+        import base64
+
+        # Convert PIL image to base64 string
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")  # or "JPEG"
+        img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+
+        result = img_str
+        usage = Usage(input_tokens=0, output_tokens=0)
+        return result, usage
 
 
 """

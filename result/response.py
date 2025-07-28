@@ -91,6 +91,34 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         """
         return self.request.model
 
+    def display(self):
+        """
+        Display image if the latest message is an ImageMessage.
+        """
+        from Chain.message.imagemessage import ImageMessage
+
+        if isinstance(self.message, ImageMessage):
+            self.message.display()
+        else:
+            raise TypeError(
+                f"Cannot display message of type {self.message.__class__.__name__}. "
+                "Only ImageMessage can be displayed."
+            )
+
+    def play(self):
+        """
+        Play audio if the latest message is an AudioMessage.
+        """
+        from Chain.message.audiomessage import AudioMessage
+
+        if isinstance(self.message, AudioMessage):
+            self.message.play()
+        else:
+            raise TypeError(
+                f"Cannot play message of type {self.message.__class__.__name__}. "
+                "Only AudioMessage can be played."
+            )
+
     def __repr__(self):
         attributes = ", ".join(
             [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
@@ -108,7 +136,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         if content.__class__.__name__ == "PerplexityContent":
             output = content.text + "\n\n"
             for index, citation in enumerate(content.citations):
-                output += f"{index+1}. - [{citation.title}]({citation.url})\n"
+                output += f"{index + 1}. - [{citation.title}]({citation.url})\n"
         else:
             output = content
         return output

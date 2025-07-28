@@ -39,6 +39,8 @@ dependencies = [
     "ruff>=0.12.4",
     "ty>=0.0.1a15",
     "diffusers>=0.34.0",
+    "peft>=0.16.0",
+    "accelerator>=2024.9.13",
 ]
 
 [project.optional-dependencies]
