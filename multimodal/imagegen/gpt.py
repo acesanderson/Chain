@@ -33,3 +33,5 @@ image_message = ImageMessage.from_base64(
     mime_type="image/png",
     role="user",
 )
+
+image_message.display()

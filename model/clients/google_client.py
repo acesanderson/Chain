@@ -44,7 +44,7 @@ class GoogleClientSync(GoogleClient):
         client = instructor.from_openai(
             OpenAI(
                 api_key=self._get_api_key(),
-                base_url="https://generativelanguage.googleapis.com/v1beta/",
+                base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
             ),
             mode=instructor.Mode.JSON,
         )
@@ -54,6 +54,17 @@ class GoogleClientSync(GoogleClient):
         self,
         request: Request,
     ) -> tuple:
+        match request.output_type:
+            case "text":
+                return self._generate_text(request)
+            case "image":
+                return self._generate_image(request)
+            case "audio":
+                return self._generate_audio(request)
+            case _:
+                raise ValueError(f"Unsupported output type: {request.output_type}")
+
+    def _generate_text(self, request: Request) -> tuple:
         structured_response = None
         if request.response_model is not None:
             # We want the raw response from Google, so we use `create_with_completion`
@@ -85,6 +96,21 @@ class GoogleClientSync(GoogleClient):
             # Handle streaming response if needed
             return result, usage
 
+    def _generate_image(self, request: Request) -> tuple:
+        response = self._client.images.generate(
+            model=request.model,
+            prompt=request.messages[-1].content,
+            response_format="b64_json",
+            n=1,
+        )
+        result = response.data[0].b64_json
+        assert isinstance(result, str)
+        usage = Usage(input_tokens=0, output_tokens=0)
+        return result, usage
+
+    def _generate_audio(self, request: Request) -> tuple:
+        raise NotImplementedError
+
 
 class GoogleClientAsync(GoogleClient):
     def _initialize_client(self):
@@ -107,10 +133,11 @@ class GoogleClientAsync(GoogleClient):
         structured_response = None
         if request.response_model is not None:
             # We want the raw response from OpenAI, so we use `create_with_completion`
-            structured_response, result = (
-                await self._client.chat.completions.create_with_completion(
-                    **request.to_openai()
-                )
+            (
+                structured_response,
+                result,
+            ) = await self._client.chat.completions.create_with_completion(
+                **request.to_openai()
             )
         else:
             # Use the standard completion method

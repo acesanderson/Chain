@@ -21,10 +21,10 @@ assert isinstance(image_data, str)
 
 
 """
-        image_content: str,
-        text_content: str,
-        mime_type: str = "image/png",
-        role: str = "user"
+       image_content: str,
+       text_content: str,
+       mime_type: str = "image/png",
+       role: str = "user"
 """
 
 

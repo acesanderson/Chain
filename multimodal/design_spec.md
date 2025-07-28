@@ -12,6 +12,10 @@ This specification extends the Chain framework to support image generation and t
 [x] 4. **Auto-generate appropriate Message objects** (ImageMessage/AudioMessage)
 [x] 5. **Preserve caching and serialization** capabilities
 
+## CLI tools
+- `tts`
+- `imagegen`
+
 ## Implementation Requirements
 
 ### 1. Request Class Extensions
