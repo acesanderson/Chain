@@ -41,6 +41,7 @@ dependencies = [
     "diffusers>=0.34.0",
     "peft>=0.16.0",
     "accelerator>=2024.9.13",
+    "sentencepiece>=0.2.0",
 ]
 
 [project.optional-dependencies]
