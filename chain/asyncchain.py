@@ -1,6 +1,7 @@
 from Chain.chain.chain import Chain, Prompt
 from Chain.model.model_async import ModelAsync
 from Chain.result.response import Response
+from Chain.result.error import ChainError
 from Chain.logs.logging_config import configure_logging, logging
 from Chain.parser.parser import Parser
 from Chain.progress.verbosity import Verbosity
@@ -16,6 +17,7 @@ if TYPE_CHECKING:
 logger = configure_logging(
     level=logging.INFO,
 )
+
 
 class AsyncChain(Chain):
     _message_store: Optional[MessageStore] = None
@@ -123,9 +125,9 @@ class AsyncChain(Chain):
         responses = asyncio.run(_run_async())
 
         assert isinstance(responses, list), "Responses should be a list"
-        assert all(
-            [isinstance(r, Response) for r in responses]
-        ), "All results should be Response objects"
+        assert all([isinstance(r, Response) for r in responses]), (
+            "All results should be Response objects"
+        )
 
         return responses
 
@@ -163,7 +165,9 @@ class AsyncChain(Chain):
                     async with semaphore:
                         return await self.model.query_async(
                             query_input=prompt_string,
-                            response_model=self.parser.pydantic_model if self.parser else None,
+                            response_model=self.parser.pydantic_model
+                            if self.parser
+                            else None,
                             cache=cache,
                             verbose=verbose,
                             print_response=print_response,
@@ -171,7 +175,9 @@ class AsyncChain(Chain):
                 else:
                     return await self.model.query_async(
                         query_input=prompt_string,
-                        response_model=self.parser.pydantic_model if self.parser else None,
+                        response_model=self.parser.pydantic_model
+                        if self.parser
+                        else None,
                         cache=cache,
                         verbose=verbose,
                         print_response=print_response,
@@ -203,9 +209,9 @@ class AsyncChain(Chain):
         responses = await asyncio.gather(*coroutines, return_exceptions=True)
 
         assert isinstance(responses, list), "Responses should be a list"
-        assert all(
-            [isinstance(r, Response) for r in responses]
-        ), "All results should be Response objects"
+        assert all([isinstance(r, Response) for r in responses]), (
+            "All results should be Response objects"
+        )
 
         # Complete concurrent tracking
         if tracker:
@@ -251,7 +257,9 @@ class AsyncChain(Chain):
                 if semaphore:
                     async with semaphore:
                         return await self.model.query_async(
-                            query_input=self.prompt.render(input_variables=input_variables),
+                            query_input=self.prompt.render(
+                                input_variables=input_variables
+                            ),
                             response_model=parser.pydantic_model if parser else None,
                             cache=cache,
                             verbose=verbose,
@@ -260,7 +268,7 @@ class AsyncChain(Chain):
                 else:
                     return await self.model.query_async(
                         query_input=self.prompt.render(input_variables=input_variables),
-                        response_model = parser.pydantic_model if parser else None,
+                        response_model=parser.pydantic_model if parser else None,
                         cache=cache,
                         verbose=verbose,
                         print_response=print_response,
@@ -295,9 +303,13 @@ class AsyncChain(Chain):
         if tracker:
             tracker.emit_concurrent_complete()
 
-        assert all(
-            [isinstance(r, Response) for r in responses]
-        ), "All results should be Response objects"
+        if isinstance(responses[0], ChainError):
+            print(responses[0].info)
+            print(responses[0].detail)
+
+        assert all([isinstance(r, Response) for r in responses]), (
+            "All results should be Response objects"
+        )
         assert isinstance(responses, list) and all(
             [isinstance(r, Response) for r in responses]
         ), "All results should be Response objects"
