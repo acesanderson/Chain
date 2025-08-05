@@ -35,6 +35,41 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
         description="Timestamp of the response creation",
     )
 
+    def __init__(self, **data):
+        super().__init__(**data)
+        try:
+            self.emit_token_event()
+        except Exception as e:
+            logger.error(f"Failed to emit token event: {e}")
+
+    def emit_token_event(self):
+        """
+        Emit a TokenEvent to the OdometerRegistry if it exists.
+        """
+        from Chain.odometer.TokenEvent import TokenEvent
+        from Chain.model.model import Model
+
+        assert self.request.provider, "Provider must be set in the request"
+
+        # Get hostname
+        import socket
+
+        try:
+            host = socket.gethostname()
+        except Exception as e:
+            logger.error(f"Failed to get hostname: {e}")
+            host = "unknown"
+
+        event = TokenEvent(
+            provider=self.request.provider,
+            model=self.request.model,
+            input_tokens=self.input_tokens,
+            output_tokens=self.output_tokens,
+            timestamp=int(datetime.fromisoformat(self.timestamp).timestamp()),
+            host=host,
+        )
+        Model._odometer_registry.emit_token_event(event)
+
     def to_cache_dict(self) -> dict:
         """
         Serialize Response to cache-friendly dictionary.

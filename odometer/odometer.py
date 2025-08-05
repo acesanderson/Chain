@@ -4,53 +4,42 @@ conversation odomoter: saved in a sqlite3 file (similar naming convention to his
 persistent odometer: saved in postgres
 """
 
-from collections import DefaultDict
 from Chain.odometer.TokenEvent import TokenEvent
-from pathlib import Path
-from typing import override
-import sqlite3
+from pydantic import BaseModel, Field
+from datetime import datetime
 
-class Odometer:
 
-    # Init
-    def __init__(self):
-        """
-        Initialize clean database.
-        """
-        self.db = self._load_db()
-        ...
+class Odometer(BaseModel):
+    # Raw event storage
+    events: list[TokenEvent] = Field(default_factory=list)
 
-    # CRUD
-    def _load_db(self) -> "db":
-        """
-        session odometer: in memory sqlite3 (conn = sqlite3.connect(":memory:")
-        conversation odomoter: saved in a sqlite3 file (similar naming convention to history store)
-        persistent odometer: saved in postgres
-        """
-        ...
+    # Aggregated totals
+    total_input_tokens: int = Field(default=0)
+    total_output_tokens: int = Field(default=0)
+    total_tokens: int = Field(default=0)  # computed property or field
 
-    def _create_table(self):
-        """
-        CREATE TABLE token_usage (
-            id SERIAL PRIMARY KEY,
-            provider VARCHAR(50) NOT NULL,
-            model VARCHAR(100) NOT NULL,
-            input_tokens INTEGER NOT NULL,
-            output_tokens INTEGER NOT NULL,
-            timestamp BIGINT NOT NULL,
-            host VARCHAR(100) NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
+    # Provider-level aggregation
+    provider_totals: dict[str, dict[str, int]] = Field(default_factory=dict)
+    # Structure: {"openai": {"input": 1000, "output": 500, "total": 1500}}
 
-        CREATE INDEX idx_token_usage_timestamp ON token_usage(timestamp);
-        CREATE INDEX idx_token_usage_provider_model ON token_usage(provider, model);
-        """
-        ...
+    # Model-level aggregation
+    model_totals: dict[str, dict[str, int]] = Field(default_factory=dict)
+    # Structure: {"gpt-4o": {"input": 800, "output": 300, "total": 1100}}
 
-    def _ingest_token_event(self, token_event: TokenEvent):
-        """
-        Use self.db to ingest TokenEvent stats.
+    # Time-based aggregation
+    daily_totals: dict[str, dict[str, int]] = Field(default_factory=dict)
+    # Structure: {"2025-01-15": {"input": 500, "output": 200, "total": 700}}
 
+    # Session metadata
+    session_start: datetime = Field(default_factory=datetime.now)
+    last_updated: datetime = Field(default_factory=datetime.now)
+
+    # Host tracking (for multi-machine scenarios)
+    hosts: set[str] = Field(default_factory=set)
+
+    def record(self, token_event: TokenEvent):
+        """
+        Add a TokenEvent to the odometer and update all aggregates.
         provider: str
         model: str
         input_tokens: int
@@ -58,48 +47,165 @@ class Odometer:
         timestamp: int
         host: str
         """
-        ...
+        self.events.append(token_event)
+        self.total_input_tokens += token_event.input_tokens
+        self.total_output_tokens += token_event.output_tokens
+        self.total_tokens += token_event.input_tokens + token_event.output_tokens
+
+        # Update provider totals
+        if token_event.provider not in self.provider_totals:
+            self.provider_totals[token_event.provider] = {
+                "input": 0,
+                "output": 0,
+                "total": 0,
+            }
+        self.provider_totals[token_event.provider]["input"] += token_event.input_tokens
+        self.provider_totals[token_event.provider]["output"] += (
+            token_event.output_tokens
+        )
+        self.provider_totals[token_event.provider]["total"] += (
+            token_event.input_tokens + token_event.output_tokens
+        )
+
+        # Update model totals
+        if token_event.model not in self.model_totals:
+            self.model_totals[token_event.model] = {"input": 0, "output": 0, "total": 0}
+        self.model_totals[token_event.model]["input"] += token_event.input_tokens
+        self.model_totals[token_event.model]["output"] += token_event.output_tokens
+        self.model_totals[token_event.model]["total"] += (
+            token_event.input_tokens + token_event.output_tokens
+        )
+
+        # Update daily totals
+        date_str = datetime.fromtimestamp(token_event.timestamp).strftime("%Y-%m-%d")
+        if date_str not in self.daily_totals:
+            self.daily_totals[date_str] = {"input": 0, "output": 0, "total": 0}
+        self.daily_totals[date_str]["input"] += token_event.input_tokens
+        self.daily_totals[date_str]["output"] += token_event.output_tokens
+        self.daily_totals[date_str]["total"] += (
+            token_event.input_tokens + token_event.output_tokens
+        )
+
+        # Update hosts set
+        self.hosts.add(token_event.host)
 
     # Query methods
+    def get_provider_breakdown(self) -> dict[str, int]:
+        # Return provider totals
+        pass
+
+    def get_model_breakdown(self) -> dict[str, int]:
+        # Return model totals
+        pass
+
+    def get_daily_usage(self, date: str) -> dict[str, int]:
+        # Return usage for specific day
+        pass
+
+    def get_recent_activity(self, hours: int = 24) -> list[TokenEvent]:
+        # Filter events by timestamp
+        pass
+
     def stats(self):
         """
         Pretty-print the stats from the odometer.
         """
-        ...
+        from rich.console import Console
+        from rich.table import Table
+        from rich.text import Text
 
-class SessionOdometer(Odometer): ...
+        console = Console()
+        table = Table(title="Odometer Stats")
+        table.add_column("Category", justify="left", style="cyan")
+        table.add_column("Input Tokens", justify="right", style="green")
+        table.add_column("Output Tokens", justify="right", style="yellow")
+        table.add_column("Total Tokens", justify="right", style="magenta")
+        table.add_row(
+            "Total",
+            str(self.total_input_tokens),
+            str(self.total_output_tokens),
+            str(self.total_tokens),
+        )
+        for provider, totals in self.provider_totals.items():
+            table.add_row(
+                Text(provider, style="blue"),
+                str(totals["input"]),
+                str(totals["output"]),
+                str(totals["total"]),
+            )
+        for model, totals in self.model_totals.items():
+            table.add_row(
+                Text(model, style="blue"),
+                str(totals["input"]),
+                str(totals["output"]),
+                str(totals["total"]),
+            )
+        for date, totals in self.daily_totals.items():
+            table.add_row(
+                Text(date, style="blue"),
+                str(totals["input"]),
+                str(totals["output"]),
+                str(totals["total"]),
+            )
+        console.print(table)
+
+
+class ConversationOdometer(Odometer):
+    """
+    Attaches to ModelStore on instance level. (self.conversation_odometer)
+    Routed to by TokenEvent.host.
+    """
+
+    conversation_id: str = Field(
+        ..., description="Unique identifier for the conversation."
+    )
+    model_name: str = Field(
+        ...,
+        description="Name of the model used in this conversation. Assumes one model for entire MessageStore, since how else can you track context window?",
+    )
+    provider: str = Field(
+        ...,
+        description="Provider of the model used in this conversation (OpenAI, Anthropic, etc.).",
+    )
+    context_window: int = Field(
+        ..., description="Context window size of the model used in this conversation."
+    )
+    start_time: datetime = Field(
+        default_factory=datetime.now, description="Start time of the conversation."
+    )
+
+    # Methods:
+    def context_utilization(self) -> float:
+        # Calculate percentage of context window used
+        pass
+
+    def should_warn_context_limit(self) -> bool:
+        # Check if approaching context limits
+        pass
+
+
+class SessionOdometer(Odometer):
     """
     Attaches to Model as a singleton (._session_odomoter).
     Always loads by default.
-    Updates PersistentOdometer on app exit / ctrl-c / app failure.
     """
-    @override
-    def _load_db(self):
-        """
-        Use sqlite in-memory.
-        """
-        ...
 
-class ConversationOdometer(Odemeter) ...
-    """
-    Attaches to ModelStore on instance level. (self.conversation_odometer)
-    Automatically updates SessionOdometer.
-    """
-    @override
-    def _load_db(self):
-        """
-        Use sqlite lite in a .db file, follow conventions from MessageStore.
-        """
-        ...
 
-class PersistentOdometer(Odemeter) ...
+class PersistentOdometer(Odometer):
     """
-    Not attached to anything; summoned when user wants to query the time series or when app updates (on completion / exit / failure).
+    Handles long-term storage of odometer data.
     """
-    @override
-    def _load_db(self):
-        """
-        Use postgres.
-        """
-        ...
 
+    def sync_session_data(self, session_odometer: SessionOdometer):
+        """
+        Syncs the session odometer data to the persistent storage.
+        This method should be overridden to implement actual storage logic.
+        """
+        # Placeholder for actual sync logic
+        pass
+
+    def load(self):
+        """
+        Load historical events from persistent storage.
+        """
+        pass
