@@ -13,5 +13,6 @@
   "llama": "llama3.1:latest",
   "deepseek": "deepseek-chat",
   "qwen": "qwen3:14b",
-  "tts": "gemini-2.5-flash-preview-tts"
+  "tts": "gemini-2.5-flash-preview-tts",
+  "gpt-oss": "gpt-oss:latest"
 }

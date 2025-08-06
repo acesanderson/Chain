@@ -22,5 +22,5 @@
   "cogito:70b": 128000,
   "qwq:latest": 128000,
   "dolphin-mixtral:latest": 32768,
-  "qwen2.5:32b": 128000
+  "gpt-oss:latest": 128000
 }

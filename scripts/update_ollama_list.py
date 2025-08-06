@@ -15,7 +15,7 @@ console = console.Console(width=80)
 
 def main():
     console.print("[green]Updating Ollama Models...[/green]")
-    m = Model("llama3.1:latest")
+    m = Model("gpt-oss:20b")
     m._client.update_ollama_models()
     console.print(
         f"[green]Model list updated: [/green][yellow]{ModelStore.models()['ollama']}[/yellow]"
