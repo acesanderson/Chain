@@ -8,7 +8,7 @@
   "groq": "mixtral-8x7b-32768",
   "ollama": "mistral:latest",
   "haiku": "claude-3-5-haiku-20241022",
-  "opus": "claude-opus-4-20250514",
+  "opus": "claude-opus-4-1-20250805",
   "gpt-mini": "gpt-4o-mini",
   "llama": "llama3.1:latest",
   "deepseek": "deepseek-chat",

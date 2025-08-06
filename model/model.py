@@ -6,6 +6,7 @@ from Chain.result.result import ChainResult
 from Chain.result.error import ChainError
 from Chain.logs.logging_config import get_logger
 from Chain.request.outputtype import OutputType
+from Chain.odometer.OdometerRegistry import OdometerRegistry
 from pydantic import ValidationError, BaseModel
 from typing import Optional, TYPE_CHECKING
 from pathlib import Path
@@ -35,6 +36,7 @@ class Model:
     _console: Optional["Console"] = (
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
+    _odometer_registry = OdometerRegistry()
 
     @classmethod
     def models(cls) -> dict:
@@ -54,6 +56,13 @@ class Model:
         self._client_type = self._get_client_type(self.model)
         self._client = self.__class__._get_client(self._client_type)
         self._console = console
+
+    @classmethod
+    def stats(cls):
+        """
+        Pretty prints session statistics (from OdometerRegistry.session_odometer).
+        """
+        cls._odometer_registry.session_odometer.stats()
 
     @property
     def console(self):
