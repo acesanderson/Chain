@@ -11,6 +11,7 @@
   "groq": "mixtral-8x7b-32768",
   "haiku": "claude-3-5-haiku-20241022",
   "llama": "llama3.1:latest",
+  "nano": "gpt-5-mini",
   "ollama": "mistral:latest",
   "opus": "claude-opus-4-1-20250805",
   "qwen": "qwen3:14b",
