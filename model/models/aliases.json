@@ -14,5 +14,5 @@
   "ollama": "mistral:latest",
   "opus": "claude-opus-4-1-20250805",
   "qwen": "qwen3:14b",
-  "tts": "gemini-2.5-flash-preview-tts",
+  "tts": "gemini-2.5-flash-preview-tts"
 }
