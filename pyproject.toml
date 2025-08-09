@@ -28,7 +28,7 @@ dependencies = [
     "soundfile",
     # Machine Learning/AI
     "torch==2.7.1", # Pinned for your GPU setup
-    "transformers",
+    "transformers==4.51.3",
     "huggingface_hub",
     # Web/HTTP
     "requests",
@@ -39,7 +39,7 @@ dependencies = [
     "ruff>=0.12.4",
     "ty>=0.0.1a15",
     "diffusers>=0.34.0",
-    "peft>=0.16.0",
+    "peft>=0.17.0",
     "accelerator>=2024.9.13",
     "sentencepiece>=0.2.0",
     "yt-dlp>=2025.7.21",
