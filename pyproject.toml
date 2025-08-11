@@ -69,7 +69,7 @@ full = [
 update = "Chain.scripts.update_modelstore:main"
 update_ollama = "Chain.scripts.update_ollama_list:main"
 models = "Chain.scripts.models_cli:main"
-chat = "Chain.chat.chat:main"
+chat = "Chain.scripts.chat_cli:main"
 chainserver = "Chain.api.server.run:main"
 tokens = "Chain.odometer.database.pgres.snapshot:main"
 

@@ -306,26 +306,3 @@ class Chat:
         except KeyboardInterrupt:
             # User can exit the chat with Ctrl+C
             self.console.print("\nGoodbye!", style="green")
-
-
-def main():
-    # Constants
-    dir_path = Path(__file__).parent
-    _ = readline.get_current_history_length()  # Gaming the type hints.
-    logger = get_logger(__name__)  # Our logger
-    console = Console()
-    Chain._console = console
-    Model._console = console
-    Model._chain_cache = ChainCache(
-        db_path=dir_path / ".chat_cache.db"
-    )  # Caching set up.
-    Chain._message_store = MessageStore(
-        pruning=True
-    )  # Non-persistant, but we should prune
-
-    c = Chat(Model("llama3.1:latest"))
-    c.chat()
-
-
-if __name__ == "__main__":
-    main()

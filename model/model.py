@@ -48,6 +48,20 @@ class Model:
 
         return ModelStore.models()
 
+    @classmethod
+    def validate_model(cls, model: str) -> bool:
+        """
+        Validates the model name against the available models.
+        Raises ValueError if the model is not found.
+        """
+        from Chain.model.models.modelstore import ModelStore
+
+        model_name = ModelStore._validate_model(model)
+        if model_name:
+            return True
+        else:
+            return False
+
     # Object methods
     def __init__(self, model: str = "gpt-4o", console: Optional["Console"] = None):
         from Chain.model.models.modelstore import ModelStore
