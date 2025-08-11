@@ -5,7 +5,7 @@ This module provides a context manager for connecting to a PostgreSQL database.
 import psycopg2
 from contextlib import contextmanager
 import subprocess
-import os, sys
+import os
 
 hostnames = {
     "remote": ["Botvinnik", "bianders-mn7180.linkedin.biz", "AlphaBlue"],
@@ -16,8 +16,7 @@ hostnames = {
 hostname = subprocess.check_output(["hostname"]).decode("utf-8").strip()
 password = os.getenv("POSTGRES_PASSWORD")
 if not password:
-    print("POSTGRES_PASSWORD not found in environment variables.")
-    sys.exit()
+    raise ValueError("POSTGRES_PASSWORD not found in environment variables.")
 
 
 @contextmanager
@@ -34,7 +33,7 @@ def get_db_connection():
     else:  # Docker shenaningans await
         host = "10.0.0.82"
     connection = psycopg2.connect(
-        dbname="kramer",
+        dbname="chain",
         host=host,
         port="5432",
         user="bianders",

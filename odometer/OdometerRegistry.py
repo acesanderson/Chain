@@ -1,8 +1,6 @@
-from Chain.odometer.odometer import (
-    SessionOdometer,
-    ConversationOdometer,
-    PersistentOdometer,
-)
+from Chain.odometer.SessionOdometer import SessionOdometer
+from Chain.odometer.ConversationOdometer import ConversationOdometer
+from Chain.odometer.PersistentOdometer import PersistentOdometer
 from Chain.odometer.TokenEvent import TokenEvent
 import atexit, signal, sys
 
