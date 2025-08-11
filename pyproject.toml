@@ -70,6 +70,7 @@ update_ollama = "Chain.scripts.update_ollama_list:main"
 models = "Chain.scripts.models_cli:main"
 chat = "Chain.chat.chat:main"
 chainserver = "Chain.api.server.run:main"
+tokens = "Chain.odometer.database.pgres.snapshot:main"
 
 [tool.pytest.ini_options]
 addopts = "-v -s --tb=short --no-header --showlocals --pdb -x"
