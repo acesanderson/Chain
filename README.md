@@ -1,235 +1,359 @@
 # Chain
 
-A lightweight, unified framework for building LLM applications with support for multiple providers, structured outputs, and async operations.
+A comprehensive Python framework for building LLM applications with support for multiple providers, multimodal content, structured outputs, and advanced features like caching, progress tracking, and token usage monitoring.
+
+## Features
+
+### 🤖 **Multi-Provider Support**
+- **OpenAI** (GPT-4, GPT-3.5, DALL-E, Whisper)
+- **Anthropic** (Claude 3.5 Sonnet/Haiku)
+- **Google** (Gemini 2.5, Imagen)
+- **Perplexity** (Research models with citations)
+- **Ollama** (Local models)
+- **Hugging Face** (Custom models)
+
+### 🎯 **Structured Outputs**
+- Pydantic model validation and parsing
+- Type-safe responses with automatic validation
+- JSON schema generation and enforcement
+
+### 🎨 **Multimodal Support**
+- **Images**: Analysis, generation, display
+- **Audio**: TTS, transcription, playback
+- **Video**: Analysis capabilities
+- Support for multiple formats with automatic conversion
+
+### ⚡ **Performance & Reliability**
+- Async/await support for concurrent operations
+- Intelligent caching with SQLite/PostgreSQL backends
+- Token usage tracking and cost monitoring
+- Progress indicators with rich console output
+
+### 🔧 **Developer Experience**
+- CLI chat interface with extensible commands
+- Rich error handling and debugging
+- Comprehensive logging and verbosity levels
+- Hot-swappable models and providers
 
 ## Quick Start
 
-```bash
-pip install git+https://github.com/acesanderson/Chain.git
-```
-
-**Basic usage in 30 seconds:**
+### Basic Usage
 
 ```python
 from Chain import Chain, Model, Prompt
 
-# Simple completion
-chain = Chain(
-    prompt=Prompt("What is the capital of France?"),
-    model=Model("gpt-4o")
-)
-response = chain.run()
-print(response.content)  # "The capital of France is Paris."
-```
+# Simple query
+model = Model("gpt-4o")
+response = model.query("What is the meaning of life?")
+print(response.content)
 
-## Why Chain?
-
-- **Universal LLM Interface**: One API for OpenAI, Anthropic, Google, Groq, Ollama, and more
-- **Structured Outputs**: Built-in Pydantic integration via Instructor
-- **Async-First**: Native async support for high-throughput applications  
-- **Smart Caching**: Automatic response caching to reduce costs and latency
-- **Rich Templating**: Jinja2 templates with variable validation
-
-## Installation & Setup
-
-### Prerequisites
-- Python 3.8+
-- API keys for desired providers
-
-### Environment Setup
-Create a `.env` file in your project root:
-
-```env
-OPENAI_API_KEY=your_openai_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
-GOOGLE_API_KEY=your_google_api_key
-GROQ_API_KEY=your_groq_api_key
-```
-
-For local models, install [Ollama](https://github.com/ollama/ollama):
-```bash
-# Install Ollama, then pull models
-ollama pull llama3.1:latest
-ollama pull qwen2.5:latest
-```
-
-## Core Examples
-
-### 1. Multi-Provider Model Access
-
-```python
-from Chain import Model
-
-# See all available models
-print(Model.models())
-# Returns: {'openai': ['gpt-4o', 'gpt-4o-mini', ...], 'anthropic': ['claude-3-5-sonnet', ...], ...}
-
-# Use any model with identical syntax
-models = [
-    Model("gpt-4o"),           # OpenAI
-    Model("claude-3-5-sonnet"), # Anthropic  
-    Model("llama3.1:latest"),   # Ollama (local)
-    Model("gemini-1.5-pro"),    # Google
-]
-```
-
-### 2. Dynamic Prompts with Variables
-
-```python
-from Chain import Chain, Model, Prompt
-
-prompt = Prompt("List 5 {{category}} that are {{color}}")
-chain = Chain(prompt=prompt, model=Model("claude-3-5-sonnet"))
+# Template-based prompts
+prompt = Prompt("Explain {{topic}} in {{style}} terms")
+chain = Chain(model=model, prompt=prompt)
 
 response = chain.run(input_variables={
-    "category": "animals", 
-    "color": "red"
+    "topic": "quantum computing", 
+    "style": "simple"
 })
 print(response.content)
 ```
 
-### 3. Structured Outputs (Function Calling)
+### Structured Outputs
 
 ```python
-from Chain import Chain, Model, Prompt, Parser
+from Chain import Chain, Model, Parser
 from pydantic import BaseModel
 
 class Animal(BaseModel):
     name: str
     species: str
     habitat: str
-    conservation_status: str
+    diet: list[str]
 
-prompt = Prompt("Create a detailed profile for a {{animal_type}}")
+model = Model("claude-3-5-sonnet")
 parser = Parser(Animal)
-chain = Chain(prompt=prompt, model=Model("gpt-4o"), parser=parser)
+chain = Chain(model=model, parser=parser)
 
-result = chain.run(input_variables={"animal_type": "arctic fox"})
-print(result.content)  # Returns Animal object
-print(result.content.conservation_status)  # "Least Concern"
+response = chain.run("Tell me about a lion")
+animal = response.content  # Returns Animal instance
+print(f"{animal.name} is a {animal.species}")
 ```
 
-### 4. Async Batch Processing
+### Multimodal Examples
+
+#### Image Analysis
+```python
+from Chain import Model
+from Chain.message.imagemessage import ImageMessage
+
+model = Model("gpt-4o")  # Vision-capable model
+image_msg = ImageMessage.from_image_file(
+    image_file="photo.jpg",
+    text_content="What's in this image?"
+)
+
+response = model.query(image_msg)
+print(response.content)
+```
+
+#### Image Generation
+```python
+model = Model("dall-e-3")
+response = model.query(
+    "A cyberpunk cityscape at sunset",
+    output_type="image"
+)
+response.display()  # Shows image in terminal
+```
+
+#### Audio Processing
+```python
+from Chain.message.audiomessage import AudioMessage
+
+model = Model("gpt-4o-audio-preview")
+audio_msg = AudioMessage.from_audio_file(
+    audio_file="recording.mp3",
+    text_content="Transcribe this audio"
+)
+
+response = model.query(audio_msg)
+print(response.content)
+```
+
+### Async Operations
 
 ```python
 from Chain import AsyncChain, ModelAsync
 
+model = ModelAsync("gpt-4o")
+chain = AsyncChain(model=model)
+
 # Process multiple prompts concurrently
 prompts = [
-    "Explain quantum computing",
+    "Explain photosynthesis",
     "What is machine learning?", 
-    "Define blockchain technology"
+    "Describe the water cycle"
 ]
 
-model = ModelAsync("gpt-4o-mini")
-chain = AsyncChain(model=model)
 responses = chain.run(prompt_strings=prompts)
-
 for response in responses:
-    print(f"Response: {response.content[:100]}...")
+    print(response.content)
 ```
 
-### 5. Image Analysis
+### Chat Interface
 
 ```python
-from Chain import Chain, Model, ImageMessage
-import base64
+from Chain import Chat, Model
+from Chain.message.messagestore import MessageStore
 
-# Load and encode image
-with open("image.jpg", "rb") as f:
-    image_data = base64.b64encode(f.read()).decode()
+# Persistent chat with history
+messagestore = MessageStore(history_file="chat_history.json")
+model = Model("claude-3-5-haiku")
+chat = Chat(model=model, messagestore=messagestore)
 
-image_msg = ImageMessage(
-    role="user",
-    text_content="What's in this image?",
-    image_content=image_data,
-    mime_type="image/jpeg"
-)
-
-chain = Chain(model=Model("gpt-4o"))
-response = chain.run(messages=[image_msg])
+chat.chat()  # Starts interactive CLI
 ```
 
 ## Advanced Features
 
-### Conversation Management
+### Caching
+
 ```python
-from Chain import MessageStore, Message
+from Chain import Model, ChainCache
 
-# Persistent chat history
-store = MessageStore(history_file="chat.pkl", log_file="chat.log")
-store.add_new("system", "You are a helpful assistant")
-store.add_new("user", "Hello!")
+# Enable caching
+Model._chain_cache = ChainCache(db_path="cache.db")
 
-chain = Chain(model=Model("gpt-4o"))
-response = chain.run(messages=store.messages)
-```
-
-### Smart Caching
-```python
-from Chain import ChainCache, Model
-
-# Enable caching for cost savings
-Model._chain_cache = ChainCache("cache.db")
-
-# Subsequent identical calls return cached results
 model = Model("gpt-4o")
-result1 = model.query("What is Python?")  # API call
-result2 = model.query("What is Python?")  # Cache hit!
+response = model.query("Expensive query", cache=True)
+# Subsequent identical queries return cached results
 ```
 
-### CLI Applications
+### Token Tracking
+
 ```python
-from Chain import ChainCLI
+from Chain import Model
 
-# Create custom CLI apps
-class MyCLI(ChainCLI):
-    @arg("-t")
-    def arg_translate(self, text):
-        """Translate text to French"""
-        # Custom functionality
-        pass
+model = Model("gpt-4o")
+response = model.query("Hello world")
 
-cli = MyCLI(name="My AI Assistant")
-cli.run()
+print(f"Input tokens: {response.input_tokens}")
+print(f"Output tokens: {response.output_tokens}")
+print(f"Duration: {response.duration:.2f}s")
+
+# View session statistics
+Model.stats()
 ```
 
-## Model Support
+### Progress & Verbosity
 
-| Provider | Models | Features |
-|----------|--------|----------|
-| **OpenAI** | GPT-4o, GPT-4o-mini, o1-preview | Function calling, vision, reasoning |
-| **Anthropic** | Claude 3.5 Sonnet, Haiku | Large context, vision, tool use |
-| **Google** | Gemini 1.5/2.0 Pro/Flash | Multimodal, long context |
-| **Groq** | Llama, Mixtral, Gemma | Ultra-fast inference |
-| **Ollama** | 100+ local models | Privacy, offline, custom models |
+```python
+from Chain import Model, Verbosity
+
+model = Model("gpt-4o")
+
+# Different verbosity levels
+response = model.query("Query", verbose=Verbosity.SILENT)    # No output
+response = model.query("Query", verbose=Verbosity.PROGRESS)  # Spinner only
+response = model.query("Query", verbose=Verbosity.DETAILED)  # Full details
+response = model.query("Query", verbose=Verbosity.DEBUG)     # JSON dump
+```
+
+### Provider-Specific Parameters
+
+```python
+from Chain import Model
+from Chain.request.request import Request
+
+# OpenAI-specific parameters
+model = Model("gpt-4o")
+request = Request.from_query_input(
+    query_input="Be creative",
+    model="gpt-4o",
+    temperature=0.9,
+    client_params={
+        "max_tokens": 1000,
+        "frequency_penalty": 0.5,
+        "presence_penalty": 0.3
+    }
+)
+response = model.query(request=request)
+```
+
+### LLM Decorator
+
+```python
+from Chain.llm_decorator import llm
+
+@llm(model="claude-3-5-haiku")
+def summarize_text(text: str, length: str):
+    """
+    Summarize the following text in {{length}} format:
+    
+    {{text}}
+    """
+
+summary = summarize_text(
+    text="Long article content...", 
+    length="bullet points"
+)
+print(summary)
+```
+
+## Installation
+
+```bash
+pip install chain-llm  # When published
+# or for development:
+git clone https://github.com/yourusername/chain
+cd chain
+pip install -e .
+```
+
+### Environment Setup
+
+```bash
+# Required API keys (set as needed)
+export OPENAI_API_KEY="your_key_here"
+export ANTHROPIC_API_KEY="your_key_here"
+export GOOGLE_API_KEY="your_key_here"
+export PERPLEXITY_API_KEY="your_key_here"
+```
+
+## CLI Tools
+
+### Chat Interface
+```bash
+python -m Chain.scripts.chat_cli --model claude-3-5-haiku
+```
+
+### Model Management
+```bash
+# List all models
+python -m Chain.scripts.models_cli
+
+# Get model details
+python -m Chain.scripts.models_cli -m gpt-4o
+
+# Filter by provider
+python -m Chain.scripts.models_cli -p anthropic
+```
+
+### Image Generation
+```bash
+python -m Chain.scripts.imagegen --model dall-e-3 "A beautiful landscape"
+```
 
 ## Architecture
 
-```
-Chain Framework
-├── Model Layer       # Universal LLM interface
-├── Prompt System     # Jinja2 templating + validation  
-├── Message Handling  # Conversation + multimodal support
-├── Response System   # Structured outputs + metadata
-├── Async Engine      # Concurrent processing
-└── Extensions        # CLI, caching, API server
+### Core Components
+
+- **Model**: Interface to LLM providers with unified API
+- **Chain**: Orchestrates model, prompt, and parser
+- **Request**: Encapsulates all parameters for LLM calls
+- **Response**: Structured response with metadata
+- **Messages**: Conversation management with validation
+- **MessageStore**: Persistent conversation storage
+
+### Message Types
+
+- **TextMessage**: Standard text content
+- **ImageMessage**: Images with analysis/generation
+- **AudioMessage**: Audio content and transcription
+- **VideoMessage**: Video analysis (planned)
+
+### Progress System
+
+- **Verbosity**: Configurable output levels
+- **Handlers**: Rich console or plain text progress
+- **Tracking**: Individual and concurrent operation monitoring
+
+### Provider Architecture
+
+Each provider implements a common interface:
+- **Client**: Provider-specific API interaction
+- **Parameters**: Validation for provider capabilities
+- **Conversion**: Request/response format adaptation
+
+## Error Handling
+
+```python
+from Chain import Model
+from Chain.result.error import ChainError
+
+model = Model("gpt-4o")
+result = model.query("Test query")
+
+if isinstance(result, ChainError):
+    print(f"Error: {result.info.message}")
+    print(f"Category: {result.info.category}")
+    if result.detail:
+        print(f"Stack trace: {result.detail.stack_trace}")
+else:
+    print(f"Success: {result.content}")
 ```
 
 ## Contributing
 
-Chain is actively developed and welcomes contributions:
+1. **Model Support**: Add new providers in `Chain/model/clients/`
+2. **Message Types**: Extend multimodal support in `Chain/message/`
+3. **Features**: Core functionality in respective modules
+4. **Tests**: Add regression tests in `Chain/tests/`
+
+### Development Setup
 
 ```bash
-git clone https://github.com/acesanderson/Chain
-cd Chain
-pip install -r requirements.txt
+git clone https://github.com/yourusername/chain
+cd chain
+pip install -e .[dev]
 pytest  # Run tests
 ```
 
-## What's Next
+## Roadmap
 
-- 🔧 **Agentic Support**: Tools and resources via MCP protocol
-- 🤗 **HuggingFace Integration**: Fine-tuned model support  
-- 💬 **Enhanced Chat**: Improved conversation management
-- 🔌 **Plugin System**: Extensible tool ecosystem
+- [ ] Video message support
+- [ ] WebSocket streaming
+- [ ] Distributed computing
+- [ ] Plugin system
+- [ ] GUI interface
+- [ ] Workflow orchestration (ChainML)
