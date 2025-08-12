@@ -71,6 +71,7 @@ models = "Chain.scripts.models_cli:main"
 chat = "Chain.scripts.chat_cli:main"
 chainserver = "Chain.api.server.run:main"
 tokens = "Chain.odometer.database.pgres.snapshot:main"
+imagegen = "Chain.scripts.imagegen_cli:main"
 
 [tool.pytest.ini_options]
 addopts = "-v -s --tb=short --no-header --showlocals --pdb -x"
