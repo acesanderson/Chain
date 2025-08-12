@@ -50,9 +50,9 @@ class TextMessage(Message):
             raise TypeError(
                 "Content must be a string, BaseModel, or list of BaseModels."
             )
-        assert isinstance(
-            content, (str, dict, list)
-        ), "Content must be a string, dict, or list of dicts, "
+        assert isinstance(content, (str, dict, list)), (
+            "Content must be a string, dict, or list of dicts, "
+        )
         return {
             "message_type": self.message_type,
             "role": role,

@@ -37,7 +37,7 @@ class OdometerRegistry:
         """
         if conversation_id not in self.conversation_odometers:
             self.conversation_odometers[conversation_id] = ConversationOdometer(
-                conversation_id
+                conversation_id=conversation_id
             )
 
     def emit_token_event(self, event: TokenEvent):
@@ -69,7 +69,7 @@ class OdometerRegistry:
             self.persistent_odometer.sync_session_data(self.session_odometer)
             # Also sync any active conversation odometers
             for conv_odo in self.conversation_odometers.values():
-                self.persistent_odometer.sync_conversation_data(conv_odo)
+                self.persistent_odometer.sync_session_data(self.session_odometer)
         except Exception as e:
             # Log error but don't crash on exit
             print(f"Warning: Failed to save odometer data on exit: {e}")

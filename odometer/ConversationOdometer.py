@@ -1,4 +1,5 @@
 from Chain.odometer.Odometer import Odometer
+from pydantic import Field
 
 
 class ConversationOdometer(Odometer):
@@ -7,9 +8,9 @@ class ConversationOdometer(Odometer):
     Routed to by TokenEvent.host.
     """
 
-    # conversation_id: str = Field(
-    #     ..., description="Unique identifier for the conversation."
-    # )
+    conversation_id: str = Field(
+        ..., description="Unique identifier for the conversation."
+    )
     # model_name: str = Field(
     #     ...,
     #     description="Name of the model used in this conversation. Assumes one model for entire MessageStore, since how else can you track context window?",
