@@ -155,9 +155,26 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
             )
 
     def __repr__(self):
-        attributes = ", ".join(
-            [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
-        )
+        attr_list = []
+        for k, v in self.__dict__.items():
+            if k == "message" and hasattr(v, "content"):
+                # Special handling for message content
+                content = v.content
+                word_count = len(content.split())
+                if len(content) > 20:
+                    truncated_content = content[:20] + f"... [{word_count} words total]"
+                else:
+                    truncated_content = content
+
+                # Build the message repr manually with truncated content
+                message_repr = (
+                    f"TextMessage(role='{v.role}', content='{truncated_content}')"
+                )
+                attr_list.append(f"{k}={message_repr}")
+            else:
+                attr_list.append(f"{k}={repr(v)[:50]}")
+
+        attributes = ", ".join(attr_list)
         return f"{self.__class__.__name__}({attributes})"
 
     def __str__(self):

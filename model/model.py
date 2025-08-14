@@ -171,6 +171,7 @@ class Model:
         temperature: Optional[float] = None,
         stream: bool = False,
         output_type: OutputType = "text",
+        max_tokens: Optional[int] = None,
         # For progress reporting decorator
         verbose: Verbosity = Verbosity.PROGRESS,
         index: int = 0,

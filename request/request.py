@@ -52,6 +52,10 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
         default=None,
         description="Pydantic model to convert messages to a specific format. If dict, this is a schema for the model for serialization / caching purposes.",
     )
+    max_tokens: Optional[int] = Field(
+        default=None,
+        description="Maximum number of tokens to generate. If None, it is not passed to the client (except for Anthropic, which requires it and has a default).",
+    )
     # Post model init parameters
     provider: Optional[Provider] = Field(
         default=None,
@@ -361,7 +365,22 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             "response_model": self.response_model,
             "temperature": self.temperature,
             "stream": self.stream,
+            "max_tokens": self.max_tokens,
         }
+
+        # OpenAI has different max token parameters for different models, irritatingly.
+        if self.max_tokens is not None:
+            if self.provider == "openai" and (
+                self.model.startswith("o1-")
+                or self.model.startswith("o3-")
+                or self.model.startswith("gpt-5")
+            ):
+                base_params["max_completion_tokens"] = self.max_tokens
+                base_params.pop("max_tokens", None)  # Remove max_tokens if set
+            else:
+                # All other providers (google, ollama, perplexity) and
+                # older OpenAI models use max_tokens
+                base_params["max_tokens"] = self.max_tokens
 
         # Automatically include all client params
         if self.provider == "ollama":
@@ -449,7 +468,7 @@ class Request(BaseModel, RichDisplayParamsMixin, PlainDisplayParamsMixin):
             "temperature": (
                 self.temperature if self.temperature is not None else 1.0
             ),  # Default to 1.0 if not set
-            "max_tokens": 4000,  # Default max tokens for Anthropic
+            "max_tokens": self.max_tokens if self.max_tokens is not None else 4000,
         }
 
         # Add system parameter if we have system content
