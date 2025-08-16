@@ -10,7 +10,7 @@ from Chain.progress.display_mixins import (
     RichDisplayResponseMixin,
     PlainDisplayResponseMixin,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from datetime import datetime
 
 logger = get_logger(__name__)
@@ -29,18 +29,23 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     output_tokens: int
     duration: float
 
+    # Control flag -- if this is rehydrated from cache, we don't want to emit token events again
+    emit_tokens: bool = Field(default=True, exclude=True)  # Exclude from serialization
+
     # Initialization attributes
     timestamp: str = Field(
         default_factory=lambda: datetime.now().isoformat(),
         description="Timestamp of the response creation",
     )
 
-    def __init__(self, **data):
-        super().__init__(**data)
-        try:
-            self.emit_token_event()
-        except Exception as e:
-            logger.error(f"Failed to emit token event: {e}")
+    @model_validator(mode="after")
+    def emit_token_event_if_enabled(self):
+        if self.emit_tokens:
+            try:
+                self.emit_token_event()
+            except Exception as e:
+                logger.error(f"Failed to emit token event: {e}")
+        return self
 
     def emit_token_event(self):
         """
@@ -95,6 +100,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
             output_tokens=cache_dict["output_tokens"],
             duration=cache_dict["duration"],
             timestamp=cache_dict.get("timestamp", datetime.now().isoformat()),
+            emit_tokens=False,  # Do not emit tokens for cached responses
         )
 
     @property
@@ -155,9 +161,26 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
             )
 
     def __repr__(self):
-        attributes = ", ".join(
-            [f"{k}={repr(v)[:50]}" for k, v in self.__dict__.items()]
-        )
+        attr_list = []
+        for k, v in self.__dict__.items():
+            if k == "message" and hasattr(v, "content"):
+                # Special handling for message content
+                content = v.content
+                word_count = len(content.split())
+                if len(content) > 20:
+                    truncated_content = content[:20] + f"... [{word_count} words total]"
+                else:
+                    truncated_content = content
+
+                # Build the message repr manually with truncated content
+                message_repr = (
+                    f"TextMessage(role='{v.role}', content='{truncated_content}')"
+                )
+                attr_list.append(f"{k}={message_repr}")
+            else:
+                attr_list.append(f"{k}={repr(v)[:50]}")
+
+        attributes = ", ".join(attr_list)
         return f"{self.__class__.__name__}({attributes})"
 
     def __str__(self):
