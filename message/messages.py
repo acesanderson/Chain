@@ -2,9 +2,14 @@ from typing import Iterator, Optional
 from pydantic import BaseModel, Field, ValidationError
 from Chain.message.message import Message
 from Chain.message.textmessage import TextMessage
+from Chain.message.imagemessage import ImageMessage
+from Chain.message.audiomessage import AudioMessage
 from Chain.logs.logging_config import get_logger
 
+MessageUnion = TextMessage | ImageMessage | AudioMessage
+
 logger = get_logger(__name__)
+
 
 class Messages(BaseModel):
     """
@@ -14,7 +19,7 @@ class Messages(BaseModel):
     class MessageStore(Messages):
     """
 
-    messages: list[Message] = Field(
+    messages: list[MessageUnion | None] = Field(
         default_factory=list,
         description="List of Message objects (including ImageMessage and AudioMessage)",
     )
@@ -260,13 +265,13 @@ class Messages(BaseModel):
         Returns:
             Messages object
         """
-        message_dicts = None
         if isinstance(cache_dict, list):
-            # If you're debugging this line, I'm sorry, this is not great design.
+            # Convert each dict to proper Message object
             message_dicts = [Message.from_cache_dict(msg) for msg in cache_dict]
-        # If this assertion breaks, we are deserializing a full Messages object, not a list of messages.
-        assert message_dicts is not None, "Message dicts cannot be None; code error." 
-        return cls(messages=message_dicts)
+            return cls(messages=message_dicts)
+        else:
+            # If this assertion breaks, we are deserializing a full Messages object, not a list of messages.
+            raise ValueError("cache_dict must be a list of message dictionaries")
 
     # API compatibility methods
     def to_openai(self) -> list[dict]:
