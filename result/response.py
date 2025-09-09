@@ -166,11 +166,23 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
             if k == "message" and hasattr(v, "content"):
                 # Special handling for message content
                 content = v.content
-                word_count = len(content.split())
-                if len(content) > 20:
-                    truncated_content = content[:20] + f"... [{word_count} words total]"
-                else:
-                    truncated_content = content
+                if isinstance(content, str):
+                    word_count = len(content.split())
+                    if len(content) > 20:
+                        truncated_content = (
+                            content[:20] + f"... [{word_count} words total]"
+                        )
+                    else:
+                        truncated_content = content
+                elif isinstance(content, BaseModel):
+                    word_count = len(content.model_dump_json().split())
+                    truncated_content = f"{content.__class__.__name__}(...)"
+                elif isinstance(content, list):
+                    word_count = sum(
+                        len(item.split()) if isinstance(item, str) else 0
+                        for item in content
+                    )
+                    truncated_content = f"List[{len(content)} items] (...)"
 
                 # Build the message repr manually with truncated content
                 message_repr = (
