@@ -3,6 +3,9 @@ A successful Result.
 """
 
 from Chain.message.message import Message
+from Chain.message.textmessage import TextMessage
+from Chain.message.audiomessage import AudioMessage
+from Chain.message.imagemessage import ImageMessage
 from Chain.message.messages import Messages
 from Chain.request.request import Request
 from Chain.logs.logging_config import get_logger
@@ -16,6 +19,9 @@ from datetime import datetime
 logger = get_logger(__name__)
 
 
+MessageUnion = TextMessage | AudioMessage | ImageMessage
+
+
 class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     """
     Our class for a successful Result.
@@ -23,7 +29,7 @@ class Response(BaseModel, RichDisplayResponseMixin, PlainDisplayResponseMixin):
     """
 
     # Core attributes
-    message: Message
+    message: MessageUnion
     request: Request
     input_tokens: int
     output_tokens: int

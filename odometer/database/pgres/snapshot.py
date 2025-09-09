@@ -77,14 +77,12 @@ def print_provider_table(console, backend):
     console.print(table)
 
 
-def print_models_table(console, backend, limit=10):
+def print_models_table(console, model_stats, limit=10, title="Top 10 Models"):
     """Print clean top models table"""
-    model_stats = backend.get_aggregates("model")
-
     if not model_stats:
         return
 
-    console.print(f"\n[bold gold3]Top {limit} Models[/bold gold3]")
+    console.print(f"\n[bold gold3]{title}[/bold gold3]")
 
     table = Table(show_header=True, header_style="bold", box=None, padding=(0, 1))
     table.add_column("Rank", justify="center", width=4)
@@ -98,7 +96,6 @@ def print_models_table(console, backend, limit=10):
 
     for i, (model, stats) in enumerate(sorted_models, 1):
         display_model = model[:35] + "..." if len(model) > 38 else model
-
         rank_text = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else str(i)
 
         table.add_row(
@@ -125,7 +122,18 @@ def main():
 
         print_usage_stats(console, backend)
         print_provider_table(console, backend)
-        print_models_table(console, backend)
+
+        # All-time models
+        all_time_stats = backend.get_aggregates("model")
+        print_models_table(console, all_time_stats)
+
+        # Today's models
+        today = date.today()
+        daily_stats = backend.get_aggregates("model", start_date=today, end_date=today)
+        if daily_stats:
+            print_models_table(console, daily_stats, title="Top 10 Models (Today)")
+        else:
+            console.print(f"\n[bold gold3]No usage today[/bold gold3]")
 
     except KeyboardInterrupt:
         console.print("\n[yellow]Cancelled[/yellow]")

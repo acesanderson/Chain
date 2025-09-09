@@ -75,7 +75,7 @@ class AsyncChain(Chain):
                 requests will run as fast as possible. Defaults to None.
             cache (bool): If True, responses will be looked up in the cache
                 and saved to it if not found. Defaults to True.
-            verbose (bool): If True, displays real-time progress information
+            verbose (Verbosity): If True, displays real-time progress information
                 for the entire batch of operations. Individual operation progress
                 is suppressed during concurrent execution. Defaults to True.
             print_response (bool): If True, prints the content of each individual
