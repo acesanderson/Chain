@@ -1,7 +1,9 @@
-from Chain.odometer.database.pgres.PGRES_connection import get_db_connection
+from dbclients import get_postgres_client
 from Chain.logs.logging_config import get_logger
 
 logger = get_logger(__name__)
+
+get_db_connection = get_postgres_client("context_db", dbname="chain")
 
 
 def wipe_token_events_database(confirm: bool = False) -> bool:

@@ -1,11 +1,13 @@
 from Chain.odometer.database.PersistenceBackend import PersistenceBackend
 from Chain.odometer.TokenEvent import TokenEvent
-from Chain.odometer.database.pgres.PGRES_connection import get_db_connection
+from dbclients import get_postgres_client
 from datetime import date, datetime
 from typing import override
 import logging
 
 logger = logging.getLogger(__name__)
+
+get_db_connection = get_postgres_client("context_db", dbname="chain")
 
 
 class PostgresBackend(PersistenceBackend):
