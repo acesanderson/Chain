@@ -44,7 +44,6 @@ dependencies = [
     "sentencepiece>=0.2.0",
     "yt-dlp>=2025.7.21",
     "psycopg2-binary==2.9.10",
-    "database-clients",
     "psycopg2>=2.9.10",
 ]
 
@@ -83,6 +82,3 @@ log_cli_level = "INFO"
 # Hatchling configuration (replaces setuptools.packages.find)
 [tool.hatch.build.targets.wheel]
 packages = ["Chain"]
-
-[tool.uv.sources]
-database-clients = { path = "../database-clients", editable = true }
