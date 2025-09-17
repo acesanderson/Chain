@@ -30,7 +30,7 @@ class ModelClient:
     """
 
     def __init__(
-        self, model: str, server_url: str = "", console: Optional["Console"] = None
+        self, model: str = "gpt-oss:latest", console: Optional["Console"] = None
     ):
         """
         Initialize ClientModel with server connection.
@@ -41,7 +41,6 @@ class ModelClient:
             console: Optional Rich console for progress display
         """
         self.model = model
-        self.server_url = server_url
         self._console = console
         self._client = self._initialize_client()
         self._validate_server_model()
@@ -50,11 +49,7 @@ class ModelClient:
         """Initialize SiphonClient connection"""
         from SiphonServer.client.siphonclient import SiphonClient
 
-        # Use provided URL or SiphonClient default
-        if self.server_url:
-            client = SiphonClient(url=self.server_url)
-        else:
-            client = SiphonClient()
+        client = SiphonClient()
 
         # Test connection
         try:

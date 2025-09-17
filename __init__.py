@@ -1,3 +1,22 @@
+# Imports
+from Chain.chain.chain import Chain
+from Chain.chain.asyncchain import AsyncChain
+from Chain.prompt.prompt import Prompt
+from Chain.model.model import Model
+from Chain.model.model_client import ModelClient
+from Chain.model.model_async import ModelAsync
+from Chain.model.models.modelstore import ModelStore
+from Chain.message.message import Message
+from Chain.message.messagestore import MessageStore
+from Chain.message.textmessage import create_system_message
+from Chain.cache.cache import ChainCache
+from Chain.result.response import Response
+from Chain.result.error import ChainError
+from Chain.result.result import ChainResult
+from Chain.parser.parser import Parser
+from Chain.progress.verbosity import Verbosity
+from Chain.chat.chat import Chat
+
 # Set global logging settings
 import logging
 
@@ -20,30 +39,13 @@ def disable_logging():
 def enable_debug_logging():
     set_log_level(logging.DEBUG)
 
-# Imports
-from Chain.chain.chain import Chain
-from Chain.chain.asyncchain import AsyncChain
-from Chain.prompt.prompt import Prompt
-from Chain.model.model import Model
-from Chain.model.model_async import ModelAsync
-from Chain.model.models.modelstore import ModelStore
-from Chain.message.message import Message
-from Chain.message.messagestore import MessageStore
-from Chain.message.textmessage import create_system_message
-from Chain.cache.cache import ChainCache
-from Chain.result.response import Response
-from Chain.result.error import ChainError
-from Chain.result.result import ChainResult
-from Chain.parser.parser import Parser
-from Chain.progress.verbosity import Verbosity
-from Chain.chat.chat import Chat
-
 
 __all__ = [
     "Chain",
     "AsyncChain",
     "Prompt",
     "Model",
+    "ModelClient",
     "ModelAsync",
     "ModelStore",
     "Parser",
@@ -58,5 +60,5 @@ __all__ = [
     "MessageStore",
     "ChainCache",
     "create_system_message",
-    "Chat"
+    "Chat",
 ]
