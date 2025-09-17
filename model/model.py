@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from rich.console import Console
     from pydantic import BaseModel
     from Chain.cache.cache import ChainCache
+    from Chain.model.model_client import ModelClient
 
 
 # Constants
@@ -37,6 +38,18 @@ class Model:
         None  # For rich console output, if needed. This is overridden in the Chain class.
     )
     _odometer_registry = OdometerRegistry()
+
+    @classmethod
+    def from_server(cls, model: str) -> "ModelClient":
+        """
+        Factory method to create a ClientModel instance for interacting with a remote server.
+
+        Usage:
+        model = Model.from_server("gpt-oss:latest")
+        """
+        from Chain.model.model_client import ModelClient
+
+        return ModelClient(model)
 
     @classmethod
     def models(cls) -> dict:
