@@ -1,6 +1,5 @@
 from Chain.odometer.Odometer import Odometer
 from Chain.odometer.SessionOdometer import SessionOdometer
-from Chain.odometer.TokenEvent import TokenEvent
 from Chain.odometer.database.PersistenceBackend import PersistenceBackend
 from datetime import date, timedelta
 from pydantic import Field
@@ -27,9 +26,11 @@ class PersistentOdometer(Odometer):
 
                 self.backend = PostgresBackend()
             except Exception as e:
-                from Chain.odometer.database.sqlite.SqliteBackend import SQLiteBackend
-
-                self.backend = SQLiteBackend("odometer.db")
+                print(f"Real error: {e}")
+                raise
+                # from Chain.odometer.database.sqlite.SqliteBackend import SQLiteBackend
+                #
+                # self.backend = SQLiteBackend("odometer.db")
         else:
             self.backend = backend
 
