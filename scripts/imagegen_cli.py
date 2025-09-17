@@ -4,6 +4,17 @@ import torch, io, base64, argparse
 
 
 def generate_image(prompt: str) -> ImageMessage:
+    from Chain import Model, Chain, Prompt
+
+    model = Model("gemini-2.5-flash-image-preview")
+    prompt = Prompt(prompt)
+    chain = Chain(model=model, prompt=prompt)
+    response = chain.run()
+    assert isinstance(response, ImageMessage)
+    return response
+
+
+def generate_image_local(prompt: str) -> ImageMessage:
     pipe = FluxPipeline.from_pretrained(
         "Jlonge4/flux-dev-fp8", torch_dtype=torch.bfloat16
     )
