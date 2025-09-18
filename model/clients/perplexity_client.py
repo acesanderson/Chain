@@ -50,29 +50,27 @@ class PerplexityClientSync(PerplexityClient):
         self._client = self._initialize_client()
 
     def _initialize_client(self):
-        """
-        We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.
-        """
-        perplexity_client = OpenAI(
+        # Keep both raw and instructor clients
+        self._raw_client = OpenAI(
             api_key=self._get_api_key(), base_url="https://api.perplexity.ai"
         )
-        return instructor.from_perplexity(perplexity_client)
+        return instructor.from_perplexity(self._raw_client)
 
-    def query(
-        self,
-        request: Request,
-    ) -> tuple:
+    def query(self, request: Request) -> tuple:
         structured_response = None
         if request.response_model is not None:
-            # We want the raw response from OpenAI, so we use `create_with_completion`
+            # Use instructor for structured responses
             structured_response, result = (
                 self._client.chat.completions.create_with_completion(
                     **request.to_perplexity()
                 )
             )
+            # Handle structured response...
         else:
-            # Use the standard completion method
-            result = self._client.chat.completions.create(**request.to_perplexity())
+            # Use raw client for unstructured responses
+            perplexity_params = request.to_perplexity()
+            perplexity_params.pop("response_model", None)  # Remove None response_model
+            result = self._raw_client.chat.completions.create(**perplexity_params)
         # Capture usage
         usage = Usage(
             input_tokens=result.usage.prompt_tokens,

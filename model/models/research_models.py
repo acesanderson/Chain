@@ -1,13 +1,16 @@
 from Chain.model.models.modelspec import ModelSpecList, ModelSpec
-from Chain.model.models.modelspecs_CRUD import create_modelspecs_from_scratch, add_modelspec, get_all_modelspecs, in_db
+from Chain.model.models.modelspecs_CRUD import (
+    create_modelspecs_from_scratch,
+    add_modelspec,
+    get_all_modelspecs,
+    in_db,
+)
 from Chain.model.model import Model
 from Chain.chain.chain import Chain
 from Chain.prompt.prompt import Prompt
 from Chain.parser.parser import Parser
 from rich.console import Console
 
-console = Console()
-Chain._console = console  # Set the console for Chain to use
 
 list_prompt_str = """
 You are an assistant who will help me identify the capabilities of a list of LLMs.
@@ -84,14 +87,26 @@ You should also generate a factual description of the model (50-80 words), inclu
 Avoid promotional language or subjective quality assessments. Focus on objective, verifiable information about what the model can do and its technical characteristics.
 """.strip()
 
-def get_capabilities_by_provider(provider: str, model_list: list[str]) -> list[ModelSpec]:
+
+def get_capabilities_by_provider(
+    provider: str, model_list: list[str]
+) -> list[ModelSpec]:
+    console = Console()
+    Chain._console = console  # Set the console for Chain to use
     length = len(model_list)
     model = Model("sonar-pro")
     prompt = Prompt(prompt_str)
     parser = Parser(ModelSpecList)
     chain = Chain(model=model, prompt=prompt, parser=parser)
-    response = chain.run(input_variables = {"provider": provider, "model_list": model_list, "length": length})
+    response = chain.run(
+        input_variables={
+            "provider": provider,
+            "model_list": model_list,
+            "length": length,
+        }
+    )
     return response.content.specs
+
 
 def get_all_capabilities() -> list[ModelSpec]:
     """
@@ -100,10 +115,13 @@ def get_all_capabilities() -> list[ModelSpec]:
     all_models = Model.models()
     all_specs = []
     for index, (provider, models) in enumerate(all_models.items()):
-        print(f"Processing {index + 1}/{len(all_models)}: {provider} with {len(models)} models")
+        print(
+            f"Processing {index + 1}/{len(all_models)}: {provider} with {len(models)} models"
+        )
         specs = get_capabilities_by_provider(provider=provider, model_list=models)
         all_specs.extend(specs)
     return all_specs
+
 
 def create_from_scratch() -> None:
     """
@@ -115,36 +133,45 @@ def create_from_scratch() -> None:
     print(f"Populated ModelSpecs database with {len(all_specs)} entries.")
     # Test retrieval of all specs
     retrieved_specs = get_all_modelspecs()
-    assert len(retrieved_specs) == len(all_specs), "Retrieved specs do not match created specs."
+    assert len(retrieved_specs) == len(all_specs), (
+        "Retrieved specs do not match created specs."
+    )
+
 
 def get_capabilities_by_model(provider: str, model: str) -> ModelSpec:
     """
     Get capabilities for a specific model.
     """
+    console = Console()
+    Chain._console = console  # Set the console for Chain to use
     model_obj = Model("sonar-pro")
     prompt = Prompt(individual_prompt_str)
     parser = Parser(ModelSpec)
     chain = Chain(model=model_obj, prompt=prompt, parser=parser)
-    response = chain.run(input_variables = {"provider": provider, "model": model})
+    response = chain.run(input_variables={"provider": provider, "model": model})
     return response.content
+
 
 def create_modelspec(model: str) -> None:
     """
     Create a new ModelSpec in the database.
     """
     from Chain.model.models.modelstore import ModelStore
+
     provider = ModelStore.identify_provider(model)
     model_spec = get_capabilities_by_model(provider, model)
     if isinstance(model_spec, ModelSpec):
         model_spec.model = model
     else:
-        raise ValueError(f"Expected ModelSpec, got {type(model_spec)} for model {model}")
+        raise ValueError(
+            f"Expected ModelSpec, got {type(model_spec)} for model {model}"
+        )
     if not in_db(model_spec):
         add_modelspec(model_spec)
         print(f"Added ModelSpec for {model_spec.model} to the database.")
     else:
         print(f"ModelSpec for {model_spec.model} already exists in the database.")
 
+
 if __name__ == "__main__":
     modelspec = get_capabilities_by_model("ollama", "qwq:latest")
-

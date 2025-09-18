@@ -47,6 +47,10 @@ class PromptLoader:
 
         self._cache = {}
 
+    @property
+    def keys(self):
+        return list(self.file_map.keys())
+
     def __getitem__(self, key):
         if key not in self._cache:
             if key not in self.file_map:

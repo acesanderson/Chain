@@ -302,7 +302,7 @@ dependencies = [
     { name = "fastapi" },
     { name = "google-generativeai" },
     { name = "huggingface-hub" },
-    { name = "instructor" },
+    { name = "instructor", extra = ["perplexity"] },
     { name = "jinja2" },
     { name = "numpy" },
     { name = "ollama" },
@@ -348,7 +348,7 @@ requires-dist = [
     { name = "fastapi" },
     { name = "google-generativeai" },
     { name = "huggingface-hub" },
-    { name = "instructor" },
+    { name = "instructor", extras = ["perplexity"] },
     { name = "jinja2" },
     { name = "mammoth", marker = "extra == 'full'" },
     { name = "matplotlib", marker = "extra == 'full'" },
@@ -1073,6 +1073,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/6a/af/428b5d7a6a6eca5738c51706795a395099c141779cd1bbb9a6e2b0d3a94d/instructor-1.11.3.tar.gz", hash = "sha256:6f58fea6fadfa228c411ecdedad4662230c456718f4a770a97a806dcb36b3287", size = 69879936, upload-time = "2025-09-09T15:44:31.548Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/4c/5f/54783e5b1a497de204a0a59b5e22549f67f5f1aceaa08e00db21b1107ce4/instructor-1.11.3-py3-none-any.whl", hash = "sha256:9ecd7a3780a045506165debad2ddcc4a30e1057f06997973185f356b0a42c6e3", size = 155501, upload-time = "2025-09-09T15:44:26.139Z" },
+]
+
+[package.optional-dependencies]
+perplexity = [
+    { name = "openai" },
 ]
 
 [[package]]

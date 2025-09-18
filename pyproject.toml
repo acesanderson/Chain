@@ -14,7 +14,7 @@ dependencies = [
     "jinja2",
     "rich",
     "tiktoken",
-    "instructor",
+    "instructor[perplexity]",
     "tinydb",
     "python-dotenv",
     # LLM Provider SDKs

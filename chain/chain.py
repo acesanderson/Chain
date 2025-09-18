@@ -16,6 +16,7 @@ from Chain.message.textmessage import TextMessage
 from Chain.message.messages import Messages
 from Chain.message.messagestore import MessageStore
 from Chain.progress.verbosity import Verbosity
+
 from Chain.logs.logging_config import configure_logging
 from typing import TYPE_CHECKING, Optional
 import logging
