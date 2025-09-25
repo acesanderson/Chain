@@ -343,7 +343,7 @@ full = [
 requires-dist = [
     { name = "accelerator", specifier = ">=2024.9.13" },
     { name = "anthropic" },
-    { name = "database-clients", editable = "../database-clients" },
+    { name = "database-clients", git = "ssh://git@github.com/acesanderson/database-clients.git" },
     { name = "diffusers", specifier = ">=0.34.0" },
     { name = "fastapi" },
     { name = "google-generativeai" },
@@ -530,22 +530,13 @@ wheels = [
 [[package]]
 name = "database-clients"
 version = "0.1.0"
-source = { editable = "../database-clients" }
+source = { git = "ssh://git@github.com/acesanderson/database-clients.git#ee9af8ef20f693e6704d7858e5198ea7a3d2b572" }
 dependencies = [
     { name = "motor" },
     { name = "psycopg2-binary" },
     { name = "pymongo" },
     { name = "pytest" },
     { name = "requests" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "motor", specifier = ">=3.7.1" },
-    { name = "psycopg2-binary", specifier = ">=2.9.10" },
-    { name = "pymongo", specifier = ">=4.14.1" },
-    { name = "pytest", specifier = ">=8.4.2" },
-    { name = "requests", specifier = ">=2.32.5" },
 ]
 
 [[package]]
