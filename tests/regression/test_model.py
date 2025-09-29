@@ -2,22 +2,23 @@
 Regression testing, behavior-driven.
 Core APIs.
 """
-from Chain import Model, ModelAsync, Response, Chain, AsyncChain
+
+from Chain.sync import Model, Response
+from Chain.batch import ModelAsync, AsyncChain
 from Chain.model.clients.perplexity_client import PerplexityContent
 from pytest import fixture
 
 models = ["gpt3", "haiku", "gemini", "llama3.1:latest", "sonar"]
 
+
 @fixture
 def prompt_list() -> list[str]:
-    return [
-        "name ten mammals",
-        "name ten birds",
-        "name ten villains"
-    ]
+    return ["name ten mammals", "name ten birds", "name ten villains"]
+
 
 # Straighforward text completion
-# --------------------------------------   
+# --------------------------------------
+
 
 # Single sync call with each provider
 def test_model_single_sync_call():
@@ -46,6 +47,7 @@ def test_model_single_sync_call():
     assert isinstance(response, Response)
     assert isinstance(response.content, PerplexityContent)
 
+
 # Series of sync calls with each provider
 def test_series_of_sync_calls(prompt_list):
     def loop_through_prompts(model: str):
@@ -59,7 +61,8 @@ def test_series_of_sync_calls(prompt_list):
         responses = loop_through_prompts(model)
         assert isinstance(responses, list)
         assert all([isinstance(response, Response) for response in responses])
-            
+
+
 ## Series of async calls with each provider
 def test_series_of_async_calls(prompt_list):
     def async_through_prompts(model: str):
@@ -67,7 +70,7 @@ def test_series_of_async_calls(prompt_list):
         chain = AsyncChain(model=model_obj)
         responses = chain.run(prompt_strings=prompt_list)
         return responses
-    
+
     model = "gpt3"
     responses = async_through_prompts(model)
     assert isinstance(responses, list)
@@ -88,11 +91,9 @@ def test_series_of_async_calls(prompt_list):
     assert isinstance(responses, list)
     assert all([isinstance(response, Response) for response in responses])
 
- 
-
 
 # Structured responses
-# --------------------------------------   
+# --------------------------------------
 
 ## Single sync call with each provider
 
@@ -105,4 +106,3 @@ def test_series_of_async_calls(prompt_list):
 ## gpt
 
 ## local
-

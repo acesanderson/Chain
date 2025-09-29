@@ -1,28 +1,22 @@
-from Chain import Model, ModelAsync, Response, Chain, AsyncChain, Prompt
+from Chain.sync import Model, Response, Chain, Prompt
+from Chain.batch import ModelAsync, AsyncChain
 from Chain.model.clients.perplexity_client import PerplexityContent
 from pytest import fixture
 
+
 @fixture
 def model_list() -> list[str]:
-    return [
-        "gpt3",
-        "haiku",
-        "gemini",
-        "llama3.1:latest",
-        "sonar"
-    ]
+    return ["gpt3", "haiku", "gemini", "llama3.1:latest", "sonar"]
+
 
 @fixture
 def prompt_list() -> list[str]:
-    return [
-        "name ten mammals",
-        "name ten birds",
-        "name ten villains"
-    ]
+    return ["name ten mammals", "name ten birds", "name ten villains"]
 
 
 # Straighforward text completion
-# --------------------------------------   
+# --------------------------------------
+
 
 ## Single sync call with each provider
 def test_chain_with_single_sync_call():
@@ -61,36 +55,37 @@ def test_chain_with_single_sync_call():
     assert isinstance(response, Response)
     assert isinstance(response.content, PerplexityContent)
 
+
 def test_chain_with_async_calls(prompt_list):
     model = ModelAsync("gpt3")
     chain = AsyncChain(model=model)
-    responses = chain.run(prompt_strings = prompt_list)
+    responses = chain.run(prompt_strings=prompt_list)
     assert isinstance(responses, list)
     assert all([isinstance(response, Response) for response in responses])
 
     model = ModelAsync("haiku")
     chain = AsyncChain(model=model)
-    responses = chain.run(prompt_strings = prompt_list)
+    responses = chain.run(prompt_strings=prompt_list)
     assert isinstance(responses, list)
     assert all([isinstance(response, Response) for response in responses])
 
     model = ModelAsync("gemini")
     chain = AsyncChain(model=model)
-    responses = chain.run(prompt_strings = prompt_list)
+    responses = chain.run(prompt_strings=prompt_list)
     assert isinstance(responses, list)
     assert all([isinstance(response, Response) for response in responses])
 
     model = ModelAsync("llama3.1:latest")
     chain = AsyncChain(model=model)
-    responses = chain.run(prompt_strings = prompt_list)
+    responses = chain.run(prompt_strings=prompt_list)
     assert isinstance(responses, list)
     assert all([isinstance(response, Response) for response in responses])
 
     model = ModelAsync("sonar")
     chain = AsyncChain(model=model)
-    responses = chain.run(prompt_strings = prompt_list)
+    responses = chain.run(prompt_strings=prompt_list)
     assert isinstance(responses, list)
     assert all([isinstance(response, Response) for response in responses])
-    assert all([isinstance(response.content, PerplexityContent) for response in responses])
-
-
+    assert all(
+        [isinstance(response.content, PerplexityContent) for response in responses]
+    )
