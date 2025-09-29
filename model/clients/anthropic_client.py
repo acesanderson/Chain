@@ -12,7 +12,6 @@ import instructor, os
 
 
 class AnthropicClient(Client):
-
     def __init__(self):
         self._client = self._initialize_client()
 
@@ -45,7 +44,6 @@ class AnthropicClient(Client):
 
 
 class AnthropicClientSync(AnthropicClient):
-
     def _initialize_client(self):
         """
         We use the Instructor library by default, as this offers a great interface for doing function calling and working with pydantic objects.
@@ -105,10 +103,11 @@ class AnthropicClientAsync(AnthropicClient):
     ) -> tuple:
         structured_response = None
         if request.response_model is not None:
-            structured_response, result = (
-                await self._client.chat.completions.create_with_completion(
-                    **request.to_anthropic(),
-                )
+            (
+                structured_response,
+                result,
+            ) = await self._client.chat.completions.create_with_completion(
+                **request.to_anthropic(),
             )
         else:
             result = await self._client.chat.completions.create(

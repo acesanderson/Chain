@@ -9,3 +9,6 @@ def test_local_sync():
     content = str(response.content)
     assert isinstance(response, Response), f"Expected Response, got {type(response)}"
     assert len(content) > 0, "Response content is empty"
+
+
+print("hi bitch")

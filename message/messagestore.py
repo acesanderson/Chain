@@ -340,7 +340,7 @@ class MessageStore(Messages):
         """
         Pretty prints the history.
         """
-        if not self:
+        if len(self) == 0:
             self.console.print("No history (yet).", style="bold red")
             return
 

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "chain"
+name = "Chain"
 version = "3.0.0"
 description = "A lightweight, unified framework for building LLM applications"
 readme = "README.md"
